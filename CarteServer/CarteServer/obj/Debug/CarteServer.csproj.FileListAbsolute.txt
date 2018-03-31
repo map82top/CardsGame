@@ -1,0 +1,5 @@
+C:\Users\map82_top\Documents\Visual Studio 2015\CarteServer\CarteServer\bin\Debug\CarteServer.exe
+C:\Users\map82_top\Documents\Visual Studio 2015\CarteServer\CarteServer\bin\Debug\CarteServer.pdb
+C:\Users\map82_top\Documents\Visual Studio 2015\CarteServer\CarteServer\obj\Debug\CarteServer.csprojResolveAssemblyReference.cache
+C:\Users\map82_top\Documents\Visual Studio 2015\CarteServer\CarteServer\obj\Debug\CarteServer.exe
+C:\Users\map82_top\Documents\Visual Studio 2015\CarteServer\CarteServer\obj\Debug\CarteServer.pdb

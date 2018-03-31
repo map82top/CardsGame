@@ -1,0 +1,12 @@
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\bin\Debug\CartGame.exe
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\bin\Debug\CartGame.pdb
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.csprojResolveAssemblyReference.cache
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.Properties.Resources.resources
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.csproj.GenerateResource.Cache
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.exe
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.pdb
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.ChoiceForm.resources
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.FormStart.resources
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.SeekForm.resources
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.Settings.resources
+C:\Users\map82_top\Documents\Visual Studio 2015\CartGame\CartGame\obj\Debug\CartGame.GameMargin.resources
