@@ -24,29 +24,29 @@ namespace CartGame
         {
             try
             {
-                var StreamInfo = new FileStream(text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                /*var StreamInfo = new FileStream(text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 var StreamRead = new StreamReader(StreamInfo);
                 string s = StreamRead.ReadLine();
                 StreamInfo.Close();
-                StreamInfo.Dispose();
-                if (s != null)
-                {
+                StreamInfo.Dispose();*/
+               
                     Controler controler = new Controler();
-                    Application.Run(new ChoiceForm(controler));
-                    this.Close();
-                }
-                else throw new DirectoryNotFoundException();
+                    ChoiceForm NewForm =  new ChoiceForm(controler);
+                    NewForm.Show();
+                    this.Hide();
+                
+                
                 
             }
             
-            catch (DirectoryNotFoundException)
+           /* catch (DirectoryNotFoundException)
             { 
                 button1.Enabled = false;
                 Settings NewForm = new Settings(this);
                 NewForm.Show();
                 
 
-            }
+            }*/
            
             catch (Exception E)
             {
@@ -55,17 +55,6 @@ namespace CartGame
 
         }
 
-        public void buttonEnabled()
-        {
-            button1.Enabled = true;
-        }
-
-        
-        private void настройкиToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            button1.Enabled = false;
-            Settings NewForm = new Settings(this);
-            NewForm.Show();
-        }
+      
     }
 }

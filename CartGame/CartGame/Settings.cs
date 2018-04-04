@@ -109,10 +109,6 @@ namespace CartGame
             }
         }
 
-        private void Settings_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            if (Temp is FormStart) (Temp as FormStart).buttonEnabled();
-            else (Temp as ChoiceForm).buttonEnabled();
-        }
+       
     }
 }

@@ -30,17 +30,21 @@ namespace CarteServer
             {
                 if (ExpectUser != null)
                 {
-
+                    ExpectUser.GetOutOfQueue-= DeliteOfQueue;
                     AllSession.Add(new Session(ExpectUser, NewUser));
                     ExpectUser = null;
-                    AllSession[CountSession].SessionEnd += new EventHandler(DeliteSession);
+                    AllSession[CountSession].SessionEnd += DeliteSession;
                     //запускаем партию в отдельном потоке
-                    
+
                     CountSession++;
-                   
+
                 }
 
-                else ExpectUser = NewUser;
+                else
+                {
+                    ExpectUser = NewUser;
+                    ExpectUser.GetOutOfQueue += DeliteOfQueue;
+                }
                    
             }
             catch (Exception e)
@@ -48,21 +52,24 @@ namespace CarteServer
 
 
         }
-        public void DeliteSession(object sender, EventArgs e)
+        private void DeliteOfQueue()
         {
-            /*if (number + 1 < Sesion.Count)
+            if (ExpectUser != null)
             {
-                for (int i = number + 1; i < Sesion.Count; i++)
-                {
-                    Sesion[i].DownUser();
-                    Sesion[i].Number--;
-                }
+                ExpectUser.Send(MsgType.DeliteSeek);
+                ExpectUser.DisposeUserToSeek();
+                ExpectUser = null;
+                Console.WriteLine("Пользователь находящийся в очереди удален!");
             }
-            else
+        }
+        private  void DeliteSession(Session sender)
+        {
+          if (AllSession.Count != 0)
             {
-                Sesion.RemoveAt(number);
+                AllSession.Remove(sender);
+                Console.WriteLine("Сессия удалена...");
+                CountSession--;
             }
-            OnlyUser--;*/
 
         }
 

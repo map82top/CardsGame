@@ -28,7 +28,12 @@ namespace CartGame
         Attack,
         MyAttackSucc,
         EnAttackSucc, 
-        EndProgress
+        EndProgress,
+        YouWin,
+        YouOver,
+        Draw,
+        TechnicalVictory,
+        ClientClosing
 
 
 

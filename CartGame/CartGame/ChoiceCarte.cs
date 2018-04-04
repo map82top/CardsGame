@@ -22,17 +22,19 @@ namespace CartGame
         List<Panel> AllCarte = new List<Panel>();//все доступные карты
         bool MouseState = false;//показывает, что в данное время элемент перетаскивается
         Point MousePoint; //координаты мыши при перетаскивании
-
+        bool OpenSeekForm = true;
         Controler controler;
         DataGame ChoiceCards;
+        FormStart BackForm;
+        
         public ChoiceForm( Controler controler)
         {
             InitializeComponent();
             this.controler = controler;
             ChoiceCards = controler.GetDataGame;
+           
         }
 
-        
         private void BackCarte_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -88,7 +90,7 @@ namespace CartGame
                 int count = ChoiceCards.UserColoda.Length;
                 for (int i = 0; i < count; i++)
                 {
-                    if (ChoiceCards.CarteFromUser[i] == 0)
+                    if (ChoiceCards.UserColoda[i] == 0)
                     { 
                         CarteSlot[i] = Carte.GetCarte(id).ImageCartNormal();//необходимо получить id для получения копии карты
                         AllBusy = false;
@@ -290,7 +292,9 @@ namespace CartGame
             int count = ChoiceCards.UserColoda.Length;
             for (int i = 0; i < count; i++)
             {
-                CarteSlot.Add(CreateEmptyCarte());
+                if (ChoiceCards.UserColoda[i] == 0)
+                    CarteSlot.Add(CreateEmptyCarte());
+                else CarteSlot.Add(Carte.GetCarte(ChoiceCards.UserColoda[i]).ImageCartNormal());
                 
             }
             PaintUserCarte();//отрисовываем
@@ -403,15 +407,15 @@ namespace CartGame
                 //закрываем поток обработки файла
                 StreamRead.Close();
                 StreamInfo.Close();
-               
-                //подключаемся к серверу
-                buttonStartSeek.Enabled = false;
-                controler.SucConnect += SuccessConnect;
-                controler.Start(IPAddress.Parse(Data[0]), int.Parse(Data[1]), Data[2]);
-                
-               
-                   
-              
+                if (Data != null)
+                {
+                    //подключаемся к серверу
+                    buttonStartSeek.Enabled = false;
+                    controler.SucConnect += SuccessConnect;
+                    controler.Start(IPAddress.Parse(Data[0]), int.Parse(Data[1]), Data[2]);
+                }
+                else throw new DirectoryNotFoundException();
+
             }
 
             catch (FormatException)
@@ -435,7 +439,7 @@ namespace CartGame
             }
             catch (Exception E)
             {
-                MessageBox.Show(E.Message);
+                MessageBox.Show(E.ToString());
             }
         }
         public void buttonEnabled()
@@ -448,10 +452,24 @@ namespace CartGame
             
             //отвязываем этот обработчик
             sender.SucConnect -= SuccessConnect;
-            SeekForm NewForm = new SeekForm(this, sender);
-            this.Hide();
+            SeekForm NewForm = new SeekForm(sender);
+            OpenSeekForm = false;
+            this.Close();
             NewForm.Show();
         }
 
+        private void ChoiceForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+
+           if(OpenSeekForm) Application.Exit();
+
+        }
+
+        private void настройкиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+   
+            Settings NewForm = new Settings(this);
+            NewForm.ShowDialog();
+        }
     }
 }

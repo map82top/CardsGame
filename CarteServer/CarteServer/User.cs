@@ -12,8 +12,8 @@ namespace CarteServer
 {
     delegate void EmptyDel();//делегат для функций без аргументов
     delegate void CardOnField(User sender,int numberCard, int idCards);
-    delegate void AttackDelegate(User sender, int attacking, int attacked); 
-                                  
+    delegate void AttackDelegate(User sender, int attacking, int attacked);
+    delegate void ErrorSend(User user);                            
     class User
     {
         private string name = null;
@@ -31,7 +31,10 @@ namespace CarteServer
         private Thread UserThread;//поток обрабатывающий сообщиеня от клиента
         private NetworkStream TcpStream;
         private bool myProgress;
+        private bool StopThread;
         public event AttackDelegate Attack;
+        public event ErrorSend FailedSendMsg;
+        public event EmptyDel GetOutOfQueue;
         public bool MyProgress
         {
             set { myProgress = value; }
@@ -82,6 +85,7 @@ namespace CarteServer
         public User()
         {
             UserTcpClient = null;
+
         }
 
         public User(TcpClient client)
@@ -93,112 +97,125 @@ namespace CarteServer
             UserThread = new Thread(RecMessage);
             UserThread.IsBackground = true;
             UserThread.Start();
+            StopThread = true;
         }
         //обрабатывает сообшения пользователя
         public void RecMessage()
         {
-            while (UserTcpClient.Connected)
+            try
             {
-                byte[] caption = new byte[3];
-                int CaptionBytes = RecData(caption, caption.Length, TcpStream);
-                MsgType? msgType = null;
-                if (CaptionBytes > 0)
+                while (StopThread && UserTcpClient.Connected)
                 {
-                    msgType = (MsgType)caption[0];
-                    short MsgLength = BitConverter.ToInt16(caption, 1);
-                    MsgLength = IPAddress.NetworkToHostOrder(MsgLength);//не работает
-                    if (MsgLength > 0)
+
+
+                    byte[] caption = new byte[3];
+                    int CaptionBytes = RecData(caption, caption.Length, TcpStream);
+                    MsgType? msgType = null;
+                    if (CaptionBytes > 0)
                     {
-                        byte[] Data = new byte[MsgLength];
-                        int ReadData = RecData(Data, MsgLength, TcpStream);
-                        if (ReadData > 0)
+                        msgType = (MsgType)caption[0];
+                        short MsgLength = BitConverter.ToInt16(caption, 1);
+                        MsgLength = IPAddress.NetworkToHostOrder(MsgLength);//не работает
+                        if (MsgLength > 0)
+                        {
+                            byte[] Data = new byte[MsgLength];
+                            int ReadData = RecData(Data, MsgLength, TcpStream);
+                            if (ReadData > 0)
+                            {
+                                switch (msgType)
+                                {
+                                    case MsgType.CarteUser:
+                                        if (MsgLength / 2 == 7)
+                                        {
+                                            int index = 0;
+                                            for (int i = 0; i < 7; i++)
+                                            {
+                                                carteUser[i] = (int)BitConverter.ToInt16(Data, index);
+
+                                                index += 2;
+                                            }
+
+                                            ColodRec();
+                                        }
+                                        break;
+
+                                    case MsgType.GetName:
+                                        name = Encoding.UTF8.GetString(Data);
+                                        Debug.Write(name);
+                                        //случайным образом определяем id пользователя
+                                        Random id = new Random();
+                                        idUser = id.Next(0, int.MaxValue);
+                                        NameRec();
+                                        break;
+
+                                    case MsgType.AddCarteOnField:
+                                        if (myProgress)
+                                        {
+                                            short value = BitConverter.ToInt16(Data, 0);
+                                            int NumberCarte = IPAddress.NetworkToHostOrder(value);
+
+                                            //получаем ID карты
+                                            int IDCarte = CardsOnHands[NumberCarte];
+                                            //получаем экземпляр этой карты
+                                            Carte NewCarte = Carte.GetCarte(IDCarte);
+                                            if (NewCarte is Robot)
+                                            {
+                                                Robot NewCarteRobot = (Robot)NewCarte;
+                                                //сравниваем цену с кол-во энергии
+                                                if (NewCarteRobot.ValueEnergy <= energy)
+                                                {
+                                                    energy -= NewCarteRobot.ValueEnergy;
+                                                    CardsOnHands.RemoveAt(NumberCarte);
+                                                    CardsOnMargin.Add(NewCarteRobot);
+                                                    AddCardField(this, NumberCarte, IDCarte);
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case MsgType.Attack:
+                                        if (myProgress)//если мой ход
+                                        {
+                                            short attacking = BitConverter.ToInt16(Data, 0);
+                                            short attacked = BitConverter.ToInt16(Data, 2);
+                                            if (attacking == -1)
+                                            {
+                                                if (userHq.AttackCount > 0)
+                                                    Attack(this, -1, attacked);
+
+
+                                            }
+                                            else
+                                            {
+                                                if (CardsOnMargin[attacking].AttackCount > 0)
+                                                    Attack(this, attacking, attacked);
+                                            }
+                                        }
+                                        break;
+
+                                }
+                            }
+                            //добавить иначе
+                        }
+                        else
                         {
                             switch (msgType)
                             {
-                                case MsgType.CarteUser:
-                                    if (MsgLength / 2 == 7)
-                                    {
-                                        int index = 0;
-                                        for (int i = 0; i < 7; i++)
-                                        {
-                                            carteUser[i] = (int)BitConverter.ToInt16(Data, index);
-
-                                            index += 2;
-                                        }
-
-                                        ColodRec();
-                                    }
+                                case MsgType.EndProgress:
+                                     EndProgress(); 
                                     break;
-
-                                case MsgType.GetName:
-                                    name = Encoding.UTF8.GetString(Data);
-                                    Debug.Write(name);
-                                    //случайным образом определяем id пользователя
-                                    Random id = new Random();
-                                    idUser = id.Next(0, int.MaxValue);
-                                    NameRec();
+                                case MsgType.DeliteSeek:
+                                    GetOutOfQueue();
                                     break;
-
-                                case MsgType.AddCarteOnField:
-                                    if (myProgress)
-                                    {
-                                        short value = BitConverter.ToInt16(Data, 0);
-                                        int NumberCarte = IPAddress.NetworkToHostOrder(value);
-
-                                        //получаем ID карты
-                                        int IDCarte = CardsOnHands[NumberCarte];
-                                        //получаем экземпляр этой карты
-                                        Carte NewCarte = Carte.GetCarte(IDCarte);
-                                        if (NewCarte is Robot)
-                                        {
-                                            Robot NewCarteRobot = (Robot)NewCarte;
-                                            //сравниваем цену с кол-во энергии
-                                            if (NewCarteRobot.ValueEnergy <= energy)
-                                            {
-                                                energy -= NewCarteRobot.ValueEnergy;
-                                                CardsOnHands.RemoveAt(NumberCarte);
-                                                CardsOnMargin.Add(NewCarteRobot);
-                                                AddCardField(this, NumberCarte, IDCarte);
-                                            }
-                                        }
-                                    }
+                                case MsgType.ClientClosing:
+                                    FailedSendMsg(this);
                                     break;
-                                case MsgType.Attack:
-                                    if (myProgress)//если мой ход
-                                    {
-                                        short attacking = BitConverter.ToInt16(Data, 0);
-                                        short attacked = BitConverter.ToInt16(Data, 2);
-                                        if (attacking == -1)
-                                        {
-                                            if (userHq.AttackCount > 0)
-                                                Attack(this, -1, attacked);
-
-
-                                        }
-                                        else
-                                        {
-                                            if (CardsOnMargin[attacking].AttackCount > 0)
-                                                Attack(this, attacking, attacked);
-                                        }
-                                    }
-                                    break;
-
                             }
                         }
-                        //добавить иначе
                     }
-                    else
-                    {
-                        switch (msgType)
-                        {
-                            case MsgType.EndProgress:
-                                EndProgress();
-                                break;
-                        }
-                        
-                    }
+                    Thread.Sleep(1);
                 }
             }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
         public void Initialize()
         {
@@ -214,15 +231,28 @@ namespace CarteServer
         }
         private int RecData(byte[] data, int length, NetworkStream stream)
         {
-            int ReadBytes = 0;
-            while (ReadBytes != length)
+            try
             {
-                int readed = stream.Read(data, 0, length - ReadBytes);
-                ReadBytes += readed;
-                if (readed == 0) return 0;
+                int ReadBytes = 0;
+                while (ReadBytes != length)
+                {
+                    int readed = stream.Read(data, 0, length - ReadBytes);
+                    ReadBytes += readed;
+                    if (readed == 0) return 0;
+                }
+                return ReadBytes;
             }
-            return ReadBytes;
-        }
+            catch (IOException e)
+            {
+                if (FailedSendMsg != null)
+                {
+                    FailedSendMsg(this);
+                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                }
+                return 0;
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); return 0; }
+            }
         public void Send(MsgType TypeMsg)
         {
             try
@@ -231,10 +261,18 @@ namespace CarteServer
                 length = IPAddress.HostToNetworkOrder(length);
 
                 TcpStream.Write(Summ((byte)TypeMsg, BitConverter.GetBytes(length)), 0, 3);
-                
+
             }
             //временно
-            catch (Exception e) { Console.WriteLine(e.Message); }
+            catch (IOException e)
+            {
+                if (FailedSendMsg != null)
+                {
+                    FailedSendMsg(this);
+                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
        
 
@@ -245,16 +283,24 @@ namespace CarteServer
                 int Length = 2;
                 short leng = IPAddress.HostToNetworkOrder((short)Length);
                 short Value = IPAddress.HostToNetworkOrder((short)number);
-                Debug.Write("Отправлено число " + Value);
+
                 byte[] head = Summ((byte)TypeMsg, BitConverter.GetBytes(leng));
-               
-                TcpStream.Write(SummNumber(head,BitConverter.GetBytes(Value)), 0, 5);
-                
+
+                TcpStream.Write(SummNumber(head, BitConverter.GetBytes(Value)), 0, 5);
+
 
             }
             //временно
-            catch (Exception e) { Console.WriteLine(e.Message); }
-        }
+            catch (IOException e)
+            {
+                if (FailedSendMsg != null)
+                {
+                    FailedSendMsg(this);
+                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            }
         private byte[] SummNumber(byte[] Head, byte[] Number)
         {
             byte[] temp = new byte[Head.Length + Number.Length];
@@ -278,7 +324,15 @@ namespace CarteServer
                 TcpStream.Write(data, 0, data.Length);
             }
             //временно
-            catch (Exception e) { Console.WriteLine(e.Message); }
+            catch (IOException e)
+            {
+                if (FailedSendMsg != null)
+                {
+                    FailedSendMsg(this);
+                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                }
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
         public void Send(int[] IDCarte, MsgType TypeMsg)
         {
@@ -304,11 +358,19 @@ namespace CarteServer
                     TcpStream.Write(data, 0, length);
 
                 }
-
-
             }
             //временно
-            catch (Exception e) { Console.WriteLine(e.Message); }
+            catch (IOException e)
+            {
+                if (FailedSendMsg != null)
+                {
+                    FailedSendMsg(this);
+                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                }
+            }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString());}
+            
         }
         private byte[] Summ(byte type, byte[] len)
         {
@@ -318,7 +380,44 @@ namespace CarteServer
             ret[2] = len[1];
             return ret;
         }
+        public void DisposeUserToSeek()
+        {
+            UserTcpClient.Close();
+            UserTcpClient = null;
+            TcpStream = null;
 
+            StopThread = false;
+            //запускаем поток обработки сообшений
+           
+        }
+        public void Dispose()
+        {
+          
+           
+            //закрываем соединение
+            UserTcpClient.Close();
+            UserTcpClient = null;
+            TcpStream = null;
+
+            StopThread = false;
+
+            name = null;
+            Attack = null;
+            carteUser = null;
+
+            CardsOnHands.Clear();
+            CardsOnHands = null;
+
+            CardsOnMargin.Clear();
+            CardsOnMargin = null;
+
+            userHq = null;
+            ColodRec = null;
+            NameRec = null;
+            EndProgress = null;
+            AddCardField = null;
+
+        }
 
     }
 }

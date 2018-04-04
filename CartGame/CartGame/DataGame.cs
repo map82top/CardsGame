@@ -26,6 +26,11 @@ namespace CartGame
         public string UsName
         {
             get { return name; }
+            set
+            {
+                if (name == null)
+                    name = value;
+            }
         }
         public string EnName
         {
@@ -116,6 +121,18 @@ namespace CartGame
             UserHq = new HeadQuarters();
             EnemyHq = new HeadQuarters();
           
+        }
+        public void Dispose()
+        {
+            enName = null;
+            if(usCarteOnField!=null) usCarteOnField.Clear();
+            usCarteOnField = null;
+            if(carteFromUser!=null) carteFromUser.Clear();
+            carteFromUser = null;
+            if (enCarteOnField != null)enCarteOnField.Clear();
+            enCarteOnField = null;
+            UserHq = null;
+            EnemyHq = null;
         }
     }
 }

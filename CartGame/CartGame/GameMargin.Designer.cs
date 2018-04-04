@@ -28,8 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.EnemyMargin = new System.Windows.Forms.Panel();
-            this.UserMargin = new System.Windows.Forms.Panel();
             this.UserHQPanel = new System.Windows.Forms.Panel();
             this.EnemyHQPanel = new System.Windows.Forms.Panel();
             this.MyCarte = new System.Windows.Forms.Panel();
@@ -41,23 +39,11 @@
             this.MyTime = new System.Windows.Forms.Label();
             this.MyEnergy = new System.Windows.Forms.Panel();
             this.EnemyEnergy = new System.Windows.Forms.Panel();
+            this.UserMargin = new System.Windows.Forms.Panel();
+            this.EnemyMargin = new System.Windows.Forms.Panel();
+            this.MyName = new System.Windows.Forms.Label();
+            this.EnemyName = new System.Windows.Forms.Label();
             this.SuspendLayout();
-            // 
-            // EnemyMargin
-            // 
-            this.EnemyMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.EnemyMargin.Location = new System.Drawing.Point(90, 196);
-            this.EnemyMargin.Name = "EnemyMargin";
-            this.EnemyMargin.Size = new System.Drawing.Size(827, 120);
-            this.EnemyMargin.TabIndex = 0;
-            // 
-            // UserMargin
-            // 
-            this.UserMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.UserMargin.Location = new System.Drawing.Point(90, 316);
-            this.UserMargin.Name = "UserMargin";
-            this.UserMargin.Size = new System.Drawing.Size(827, 120);
-            this.UserMargin.TabIndex = 1;
             // 
             // UserHQPanel
             // 
@@ -160,11 +146,49 @@
             this.EnemyEnergy.Size = new System.Drawing.Size(332, 28);
             this.EnemyEnergy.TabIndex = 13;
             // 
+            // UserMargin
+            // 
+            this.UserMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.UserMargin.Location = new System.Drawing.Point(90, 316);
+            this.UserMargin.Name = "UserMargin";
+            this.UserMargin.Size = new System.Drawing.Size(827, 120);
+            this.UserMargin.TabIndex = 1;
+            // 
+            // EnemyMargin
+            // 
+            this.EnemyMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.EnemyMargin.Location = new System.Drawing.Point(90, 196);
+            this.EnemyMargin.Name = "EnemyMargin";
+            this.EnemyMargin.Size = new System.Drawing.Size(827, 120);
+            this.EnemyMargin.TabIndex = 0;
+            // 
+            // MyName
+            // 
+            this.MyName.AutoSize = true;
+            this.MyName.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.MyName.Location = new System.Drawing.Point(54, 478);
+            this.MyName.Name = "MyName";
+            this.MyName.Size = new System.Drawing.Size(107, 25);
+            this.MyName.TabIndex = 14;
+            this.MyName.Text = "Мой ник: ";
+            // 
+            // EnemyName
+            // 
+            this.EnemyName.AutoSize = true;
+            this.EnemyName.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.EnemyName.Location = new System.Drawing.Point(54, 141);
+            this.EnemyName.Name = "EnemyName";
+            this.EnemyName.Size = new System.Drawing.Size(184, 25);
+            this.EnemyName.TabIndex = 15;
+            this.EnemyName.Text = "Ник противника: ";
+            // 
             // GameMargin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1074, 696);
+            this.Controls.Add(this.EnemyName);
+            this.Controls.Add(this.MyName);
             this.Controls.Add(this.EnemyEnergy);
             this.Controls.Add(this.MyEnergy);
             this.Controls.Add(this.EnemyHQPanel);
@@ -190,9 +214,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Panel EnemyMargin;
-        private System.Windows.Forms.Panel UserMargin;
         private System.Windows.Forms.Panel UserHQPanel;
         private System.Windows.Forms.Panel EnemyHQPanel;
         private System.Windows.Forms.Panel MyCarte;
@@ -204,5 +225,9 @@
         private System.Windows.Forms.Label MyTime;
         private System.Windows.Forms.Panel MyEnergy;
         private System.Windows.Forms.Panel EnemyEnergy;
+        private System.Windows.Forms.Panel UserMargin;
+        private System.Windows.Forms.Panel EnemyMargin;
+        private System.Windows.Forms.Label MyName;
+        private System.Windows.Forms.Label EnemyName;
     }
 }

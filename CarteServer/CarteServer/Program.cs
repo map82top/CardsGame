@@ -29,6 +29,7 @@ namespace CarteServer
                 {
                     //добавляем пользователя в сервер
                     NewServer.AddUser(new User(List.AcceptTcpClient()));
+                    Thread.Sleep(2);
 
                 }
             }

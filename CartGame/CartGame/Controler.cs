@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.IO;
 
 namespace CartGame
 {
@@ -17,6 +18,7 @@ namespace CartGame
     public delegate void MsgWithData(MsgType type, byte[] data);//делегат для сообщения с данными
     public delegate void StringDel(string data);
     public delegate void Attack(int attacking, int attacked);
+    public delegate void End(MsgType e);
    
 
    public class Controler
@@ -37,6 +39,9 @@ namespace CartGame
         public event EmptyDel EnemyProgress;
         public event Attack MyAttack;
         public event Attack EnAttack;
+        public event End EndGame;
+        public event EmptyDel DeliteSeek;
+        public event EmptyDel ErrorConnectToServer;
 
         private DataGame DataSession;
 
@@ -55,22 +60,34 @@ namespace CartGame
         {
             //инициализируем класс работы с сервером
             dialogWithServ = new SendAndRecMsg(IpAdress, Port);
-
-            //подписываемя на получение сообщений
             dialogWithServ.RecMsgWithoutData += ProcMsgWithoutData;
             dialogWithServ.RecMsgWithData += ProcMsgWithData;
-
-
+            DataSession.UsName = Name;
             dialogWithServ.Connect();
             if (dialogWithServ.Connected)
             {
                 DataSession.InicializeListCards();
                 SucConnect(this);
-                
+              
+                //подписываемя на получение сообщений
+              
+                dialogWithServ.ErrorConnectToServer += ErrorConnection;
             }
-            else FailConnect(this);
+            else
+            {
+                dialogWithServ.RecMsgWithoutData -= ProcMsgWithoutData;
+                dialogWithServ.RecMsgWithData -= ProcMsgWithData;
+                FailConnect(this);
+            }
 
 
+        }
+        private void ErrorConnection()
+        {
+            dialogWithServ.ErrorConnectToServer -= ErrorConnection;
+            ErrorConnectToServer();
+            //освобождаем ресурсы
+            this.Dispose();
         }
         private void ProcMsgWithoutData(MsgType type)
         {
@@ -93,9 +110,52 @@ namespace CartGame
                 case MsgType.EnemyProgress:
                     EnemyProgress();
                     break;
-                  
+                case MsgType.YouWin:
+                    EndGame(MsgType.YouWin);
+                    Dispose();
+                    break;
+                case MsgType.YouOver:
+                    EndGame(MsgType.YouOver);
+                    Dispose();
+                    break;
+                case MsgType.Draw:
+                    EndGame(MsgType.Draw);
+                    Dispose();
+                    break;
+                case MsgType.TechnicalVictory:
+                    EndGame(MsgType.TechnicalVictory);
+                    Dispose();
+                    break;
+                case MsgType.DeliteSeek:
+                    DeliteSeek();
+                    break;
+                
+
             }
         }
+        public void Dispose()
+        {
+            DataSession.Dispose();
+            dialogWithServ.Disconnect();
+             SucConnect = null;
+            FailConnect =null;
+            StartGame = null;
+            DeliteSeek = null;
+            EnAddCardOnField = null;
+            PaintUserCarte = null;
+            PaintEnemyCarte = null;
+            AddCardsOnField = null;
+            PaintMyEnergy = null;
+            PaintEnEnergy = null;
+            ErrorConnectToServer = null;
+            UpdateTime = null;
+            MyProgress = null;
+            EnemyProgress = null;
+            MyAttack = null;
+            EnAttack = null;
+            EndGame = null;
+
+    }
         private void ProcMsgWithData(MsgType type, byte[] data)
         {
             
@@ -103,7 +163,7 @@ namespace CartGame
             {
                 case MsgType.StartGame:
 
-                    DataSession.EnName = BitConverter.ToString(data);
+                    DataSession.EnName = Encoding.UTF8.GetString(data);
                     StartGame();
                     break;
 
@@ -111,7 +171,6 @@ namespace CartGame
 
                     short IdCarte = BitConverter.ToInt16(data,0);
                     IdCarte = IPAddress.NetworkToHostOrder(IdCarte);
-                    Debug.WriteLine("ИД карты" + IdCarte);
                     //добавляем карты в массив карт пользователя
                     DataSession.CarteFromUser.Add(IdCarte);
                     //перерисовываем все карты у пользователя
@@ -123,7 +182,6 @@ namespace CartGame
                     short MyMaxEnergy = BitConverter.ToInt16(data, 0);
                     MyMaxEnergy = IPAddress.NetworkToHostOrder(MyMaxEnergy);
                     DataSession.MyMaxEnergy = MyMaxEnergy;
-                    Debug.WriteLine("У меня макс энергии" + MyMaxEnergy);
                     //оповещяем о измении энергии
                     PaintMyEnergy();
                     break;
@@ -132,7 +190,6 @@ namespace CartGame
                     short MyEnergy = BitConverter.ToInt16(data, 0);
                     MyEnergy = IPAddress.NetworkToHostOrder(MyEnergy);
                     DataSession.MyEnergy = MyEnergy;
-                    Debug.WriteLine("У меня энергии" + MyEnergy);
                     //оповещяем о измении энергии
                     PaintMyEnergy();
                     break;
@@ -140,7 +197,6 @@ namespace CartGame
                 case MsgType.EnemyMaxEnergy:
                     short EnMaxEnergy = BitConverter.ToInt16(data, 0);
                     EnMaxEnergy = IPAddress.NetworkToHostOrder(EnMaxEnergy);
-                    Debug.WriteLine("Макс кол энергии у противника" + EnMaxEnergy);
                     DataSession.EnMaxEnergy = EnMaxEnergy;
                     //оповещяем о измении энергии
                     PaintEnEnergy();
@@ -149,7 +205,6 @@ namespace CartGame
                 case MsgType.EnemyEnergy:
                     short EnEnergy = BitConverter.ToInt16(data, 0);
                     EnEnergy = IPAddress.NetworkToHostOrder(EnEnergy);
-                    Debug.WriteLine("кол энергии у противника"+EnEnergy);
                     DataSession.EnEnergy = EnEnergy;
                     //оповещяем о измении энергии
                     PaintEnEnergy();
@@ -157,10 +212,10 @@ namespace CartGame
                 case MsgType.ProgressTime:
                     UpdateTime(Encoding.UTF8.GetString(data));
                     break;
+
                 case MsgType.AddCarteOnField:
                     short NumberCarte = BitConverter.ToInt16(data, 0);
                     NumberCarte = IPAddress.NetworkToHostOrder(NumberCarte);
-
                     //удаляем карту из массива id карт на руках у игрока
                     int IdCards = DataSession.CarteFromUser[NumberCarte];
                     DataSession.CarteFromUser.RemoveAt(NumberCarte);
@@ -168,12 +223,14 @@ namespace CartGame
                     DataSession.UsCarteOnField.Add((Robot)Carte.GetCarte(IdCards));
                     AddCardsOnField(NumberCarte);
                     break;
+
                 case MsgType.EnemyAddCarteOnField:
                     short EnIdCarte = BitConverter.ToInt16(data, 0);
                     EnIdCarte = IPAddress.NetworkToHostOrder(EnIdCarte);
                     DataSession.EnCarteOnField.Add((Robot)Carte.GetCarte(EnIdCarte));
                     EnAddCardOnField();
                     break;
+
                 case MsgType.MyAttackSucc:
                     short attacking = BitConverter.ToInt16(data, 0);
                     short attacked = BitConverter.ToInt16(data, 2);
@@ -276,19 +333,7 @@ namespace CartGame
         {
             get { return dialogWithServ; }
         }
-        public void Close()
-        {
-            dialogWithServ.Disconnect();
-
-           
-
-            //отвязываем все события
-            SucConnect = null;
-            FailConnect = null;
-            StartGame = null;
-                  
-            
-    }
+       
     }
    public class SendAndRecMsg
     {
@@ -296,10 +341,12 @@ namespace CartGame
         IPEndPoint EndPoint;
         NetworkStream ClientNetwork;
         private Thread ThProcesMsg;
+        private bool StopThread; 
         
         //события получения сообщения
         public event MsgWithoutData RecMsgWithoutData;
         public event MsgWithData RecMsgWithData;
+        public event EmptyDel ErrorConnectToServer;
         public bool Connected
         {
             get { return Client.Connected;}
@@ -314,20 +361,30 @@ namespace CartGame
 
         public void Connect()
         {
+            try
+            {
                 if (!Client.Connected)
                 {
                     Client.Connect(EndPoint);
                     ClientNetwork = Client.GetStream();
-                     ThProcesMsg = new Thread(ProcessMsg);
+                    StopThread = true;
+                    ThProcesMsg = new Thread(ProcessMsg);
                     ThProcesMsg.Start();
                 }
+            }
+            catch (SocketException e) {
+                Client.Close();
+                EndPoint = null;
+                throw e;
+            }
+            
         }
 
             private void ProcessMsg()
             {
             try
             {
-                while (Client.Connected)
+                while (StopThread && Client.Connected)
                 {
                     byte[] caption = new byte[3];
                     int CaptionBytes = RecData(caption, caption.Length, ClientNetwork);
@@ -339,9 +396,8 @@ namespace CartGame
                         MsgLength = IPAddress.NetworkToHostOrder(MsgLength);
                         if (MsgLength == 0)
                         {
-
                             RecMsgWithoutData(msgType);
-                            
+                            Debug.WriteLine(msgType.ToString());
                         }
                         else
                         {
@@ -351,34 +407,51 @@ namespace CartGame
                             {
 
                                 RecMsgWithData(msgType, Data);
-                                
+
                             }
                         }
                     }
                     Thread.Sleep(1);
+
                 }
+
             }
+            
             catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
-            }
+            { MessageBox.Show(e.ToString()); }
+        }
         private int RecData(byte[] data, int length, NetworkStream stream)
         {
-            int ReadBytes = 0;
-            while (ReadBytes != length)
+            try
             {
-                int readed = stream.Read(data, 0, length - ReadBytes);
-                ReadBytes += readed;
-                if (readed == 0) return 0;
+                int ReadBytes = 0;
+                while (ReadBytes != length)
+                {
+                    int readed = stream.Read(data, 0, length - ReadBytes);
+                    ReadBytes += readed;
+                    if (readed == 0) return 0;
+                }
+                return ReadBytes;
             }
-            return ReadBytes;
+            catch (IOException e)
+            {
+                ErrorConnectToServer();
+                MessageBox.Show("Связь с сервером потеряна!");
+                return 0;
+            }
+            catch (Exception e)
+            { MessageBox.Show(e.ToString()); return 0; }
         }
 
         public void Disconnect()
-        {
+        { 
+
+               StopThread = false;
                Client.Close();
-               ThProcesMsg.Abort();
+              Client = null;
+              ClientNetwork = null;
+               
+               
         }
         public void Send(MsgType TypeMsg)
         {
@@ -392,13 +465,20 @@ namespace CartGame
 
             }
             //временно
-            catch (Exception e) { MessageBox.Show(e.Message); }
+            catch (IOException e)
+            {
+                ErrorConnectToServer();
+                MessageBox.Show("Связь с сервером потеряна!");
+            }
+            catch (Exception e)
+            { MessageBox.Show(e.ToString()); }
         }
 
         public void Send(int[] IDCarte, MsgType TypeMsg)
         {
             try
             {
+             
                 int Length = IDCarte.Length;
                 if (Length < 500)
                 {
@@ -420,10 +500,15 @@ namespace CartGame
 
                 }
 
-
-            }
+             }
             //временно
-            catch (Exception e) { MessageBox.Show(e.Message); }
+            catch (IOException e)
+            {
+                ErrorConnectToServer();
+                MessageBox.Show("Связь с сервером потеряна!");
+            }
+            catch (Exception e)
+            { MessageBox.Show(e.ToString()); }
         }
         public void Send(string message, MsgType TypeMsg)
         {
@@ -439,7 +524,13 @@ namespace CartGame
                 ClientNetwork.Write(data, 0, data.Length);
             }
             //временно
-            catch (Exception e) { MessageBox.Show(e.Message); }
+            catch (IOException e)
+            {
+                ErrorConnectToServer();
+                MessageBox.Show("Связь с сервером потеряна!");
+            }
+            catch (Exception e)
+            { MessageBox.Show(e.ToString()); }
         }
         public void Send(int number, MsgType TypeMsg)
         {
@@ -448,14 +539,20 @@ namespace CartGame
                 int Length = 2;
                 short leng = IPAddress.HostToNetworkOrder((short)Length);
                 short Value = IPAddress.HostToNetworkOrder((short)number);
-                Debug.Write("Отправлено число " + Value);
+               // Debug.Write("Отправлено число " + Value);
                 byte[] head = Summ((byte)TypeMsg, BitConverter.GetBytes(leng));
 
                 ClientNetwork.Write(SummNumber(head, BitConverter.GetBytes(Value)), 0, 5);
 
             }
             //временно
-            catch (Exception e) { MessageBox.Show(e.Message); }
+            catch (IOException e)
+            {
+                ErrorConnectToServer();
+                MessageBox.Show("Связь с сервером потеряна!");
+            }
+            catch (Exception e)
+            { MessageBox.Show(e.ToString()); }
         }
         private byte[] SummNumber(byte[] Head, byte[] Number)
         {
