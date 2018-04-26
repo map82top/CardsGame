@@ -27,7 +27,7 @@ namespace CartGame
         private List<Panel> UserCards;//карты в руке и игрока
         private List<Panel> UserCardsOfMargin;//изображения карт на поле
         private List<Panel> EnemyCardsOfMargin;//изображения вражеских карт на поле
-       
+        private Panel DamageEnemy, DamageUser;//изображение урона по игроку и его противнику
       
         //сообщает о ходе начале хода игрока
         private Label NotificLabel;
@@ -478,12 +478,12 @@ namespace CartGame
          
         }
 
-        private void MyAttackVisual(int attacking, int attacked)
+        private void MyAttackVisual(int attacking, int attacked, int damageUser, int damageEnemy)
         {
             try
             {
-                
-                    
+                AnimationDamage(attacking, attacked, damageUser, damageEnemy); 
+
                     if (attacking == -1)
                     {
                         //добавляем изображение штаба после атаки
@@ -511,12 +511,121 @@ namespace CartGame
             catch (Exception e)
             { MessageBox.Show(e.ToString()); }
         }
-        private void EnAttackVisual(int attacking, int attacked)
+        private void AnimationDamage(Panel MoveEnemyPanel, int attacked, int damageUser, int damageEnemy)
+        {
+            Point damageLoc;
+            if (attacked == -1)
+            {
+                damageLoc = new Point();
+                damageLoc.X = UserHQPanel.Location.X + 15;
+                damageLoc.Y = UserHQPanel.Location.Y + 15;
+            }
+            else
+            {
+                damageLoc = new Point();
+                damageLoc.X = UserMargin.Location.X + UserMargin.Controls[attacked].Location.X + 15;
+                damageLoc.Y = UserMargin.Location.Y + UserMargin.Controls[attacked].Location.Y + 15;
+            }
+            DamageUser = CreateDamagePanel(damageUser);
+            DamageUser.Location = damageLoc;
+            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); });
+
+
+
+            
+                damageLoc = new Point();
+                damageLoc.X = MoveEnemyPanel.Location.X + 15;
+                damageLoc.Y = MoveEnemyPanel.Location.Y + 15;
+           
+              
+            DamageEnemy = CreateDamagePanel(damageEnemy);
+            DamageEnemy.Location = damageLoc;
+            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageEnemy); DamageEnemy.BringToFront(); });
+
+            System.Timers.Timer timerPaint = new System.Timers.Timer();
+            timerPaint.Interval = 1500;
+            timerPaint.Elapsed += Elapsed_TimerPaint;
+            timerPaint.Start();
+        }
+        private void AnimationDamage( int attacking, int attacked, int damageUser, int damageEnemy)
+        {
+            Point damageLoc;
+            if (attacking == -1)
+            {
+                damageLoc = new Point();
+                damageLoc.X = UserHQPanel.Location.X + 15;
+                damageLoc.Y = UserHQPanel.Location.Y + 15;        
+            }
+            else
+            {
+                damageLoc = new Point();
+                damageLoc.X = UserMargin.Location.X + UserMargin.Controls[attacking].Location.X + 15;
+                damageLoc.Y = UserMargin.Location.Y + UserMargin.Controls[attacking].Location.Y + 15;
+            }
+             DamageUser = CreateDamagePanel(damageUser);
+            DamageUser.Location = damageLoc;
+            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); }); 
+            
+
+            
+            if (attacked == -1)
+            {
+                damageLoc = new Point();
+                damageLoc.X = EnemyHQPanel.Location.X + 15;
+                damageLoc.Y = EnemyHQPanel.Location.Y + 15;
+            }
+            else
+            {
+                damageLoc = new Point();
+                damageLoc.X = EnemyMargin.Location.X + EnemyMargin.Controls[attacked].Location.X + 15;
+                damageLoc.Y = EnemyMargin.Location.Y + EnemyMargin.Controls[attacked].Location.Y + 15;
+            }
+            DamageEnemy = CreateDamagePanel(damageEnemy);
+            DamageEnemy.Location = damageLoc;
+            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageEnemy); DamageEnemy.BringToFront(); });
+            
+            System.Timers.Timer timerPaint = new System.Timers.Timer();
+            timerPaint.Interval = 1500;
+            timerPaint.Elapsed += Elapsed_TimerPaint;
+            timerPaint.Start();
+        }
+        private void Elapsed_TimerPaint(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            System.Timers.Timer tempe = (System.Timers.Timer)sender;
+            tempe.Stop();
+            tempe.Dispose();
+            int count = this.Controls.Count;
+            this.Invoke((MethodInvoker)delegate
+            {
+                this.Controls.Remove(DamageEnemy);
+                DamageEnemy = null;
+                this.Controls.Remove(DamageUser);
+                DamageUser = null;
+            });
+           
+        }
+        private Panel CreateDamagePanel(int damage)
+        {
+            Panel damagePanel = new Panel();
+            damagePanel.Size = new Size(60, 65);
+            damagePanel.BackgroundImage = Properties.Resources.damage;
+            damagePanel.BackgroundImageLayout = ImageLayout.Zoom;
+
+            Label ValueDamage = new Label();
+            ValueDamage.Text = "-" + damage;
+            ValueDamage.Font = new Font("Arial", 17);
+            ValueDamage.Location = new Point(11,18);
+            ValueDamage.Size = new Size(36, 30);
+            damagePanel.Controls.Add(ValueDamage);
+            return damagePanel;
+        }
+
+        private void EnAttackVisual(int attacking, int attacked, int damageUser, int damageEnemy)
         {
             try
             {
                                 
-                    AnimationEnemyAttack(attacking, attacked);
+                    AnimationEnemyAttack(attacking, attacked, damageUser, damageEnemy);
                     if (attacking == -1)
                     {
                         //добавляем изображение штаба после атаки
@@ -768,8 +877,11 @@ namespace CartGame
                     NotificLabel.Text = "Вы проиграли!!!";
                 if (e == MsgType.Draw)
                     NotificLabel.Text = "Ничья!!!";
-               
-                NotificLabel.Size = new Size(376, 55);
+                if (e == MsgType.EnemyNoActiv)
+                {
+                    NotificLabel.Text = "Противник неактивен!";
+                }
+                    NotificLabel.Size = new Size(376, 55);
                 NotificLabel.Visible = true;
                 NotificLabel.Location = new Point(334, 235);
                 Button Close = new Button();
@@ -788,9 +900,19 @@ namespace CartGame
                     NotificLabel.Location = new Point(250, 235);
                     
                 }
-                    
-
-               
+                       
+                if(e == MsgType.YouNoActiv)
+                {
+                    NotificLabel.Text = "Вы долго были неактивны!";
+                    NotificLabel.Size = new Size(600, 55);
+                    NotificLabel.Location = new Point(250, 235);
+                }
+                if (e == MsgType.EnemyNoActiv)
+                {
+                    NotificLabel.Text = "Противник неактивен!";
+                    NotificLabel.Size = new Size(600, 55);
+                    NotificLabel.Location = new Point(250, 235);
+                }
 
             });
             
@@ -814,7 +936,7 @@ namespace CartGame
             
 
         }
-        private void AnimationEnemyAttack(int attacking, int attacked)
+        private void AnimationEnemyAttack(int attacking, int attacked, int damageUser, int damageEnemy)
         {
 
             try
@@ -926,7 +1048,9 @@ namespace CartGame
                     Thread.Sleep(1);
 
                 }
+                AnimationDamage(ImageCarte, attacked, damageUser, damageEnemy);
                 Thread.Sleep(100);
+
                 //возваращаем карту обратно
                 for (int i = 0; i < TimeAnimaton; i++)
                 {
@@ -936,7 +1060,6 @@ namespace CartGame
                         if (i % SmallTime == 0) StartPoint.Y -= dy;
                         if (i % BigTime == 0) StartPoint.Y -= dy;
 
-
                     }
                     else
                     {
@@ -945,7 +1068,9 @@ namespace CartGame
                         if (i % BigTime == 0) StartPoint.X -= dx;
 
                     }
-                    this.Invoke((MethodInvoker)delegate { ImageCarte.Location = StartPoint; });
+                    this.Invoke((MethodInvoker)delegate { ImageCarte.Location = StartPoint;
+                        DamageEnemy.Location = new Point(StartPoint.X + 15, StartPoint.Y + 15);
+                    });
                     Thread.Sleep(1);
                 }
                 //возвращаем карты обартно
@@ -1062,9 +1187,7 @@ namespace CartGame
                 });
 
             }
-           
-            
-           
+          
         }
 
         private void StepEnd_Click(object sender, EventArgs e)

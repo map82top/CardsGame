@@ -65,7 +65,12 @@ namespace CarteServer
             get { return CardsOnHands; }
            // set { CardsOnHands = value; }
         }
-
+        private bool userNoProgress;
+        public bool UserNoProgress
+        {
+            get { return userNoProgress; }
+            set { userNoProgress = value; }
+        }
         private List<Robot> CardsOnMargin;//карты на поле
         public List<Robot> CardsMargin
         {
@@ -98,6 +103,7 @@ namespace CarteServer
             UserThread.IsBackground = true;
             UserThread.Start();
             StopThread = true;
+            userNoProgress = false;
         }
         //обрабатывает сообшения пользователя
         public void RecMessage()
@@ -107,7 +113,7 @@ namespace CarteServer
                 while (StopThread && UserTcpClient.Connected)
                 {
 
-
+                    
                     byte[] caption = new byte[3];
                     int CaptionBytes = RecData(caption, caption.Length, TcpStream);
                     MsgType? msgType = null;

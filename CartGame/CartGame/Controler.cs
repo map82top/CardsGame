@@ -17,7 +17,7 @@ namespace CartGame
     public delegate void MsgWithoutData(MsgType type);//делегат для сообщения без данных
     public delegate void MsgWithData(MsgType type, byte[] data);//делегат для сообщения с данными
     public delegate void StringDel(string data);
-    public delegate void Attack(int attacking, int attacked);
+    public delegate void Attack(int attacking, int attacked, int damageUser,int damageEnemy);
     public delegate void End(MsgType e);
    
 
@@ -129,7 +129,15 @@ namespace CartGame
                 case MsgType.DeliteSeek:
                     DeliteSeek();
                     break;
-                
+                case MsgType.EnemyNoActiv:
+                    EndGame(MsgType.EnemyNoActiv);
+                    Dispose();
+                    break;
+                case MsgType.YouNoActiv:
+                    EndGame(MsgType.YouNoActiv);
+                    Dispose();
+                    break;
+
 
             }
         }
@@ -234,17 +242,19 @@ namespace CartGame
                 case MsgType.MyAttackSucc:
                     short attacking = BitConverter.ToInt16(data, 0);
                     short attacked = BitConverter.ToInt16(data, 2);
+                    short damageUser = BitConverter.ToInt16(data, 4);
+                    short damageEnemy = BitConverter.ToInt16(data, 6);
                     if (attacking == -1)
                     {
                         if (attacked == -1)
                         {
-                            DataSession.EnemyHQ.Armor -= DataSession.UserHQ.Attack;
-                            DataSession.UserHQ.Armor -= DataSession.EnemyHQ.Attack;
+                            DataSession.EnemyHQ.Armor -= damageEnemy;
+                            DataSession.UserHQ.Armor -= damageUser;
                         }
                         else
                         {
-                            DataSession.EnCarteOnField[attacked].Armor -= DataSession.UserHQ.Attack;
-                            DataSession.UserHQ.Armor -= DataSession.EnCarteOnField[attacked].Attack;
+                            DataSession.EnCarteOnField[attacked].Armor -= damageEnemy;
+                            DataSession.UserHQ.Armor -= damageUser;
                             if (DataSession.EnCarteOnField[attacked].Armor <= 0)
                                 //удаляем карту
                                 DataSession.EnCarteOnField.RemoveAt(attacked);
@@ -255,8 +265,8 @@ namespace CartGame
                     {
                         if (attacked == -1)
                         {
-                            DataSession.UsCarteOnField[attacking].Armor -= DataSession.EnemyHQ.Attack;
-                            DataSession.EnemyHQ.Armor -= DataSession.UsCarteOnField[attacking].Attack;
+                            DataSession.UsCarteOnField[attacking].Armor -= damageUser;
+                            DataSession.EnemyHQ.Armor -= damageEnemy;
                             if (DataSession.UsCarteOnField[attacking].Armor <= 0)
                                 //удаляем карту
                                 DataSession.UsCarteOnField.RemoveAt(attacking);
@@ -264,8 +274,8 @@ namespace CartGame
                         }
                         else
                         {
-                            DataSession.UsCarteOnField[attacking].Armor -= DataSession.EnCarteOnField[attacked].Attack;
-                            DataSession.EnCarteOnField[attacked].Armor -= DataSession.UsCarteOnField[attacking].Attack;
+                            DataSession.UsCarteOnField[attacking].Armor -= damageUser;
+                            DataSession.EnCarteOnField[attacked].Armor -= damageEnemy;
                             //удаляем карты у которых очки прочности меньше 0
                             if (DataSession.UsCarteOnField[attacking].Armor <= 0)
                                 DataSession.UsCarteOnField.RemoveAt(attacking);
@@ -276,24 +286,26 @@ namespace CartGame
                         }
                     }
                     //оповещаем об атаке
-                    MyAttack(attacking, attacked);               
+                    MyAttack(attacking, attacked,damageUser, damageEnemy);               
                         break;
                 case MsgType.EnAttackSucc:
                     short Attacking = BitConverter.ToInt16(data, 0);
                     short Attacked = BitConverter.ToInt16(data, 2);
+                    short DamageUser = BitConverter.ToInt16(data, 4);
+                    short DamageEnemy = BitConverter.ToInt16(data, 6);
                     if (Attacking == -1)
                     {
                         if (Attacked == -1)
                         {
-                            DataSession.EnemyHQ.Armor -= DataSession.UserHQ.Attack;
-                            DataSession.UserHQ.Armor -= DataSession.EnemyHQ.Attack;
+                            DataSession.EnemyHQ.Armor -= DamageEnemy;
+                            DataSession.UserHQ.Armor -= DamageUser;
                             //оповещаем об атаке
                             
                         }
                         else
                         {
-                            DataSession.UsCarteOnField[Attacked].Armor -= DataSession.EnemyHQ.Attack;
-                            DataSession.EnemyHQ.Armor -= DataSession.UsCarteOnField[Attacked].Attack;
+                            DataSession.UsCarteOnField[Attacked].Armor -= DamageUser;
+                            DataSession.EnemyHQ.Armor -= DamageEnemy;
                             if (DataSession.UsCarteOnField[Attacked].Armor <= 0)
                             {
                                 //удаляем карту
@@ -305,15 +317,15 @@ namespace CartGame
                     {
                         if (Attacked == -1)
                         {
-                            DataSession.EnCarteOnField[Attacking].Armor -= DataSession.UserHQ.Attack;
-                            DataSession.UserHQ.Armor -= DataSession.EnCarteOnField[Attacking].Attack;
+                            DataSession.EnCarteOnField[Attacking].Armor -= DamageEnemy;
+                            DataSession.UserHQ.Armor -= DamageUser;
                             if (DataSession.EnCarteOnField[Attacking].Armor <= 0)
                                 DataSession.EnCarteOnField.RemoveAt(Attacking);
                         }
                         else
                         {
-                            DataSession.EnCarteOnField[Attacking].Armor -= DataSession.UsCarteOnField[Attacked].Attack;
-                            DataSession.UsCarteOnField[Attacked].Armor -= DataSession.EnCarteOnField[Attacking].Attack;
+                            DataSession.EnCarteOnField[Attacking].Armor -= DamageEnemy;
+                            DataSession.UsCarteOnField[Attacked].Armor -= DamageUser;
                             //удаляем уничтоженные карты
                             if (DataSession.EnCarteOnField[Attacking].Armor <= 0)
                                 DataSession.EnCarteOnField.RemoveAt(Attacking);
@@ -325,7 +337,7 @@ namespace CartGame
 
                    }
                     //оповещаем об атаке
-                    EnAttack(Attacking, Attacked);
+                    EnAttack(Attacking, Attacked, DamageUser, DamageEnemy);
                     break;
             }
         }

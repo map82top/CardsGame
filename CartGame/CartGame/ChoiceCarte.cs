@@ -25,7 +25,7 @@ namespace CartGame
         bool OpenSeekForm = true;
         Controler controler;
         DataGame ChoiceCards;
-        FormStart BackForm;
+       
         
         public ChoiceForm( Controler controler)
         {

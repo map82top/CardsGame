@@ -71,6 +71,16 @@ namespace CartGame.Properties {
         }
         
         /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap damage {
+            get {
+                object obj = ResourceManager.GetObject("damage", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Пока на поле боя он не один, получает дополнительный бонус к защите.
         /// </summary>
         internal static string DescrDuelist {

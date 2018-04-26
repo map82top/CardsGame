@@ -38,7 +38,9 @@ namespace CarteServer
         YouOver, 
         Draw,
         TechnicalVictory,
-        ClientClosing
+        ClientClosing,
+        EnemyNoActiv,
+        YouNoActiv
 
 
 
@@ -119,6 +121,28 @@ namespace CarteServer
                 Us2.Send(MsgType.TechnicalVictory);
             else
                 Us1.Send(MsgType.TechnicalVictory);
+            //завершаем сессию
+            Dispose();
+
+        }
+        private void DisconnectClient()
+        {
+            //отвязваемся от игроков, чтобы этот метод не был запущен вторично
+            Us1.FailedSendMsg -= DisconnectClient;
+            Us2.FailedSendMsg -= DisconnectClient;
+
+            //отправляем сообщение о победе противоположному игроку 
+            if (UsProgress == Us1)
+            {
+                Us1.Send(MsgType.YouNoActiv);
+                Us2.Send(MsgType.EnemyNoActiv);
+            }
+            else
+            {
+                Us2.Send(MsgType.YouNoActiv);
+                Us1.Send(MsgType.EnemyNoActiv);
+            }
+              
             //завершаем сессию
             Dispose();
 
@@ -221,8 +245,20 @@ namespace CarteServer
                 }
                 else
                 {
-                    TempProgress.Stop();
-                    NewProgress();
+                    if (!UsProgress.UserNoProgress)
+                    {
+                      
+                        TempProgress.Stop();
+                        UsProgress.UserNoProgress = true;
+                        NewProgress();
+                       
+                    }
+                    else
+                    {
+                        DisconnectClient();
+                       
+                    }
+                   
                 }
             }
             catch (Exception E)
@@ -234,6 +270,7 @@ namespace CarteServer
         {
             try
             {
+                int damageEnemy = 0, damageUser = 0;
                 if (sender == Us1)
                 {
                     if (attacking == -1)
@@ -241,15 +278,19 @@ namespace CarteServer
                         if (attacked == -1)
                         {
                             //урон по противнику
-                            Us2.userHQ.Armor -= Us1.userHQ.Attack;
+                            damageEnemy = Us1.userHQ.Attack;
+                            Us2.userHQ.Armor -= damageUser;
                             //урон от противника
-                            Us1.userHQ.Armor -= Us2.userHQ.Attack;
-
+                             damageUser = Us2.userHQ.Attack;
+                            Us1.userHQ.Armor -= damageUser;
                         }
                         else
                         {
-                            Us2.CardsMargin[attacked].Armor -= Us1.userHQ.Attack;
-                            Us1.userHQ.Armor -= Us2.CardsMargin[attacked].Attack;
+
+                             damageEnemy = Us1.userHQ.Attack;
+                            Us2.CardsMargin[attacked].Armor -= damageEnemy;
+                            damageUser = Us2.CardsMargin[attacked].Attack;
+                            Us1.userHQ.Armor -= damageUser;
                             //если очков прочности меньше 0 удаляем карту
                             if (Us2.CardsMargin[attacked].Armor <= 0)
                             {
@@ -261,8 +302,10 @@ namespace CarteServer
                     {
                         if (attacked == -1)
                         {
-                            Us1.CardsMargin[attacking].Armor -= Us2.userHQ.Attack;
-                            Us2.userHQ.Armor -= Us1.CardsMargin[attacking].Attack;
+                            damageEnemy = Us1.CardsMargin[attacking].Attack;
+                            Us2.userHQ.Armor -= damageEnemy;
+                            damageUser = Us2.userHQ.Attack;
+                            Us1.CardsMargin[attacking].Armor -= damageUser;
                             //если очков прочности меньше 0 удаляем карту
                             if (Us1.CardsMargin[attacking].Armor <= 0)
                             {
@@ -272,8 +315,10 @@ namespace CarteServer
                         else
                         {
                             //карты атакуют друг друга
-                            Us1.CardsMargin[attacking].Armor -= Us2.CardsMargin[attacked].Attack;
-                            Us2.CardsMargin[attacked].Armor -= Us1.CardsMargin[attacking].Attack;
+                            damageEnemy = Us1.CardsMargin[attacking].Attack;
+                            Us2.CardsMargin[attacked].Armor -= damageEnemy;
+                            damageUser = Us2.CardsMargin[attacked].Attack;
+                            Us1.CardsMargin[attacking].Armor -= damageUser;
                             //если их очки прочности меньше 0, то удаляем их
                             if (Us1.CardsMargin[attacking].Armor <= 0)
                                 Us1.CardsMargin.RemoveAt(attacking);
@@ -284,8 +329,8 @@ namespace CarteServer
                     }
 
                     //отправляем о сообщение об удачной атаке
-                    Us1.Send(new int[] { attacking, attacked }, MsgType.MyAttackSucc);
-                    Us2.Send(new int[] { attacking, attacked }, MsgType.EnAttackSucc);
+                    Us1.Send(new int[] { attacking, attacked, damageUser, damageEnemy }, MsgType.MyAttackSucc);
+                    Us2.Send(new int[] { attacking, attacked, damageEnemy, damageUser }, MsgType.EnAttackSucc);
                 }
                 else//если пользователь Us2
                 {
@@ -294,17 +339,22 @@ namespace CarteServer
                         if (attacked == -1)
                         {
                             //урон по противнику
-                            Us1.userHQ.Armor -= Us2.userHQ.Attack;
+                            damageEnemy = Us2.userHQ.Attack;
+                            Us1.userHQ.Armor -= damageUser;
                             //урон от противника
-                            Us2.userHQ.Armor -= Us1.userHQ.Attack;
-                            //отправляем о сообщение об удачной атаке
+                            damageUser = Us1.userHQ.Attack;
+                            Us2.userHQ.Armor -= damageUser;
+                         
+                         
 
                         }
                         else
                         {
 
-                            Us1.CardsMargin[attacked].Armor -= Us2.userHQ.Attack;
-                            Us2.userHQ.Armor -= Us1.CardsMargin[attacked].Attack;
+                            damageEnemy = Us2.userHQ.Attack;
+                            Us1.CardsMargin[attacked].Armor -= damageEnemy;
+                            damageUser = Us1.CardsMargin[attacked].Attack;
+                            Us2.userHQ.Armor -= damageUser;
                             //если очков прочности меньше 0 удаляем карту
                             if (Us1.CardsMargin[attacked].Armor <= 0)
                                 Us1.CardsMargin.RemoveAt(attacked);
@@ -315,8 +365,10 @@ namespace CarteServer
                     {
                         if (attacked == -1)
                         {
-                            Us2.CardsMargin[attacking].Armor -= Us1.userHQ.Attack;
-                            Us1.userHQ.Armor -= Us2.CardsMargin[attacking].Attack;
+                            damageEnemy = Us2.CardsMargin[attacking].Attack;
+                            Us1.userHQ.Armor -= damageEnemy;
+                            damageUser = Us1.userHQ.Attack;
+                            Us2.CardsMargin[attacking].Armor -= damageUser;
 
                             //если очков прочности меньше 0 удаляем карту
                             if (Us2.CardsMargin[attacking].Armor <= 0)
@@ -327,8 +379,10 @@ namespace CarteServer
                         else
                         {
                             //карты атакуют друг друга
-                            Us2.CardsMargin[attacking].Armor -= Us1.CardsMargin[attacked].Attack;
-                            Us1.CardsMargin[attacked].Armor -= Us2.CardsMargin[attacking].Attack;
+                            damageEnemy = Us2.CardsMargin[attacking].Attack;
+                            Us1.CardsMargin[attacked].Armor -= damageEnemy;
+                            damageUser = Us1.CardsMargin[attacked].Attack;
+                            Us2.CardsMargin[attacking].Armor -= damageUser;
                             //если очки прочности карты меньше 0, удаляем ее
                             if (Us2.CardsMargin[attacking].Armor <= 0)
                                 Us2.CardsMargin.RemoveAt(attacking);
@@ -336,8 +390,8 @@ namespace CarteServer
                                 Us1.CardsMargin.RemoveAt(attacked);
                         }
                     }
-                    Us2.Send(new int[] { attacking, attacked }, MsgType.MyAttackSucc);
-                    Us1.Send(new int[] { attacking, attacked }, MsgType.EnAttackSucc);
+                    Us2.Send(new int[] { attacking, attacked, damageUser,damageEnemy }, MsgType.MyAttackSucc);
+                    Us1.Send(new int[] { attacking, attacked,damageEnemy, damageUser }, MsgType.EnAttackSucc);
                 }
                 //проверяем на конец игры
                 if ((Us1.userHQ.Armor <= 0 && Us2.userHQ.Armor <= 0))
@@ -380,6 +434,11 @@ namespace CarteServer
         {
             try
             {
+                if (SecProgress > 0)
+                {
+
+                    UsProgress.UserNoProgress = false;
+                }
                 Random rand = new Random();
                 //обвновляем атаки карт
                 UsProgress.userHQ.NewProgress();

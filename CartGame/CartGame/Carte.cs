@@ -33,7 +33,9 @@ namespace CartGame
         YouOver,
         Draw,
         TechnicalVictory,
-        ClientClosing
+        ClientClosing,
+        EnemyNoActiv,
+        YouNoActiv
 
 
 
