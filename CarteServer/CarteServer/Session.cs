@@ -40,7 +40,10 @@ namespace CarteServer
         TechnicalVictory,
         ClientClosing,
         EnemyNoActiv,
-        YouNoActiv
+        YouNoActiv,
+        DamageEvent,
+        UserDamageEvent, 
+        EnemyDamageEvent
 
 
 
@@ -212,8 +215,13 @@ namespace CarteServer
                 {
                     Thread.Sleep(1);
                 }
+                //привязываем обработчик обработки атаки картой робота
                 Us1.Attack += AttackFunc;
                 Us2.Attack += AttackFunc;
+                //привязываем обработчик атаки картой-событием нанесения урона
+                Us1.DamageCardEvent += DamageEventFunc;
+                Us2.DamageCardEvent += DamageEventFunc;
+                //привязываем обработчик окночания хода игрока
                 Us1.EndProgress += NewProgress;
                 Us2.EndProgress += NewProgress;
                 //инициализируем таймер
@@ -264,7 +272,46 @@ namespace CarteServer
             catch (Exception E)
             { Console.WriteLine(E.ToString()); }
         }
+        private void DamageEventFunc(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked)
+        {
+            if (user == Us1)
+            {
+                if (attacked == -1)
+                {
+                    Us2.userHQ.Armor -= Card.Damage;
+                }
+                else
+                {
+                    Us2.CardsMargin[attacked].Armor -= Card.Damage;
+                    if(Us2.CardsMargin[attacked].Armor <= 0) Us2.CardsMargin.RemoveAt(attacked);
+                }
+                //отправляем о сообщение об удачной атаке
+                Us1.Send(Us1.Energy, MsgType.YourEnergy);
+                Us2.Send(Us1.Energy, MsgType.EnemyEnergy);
+                Us1.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
+                Us2.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
+            }
+            else if (user == Us2)
+            {
+                if (attacked == -1)
+                {
+                    Us1.userHQ.Armor -= Card.Damage;
 
+                }
+                else
+                {
+                    Us1.CardsMargin[attacked].Armor -= Card.Damage;
+                    if (Us1.CardsMargin[attacked].Armor <= 0) Us1.CardsMargin.RemoveAt(attacked);
+                }
+                //отправляем о сообщение об удачной атаке
+                Us2.Send(Us2.Energy, MsgType.YourEnergy);
+                Us1.Send(Us2.Energy, MsgType.EnemyEnergy);
+                Us2.Send(new int[] {attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
+                Us1.Send(new int[] {attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
+            }
+            //проверяем на уничтожение одного из штабов
+            TestEndGame();
+        }
         
         private void AttackFunc(User sender, int attacking, int attacked)
         {
@@ -393,29 +440,38 @@ namespace CarteServer
                     Us2.Send(new int[] { attacking, attacked, damageUser,damageEnemy }, MsgType.MyAttackSucc);
                     Us1.Send(new int[] { attacking, attacked,damageEnemy, damageUser }, MsgType.EnAttackSucc);
                 }
-                //проверяем на конец игры
-                if ((Us1.userHQ.Armor <= 0 && Us2.userHQ.Armor <= 0))
-                {
-                    Us1.Send(MsgType.Draw);
-                    Us2.Send(MsgType.Draw);
-                    return;
-                }
-                if (Us1.userHQ.Armor <= 0)
-                {
-                    Us1.Send(MsgType.YouOver);
-                    Us2.Send(MsgType.YouWin);
-                    return;
-                }
-                if (Us2.userHQ.Armor <= 0)
-                {
-                    Us2.Send(MsgType.YouOver);
-                    Us1.Send(MsgType.YouWin);
-                    return;
-                }
+                //проверяем на уничтожение одного из штабов
+                TestEndGame();
             }
             catch (Exception e)
             { Console.WriteLine(e.ToString()); }
         }
+        private void TestEndGame()
+        {
+            //проверяем на конец игры
+            if ((Us1.userHQ.Armor <= 0 && Us2.userHQ.Armor <= 0))
+            {
+                Us1.Send(MsgType.Draw);
+                Us2.Send(MsgType.Draw);
+                return;
+            }
+            if (Us1.userHQ.Armor <= 0)
+            {
+                Us1.Send(MsgType.YouOver);
+                Us2.Send(MsgType.YouWin);
+                return;
+            }
+            if (Us2.userHQ.Armor <= 0)
+            {
+                Us2.Send(MsgType.YouOver);
+                Us1.Send(MsgType.YouWin);
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Освобождает все ресурсы сессии
+        /// </summary>
         private void Dispose()
         {
             Us1.Dispose();
@@ -430,6 +486,10 @@ namespace CarteServer
             SessionEnd = null;
 
         }
+
+        /// <summary>
+        /// Управляет созданиием нового хода
+        /// </summary>
         private void NewProgress()
         {
             try
@@ -514,7 +574,7 @@ namespace CarteServer
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
-
+        
         private void LoadGame(object stateInfo)
         {
             try

@@ -154,4 +154,37 @@
   <data name="TestCart" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TestCart.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="AmbushFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AmbushFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AmbushNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AmbushNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DuelistFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DuelistFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DuelistNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DuelistNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EventCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EventCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RecruitFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RecruitFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RecruitNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RecruitNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RocketFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RocketFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RocketNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RocketNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VeteranFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\VeteranFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VeteranNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\VeteranNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

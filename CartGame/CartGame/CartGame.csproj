@@ -145,6 +145,42 @@
   <ItemGroup>
     <None Include="Resources\damage.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AmbushNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DuelistNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\VeteranNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RecruitFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DuelistFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\VeteranFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RecruitNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DamageCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EventCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AmbushFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RocketFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RocketNormalCard.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

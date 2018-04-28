@@ -22,9 +22,10 @@ namespace CartGame
         private SendAndRecMsg СomWithServer;
         private Controler ClientContr;
         private DataGame DataSession;
-        
+     
+
         private bool MouseState;//если true мышь перетаскивает карту
-        private List<Panel> UserCards;//карты в руке и игрока
+        private List<Panel> UserCards;//карты в руке игрока
         private List<Panel> UserCardsOfMargin;//изображения карт на поле
         private List<Panel> EnemyCardsOfMargin;//изображения вражеских карт на поле
         private Panel DamageEnemy, DamageUser;//изображение урона по игроку и его противнику
@@ -46,19 +47,20 @@ namespace CartGame
 
 
         }
+        /// <summary>
+        /// Обрабатывает события, когда противниик перетаскивает карты на игровое поле
+        /// </summary>
         private void EnemyAddCardsOnMyCarte()
         {
             this.Invoke((MethodInvoker)delegate
             {
-                lock (EnemyCarte)
-                {
                     if (EnemyCarte.Controls.Count > 0)
                     {
                         EnemyCarte.Controls.RemoveAt(0);
                         UpdateLocation_Cards(EnemyCarte, 70, 3);
                     }
 
-                }
+                
 
                 //добавляем карту на панель
 
@@ -72,7 +74,7 @@ namespace CartGame
                 EnemyCardsOfMargin.Add(temp);
 
                 EnemyMargin.Controls.Add(temp);
-                UpdateLocation_Cards(EnemyMargin, EnemyMargin.Controls[0].Width, 3);
+                UpdateLocation_Cards(EnemyMargin, 90, 3);
 
             });
         }
@@ -86,6 +88,12 @@ namespace CartGame
             Panel temp = (Panel)sender;
             temp.BorderStyle = BorderStyle.None;
         }
+
+        /// <summary>
+        /// Начинает перетаскивание карты, когда игрок зажимает кнопку мыши
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MyCarte_MouseDown(object sender, MouseEventArgs e)
         {
             lock (MyCarte)
@@ -99,6 +107,14 @@ namespace CartGame
                     {
                         if (MyCarte.Controls[NumberCarte] == temp) break;
                     }
+
+                    //если карта является наследником классса Event
+                    if (Carte.GetCarte(DataSession.CarteFromUser[NumberCarte]) is Event)
+                    {
+                        //привязываем к ней новый обработичик
+                        temp.MouseUp -= MyCarte_MouseUp;
+                        temp.MouseUp += EventCarte_MouseUp;
+                    }
                     //удаляем карту
                     MyCarte.Controls.RemoveAt(NumberCarte);
 
@@ -109,6 +125,104 @@ namespace CartGame
 
                 }
             }
+        }
+        /// <summary>
+        /// Проверяем, какая из карт противника была атакована
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <returns></returns>
+        private int Which_Сard_Is_Attacked(Panel temp)
+        {
+            //если мышка находится на поле вражеского штаба
+            if (temp.Location.X + temp.Width / 2 >= EnemyHQPanel.Location.X && temp.Location.X + temp.Width / 2 <= EnemyHQPanel.Location.X + EnemyHQPanel.Width &&
+                temp.Location.Y + temp.Height / 4 >= EnemyHQPanel.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyHQPanel.Location.Y + EnemyHQPanel.Height)
+            {
+
+                //атака на штаб
+                return -1;
+
+            }
+            //если мышка находится на поле карт
+            else if ((temp.Location.X + temp.Width / 2 >= EnemyMargin.Location.X && temp.Location.X + temp.Width / 2 <= EnemyMargin.Location.X + EnemyMargin.Width &&
+                temp.Location.Y + temp.Height / 4 >= EnemyMargin.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyMargin.Location.Y + EnemyMargin.Height))
+            {
+                int Count = EnemyMargin.Controls.Count;
+                for (int i = 0; i < Count; i++)
+                {
+                    if (temp.Location.X + temp.Width / 2 >= EnemyMargin.Location.X + EnemyMargin.Controls[i].Location.X &&
+                        temp.Location.X + temp.Width / 2 <= EnemyMargin.Location.X + EnemyMargin.Controls[i].Location.X + EnemyMargin.Controls[i].Width &&
+                        temp.Location.Y + temp.Height / 4 >= EnemyMargin.Location.Y + EnemyMargin.Controls[i].Location.Y &&
+                        temp.Location.Y + temp.Height / 4 <= EnemyMargin.Location.Y + EnemyMargin.Controls[i].Location.Y + EnemyMargin.Controls[i].Height)
+                    {
+                        //атака на карточку
+                        return i;
+                       
+                    }
+                }
+            }
+            return int.MinValue;
+        }
+        private void EventCarte_MouseUp(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    Panel temp = (Panel)sender;
+                    int attacked = int.MinValue; ;
+                    //определяем тип события
+                    switch ((Carte.GetCarte(DataSession.CarteFromUser[NumberCarte]) as Event).TypeEvent)
+                    {
+                        case TypeEventCard.DamageCard:
+                            //узнаем какую карту атакует игрок
+                            attacked = Which_Сard_Is_Attacked(temp);
+                            //если событие было использовано
+
+                            break;
+                    }
+
+                    ReturnDropCard(temp, MyCarte, UserCards);
+                    if (attacked != int.MinValue && AllowProgress)
+                    {
+                        //отсылаем сообщение
+                        СomWithServer.Send(new int[] { NumberCarte, attacked }, MsgType.DamageEvent);
+                        return;
+                    }
+                    NumberCarte = 0;
+
+                }
+            }
+            catch (Exception E)
+            {
+                MessageBox.Show(E.ToString() + "   " + MyCarte.Controls.Count);
+            }
+        }
+
+        /// <summary>
+        /// Возвращает перетаскиваемую карту на место
+        /// </summary>
+        /// <param name="DropCart"></param>
+        /// <param name="ParentPanel"></param>
+        /// <param name="ListCardsBeforeDrop"></param>
+        private void ReturnDropCard(Panel DropCart, Panel ParentPanel, List<Panel> ListCardsBeforeDrop)
+        {
+            //удаляем перетаскиваемую карточку
+            this.Controls.Remove(DropCart);
+
+            MouseState = false;
+            //очищаем панель
+
+            ParentPanel.Controls.Clear();
+            int count = ListCardsBeforeDrop.Count;
+            //заполняем массив заново
+            for (int i = 0; i < count; i++)
+            {
+                ParentPanel.Controls.Add(ListCardsBeforeDrop[i]);
+            }
+            //устанваливаем позицию карт
+            UpdateLocation_Cards(ParentPanel, ParentPanel.Controls[0].Width, 3);
+            
+            //ParentPanel.Controls[0].Width
         }
 
         private void Carte_MouseMove(object sender, MouseEventArgs e)
@@ -123,36 +237,27 @@ namespace CartGame
             }
 
         }
+        /// <summary>
+        /// Обрабатывает событие отпускания карты игроком, при перетаскивании карты на игровое поле
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MyCarte_MouseUp(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
+                //здесь должна быть проверка на тип карты
                 Panel temp = (Panel)sender;
                 bool CardFound = false;
-                if (temp.Location.X + temp.Width / 2 >= temp.Location.X + temp.Width / 2 &&
-                    temp.Location.Y + temp.Height / 4 <= UserMargin.Location.X + UserMargin.Width && temp.Location.Y + temp.Height / 4 >= UserMargin.Location.Y && temp.Location.Y + temp.Height / 4 <= UserMargin.Location.Y + UserMargin.Height)
+                if (temp.Location.X + temp.Width / 2 <= UserMargin.Location.X + UserMargin.Width &&
+                    temp.Location.X + temp.Width / 2 >= UserMargin.Location.X && temp.Location.Y + temp.Height / 4 >= UserMargin.Location.Y && temp.Location.Y + temp.Height / 4 <= UserMargin.Location.Y + UserMargin.Height)
                 {
-
 
                     CardFound = true;
                 }
 
-
-                //удаляем перетаскиваемую карточку
-                this.Controls.Remove(temp);
-
-                MouseState = false;
-                //очищаем панель
-
-                MyCarte.Controls.Clear();
-                int count = UserCards.Count;
-                //заполняем массив заново
-                for (int i = 0; i < count; i++)
-                {
-                    MyCarte.Controls.Add(UserCards[i]);
-                }
-                //устанваливаем позицию карт
-                UpdateLocation_Cards(MyCarte, MyCarte.Controls[0].Width, 3);
+                ReturnDropCard(temp, MyCarte, UserCards);
+               
                 if (AllowProgress && CardFound)
                 {//отправляем сообщение о том что необходимо отправить добавить карты на поле, если достаточно ресурсов
                     СomWithServer.Send(NumberCarte, MsgType.AddCarteOnField);
@@ -170,12 +275,11 @@ namespace CartGame
             //удаляем карты из MyCarte
             this.Invoke((MethodInvoker)delegate
             {
-                lock (MyCarte)
-                {
+                
                     MyCarte.Controls.RemoveAt(number);
                     UserCards.RemoveAt(number);
-                    UpdateLocation_Cards(MyCarte, MyCarte.Controls[0].Width, 3);
-                }
+                    UpdateLocation_Cards(MyCarte, 100, 3);
+                
 
                 //добавляем карту на панель
 
@@ -191,14 +295,18 @@ namespace CartGame
 
 
                 UserMargin.Controls.Add(temp);
-                UpdateLocation_Cards(UserMargin, UserMargin.Controls[0].Width, 3);
+                UpdateLocation_Cards(UserMargin, 85, 3);
 
 
             });
 
 
         }
-
+        /// <summary>
+        /// Класс обработки отпускания карты, находящейся на поле
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MarginCarte_MouseDown(object sender, MouseEventArgs e)
         {
             
@@ -233,58 +341,15 @@ namespace CartGame
                 if (e.Button == MouseButtons.Left)
                 {
                     Panel temp = (Panel)sender;
+                    //узнаем какую карту атакует игрок
+                    attacked = Which_Сard_Is_Attacked(temp);
 
-                        //если мышка находится на поле вражеского штаба
-                        if (temp.Location.X + temp.Width / 2 >= EnemyHQPanel.Location.X && temp.Location.X + temp.Width / 2 <= EnemyHQPanel.Location.X + EnemyHQPanel.Width &&
-                            temp.Location.Y + temp.Height / 4 >= EnemyHQPanel.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyHQPanel.Location.Y + EnemyHQPanel.Height)
-                        {
-
-                        //атака на штаб
-                            attacked = -1;
-                           
-                        }
-                        //если мышка находится на поле карт
-                        else if ((temp.Location.X + temp.Width / 2 >= EnemyMargin.Location.X && temp.Location.X + temp.Width / 2 <= EnemyMargin.Location.X + EnemyMargin.Width &&
-                            temp.Location.Y + temp.Height / 4 >= EnemyMargin.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyMargin.Location.Y + EnemyMargin.Height))
-                        {
-                            int Count = EnemyMargin.Controls.Count;
-                            for (int i = 0; i < Count; i++)
-                            {
-                                if (temp.Location.X + temp.Width / 2 >= EnemyMargin.Location.X + EnemyMargin.Controls[i].Location.X &&
-                                    temp.Location.X + temp.Width / 2 <= EnemyMargin.Location.X + EnemyMargin.Controls[i].Location.X + EnemyMargin.Controls[i].Width &&
-                                    temp.Location.Y + temp.Height / 4 >= EnemyMargin.Location.Y + EnemyMargin.Controls[i].Location.Y &&
-                                    temp.Location.Y + temp.Height / 4 <= EnemyMargin.Location.Y + EnemyMargin.Controls[i].Location.Y + EnemyMargin.Controls[i].Height)
-                                {
-                                //атака на карточку
-                                attacked = i;
-                                   
-                                   
-                                    break;
-                                }
-                            }
-                        }
-                        
-                     //удаляем перетаскиваемую карточку
-                    this.Controls.Remove(temp);           
-                    MouseState = false;
-                    //очищаем панель
-
-
-                        UserMargin.Controls.Clear();
-                        int count = UserCardsOfMargin.Count;
-                        //заполняем массив заново
-                        for (int i = 0; i < count; i++)
-                        {
-                            UserMargin.Controls.Add(UserCardsOfMargin[i]);
-                        }
-                        //устанваливаем позицию карт
-                        UpdateLocation_Cards(UserMargin, 90, 3);
-
-
-                  
+                    ReturnDropCard(temp, UserMargin, UserCardsOfMargin);
+                   
+                                     
                     if (AllowProgress&&attacked!= int.MinValue)//если разрешена отпрака сообщений 
                     {
-                        Debug.WriteLine($"Карта {NumberCarte} атакует {attacked}");
+                        
                         СomWithServer.Send(new int[] { NumberCarte, attacked }, MsgType.Attack);
                     }
                     NumberCarte = 0;
@@ -298,6 +363,12 @@ namespace CartGame
 
 
         }
+        /// <summary>
+        /// Обновляет позиции карт на игровом поле и в руке у игрока
+        /// </summary>
+        /// <param name="Margin"></param>
+        /// <param name="WidthCart"></param>
+        /// <param name="DistCards"></param>
         private void UpdateLocation_Cards(Panel Margin, int WidthCart, int DistCards)
         {
            
@@ -374,7 +445,7 @@ namespace CartGame
             try
             {
 
-                if (index < 4)//на данный момент доступно 3 карты
+                if (index < 6)//на данный момент доступно 3 карты
                 {
                     Panel temp = Carte.GetCarte(index).ImageCartFullMin();
                     //обводят карту при наведении на нее указателя мыши
@@ -386,7 +457,7 @@ namespace CartGame
                     temp.MouseUp += new MouseEventHandler(MyCarte_MouseUp);
 
                     UserCards.Add(temp);
-
+                  
 
                     this.Invoke((MethodInvoker)delegate { MyCarte.Controls.Add(temp); });
                     UpdateLocation_Cards(MyCarte, MyCarte.Controls[0].Width, 3);
@@ -482,6 +553,7 @@ namespace CartGame
         {
             try
             {
+                //отображаем урон по карточкам
                 AnimationDamage(attacking, attacked, damageUser, damageEnemy); 
 
                     if (attacking == -1)
@@ -514,6 +586,7 @@ namespace CartGame
         private void AnimationDamage(Panel MoveEnemyPanel, int attacked, int damageUser, int damageEnemy)
         {
             Point damageLoc;
+            //отображаем урон на карте пользователя
             if (attacked == -1)
             {
                 damageLoc = new Point();
@@ -529,63 +602,68 @@ namespace CartGame
             DamageUser = CreateDamagePanel(damageUser);
             DamageUser.Location = damageLoc;
             this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); });
-
-
-
-            
+            //отображаем урон на карте врага
                 damageLoc = new Point();
                 damageLoc.X = MoveEnemyPanel.Location.X + 15;
                 damageLoc.Y = MoveEnemyPanel.Location.Y + 15;
-           
-              
+
+            //создаем элемент показывающией урон и устанавливаем текущую позиции карточки врага которая будет перемещатсься
             DamageEnemy = CreateDamagePanel(damageEnemy);
             DamageEnemy.Location = damageLoc;
             this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageEnemy); DamageEnemy.BringToFront(); });
 
             System.Timers.Timer timerPaint = new System.Timers.Timer();
-            timerPaint.Interval = 1500;
+            timerPaint.Interval = 1200;
             timerPaint.Elapsed += Elapsed_TimerPaint;
             timerPaint.Start();
         }
-        private void AnimationDamage( int attacking, int attacked, int damageUser, int damageEnemy)
+        private void AnimationDamage(int attacking, int attacked, int damageUser, int damageEnemy)
         {
-            Point damageLoc;
+            Point damageLoc = new Point();
+            if (damageUser!=0)
+            {
+                
             if (attacking == -1)
             {
                 damageLoc = new Point();
                 damageLoc.X = UserHQPanel.Location.X + 15;
-                damageLoc.Y = UserHQPanel.Location.Y + 15;        
+                damageLoc.Y = UserHQPanel.Location.Y + 15;
             }
-            else
+            else 
             {
                 damageLoc = new Point();
                 damageLoc.X = UserMargin.Location.X + UserMargin.Controls[attacking].Location.X + 15;
                 damageLoc.Y = UserMargin.Location.Y + UserMargin.Controls[attacking].Location.Y + 15;
             }
-             DamageUser = CreateDamagePanel(damageUser);
-            DamageUser.Location = damageLoc;
-            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); }); 
-            
 
+                DamageUser = CreateDamagePanel(damageUser);
+                DamageUser.Location = damageLoc;
+                this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); });
+            }
+
+            if (damageEnemy != 0)
+            {
+                if (attacked == -1)
+                {
+                    damageLoc = new Point();
+                    damageLoc.X = EnemyHQPanel.Location.X + 15;
+                    damageLoc.Y = EnemyHQPanel.Location.Y + 15;
+                }
+                else
+                {
+                    damageLoc = new Point();
+                    damageLoc.X = EnemyMargin.Location.X + EnemyMargin.Controls[attacked].Location.X + 15;
+                    damageLoc.Y = EnemyMargin.Location.Y + EnemyMargin.Controls[attacked].Location.Y + 15;
+                }
             
-            if (attacked == -1)
-            {
-                damageLoc = new Point();
-                damageLoc.X = EnemyHQPanel.Location.X + 15;
-                damageLoc.Y = EnemyHQPanel.Location.Y + 15;
+                DamageEnemy = CreateDamagePanel(damageEnemy);
+                DamageEnemy.Location = damageLoc;
+                this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageEnemy); DamageEnemy.BringToFront(); });
             }
-            else
-            {
-                damageLoc = new Point();
-                damageLoc.X = EnemyMargin.Location.X + EnemyMargin.Controls[attacked].Location.X + 15;
-                damageLoc.Y = EnemyMargin.Location.Y + EnemyMargin.Controls[attacked].Location.Y + 15;
-            }
-            DamageEnemy = CreateDamagePanel(damageEnemy);
-            DamageEnemy.Location = damageLoc;
-            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageEnemy); DamageEnemy.BringToFront(); });
+            
             
             System.Timers.Timer timerPaint = new System.Timers.Timer();
-            timerPaint.Interval = 1500;
+            timerPaint.Interval = 1200;
             timerPaint.Elapsed += Elapsed_TimerPaint;
             timerPaint.Start();
         }
@@ -604,6 +682,12 @@ namespace CartGame
             });
            
         }
+
+        /// <summary>
+        /// Создает элемент урона по карте 
+        /// </summary>
+        /// <param name="damage"></param>
+        /// <returns></returns>
         private Panel CreateDamagePanel(int damage)
         {
             Panel damagePanel = new Panel();
@@ -620,6 +704,13 @@ namespace CartGame
             return damagePanel;
         }
 
+        /// <summary>
+        /// Визуально отображает атаку противника картой робота
+        /// </summary>
+        /// <param name="attacking"></param>
+        /// <param name="attacked"></param>
+        /// <param name="damageUser"></param>
+        /// <param name="damageEnemy"></param>
         private void EnAttackVisual(int attacking, int attacked, int damageUser, int damageEnemy)
         {
             try
@@ -733,6 +824,10 @@ namespace CartGame
             catch (Exception e)
             { MessageBox.Show(e.ToString()); }
         }
+
+        /// <summary>
+        /// Обрабавтывает на уровне интерфейса новый ход игрока
+        /// </summary>
         private void MyProgress_Func()
         {
             this.Invoke((MethodInvoker)delegate
@@ -747,6 +842,10 @@ namespace CartGame
 
             });
         }
+
+        /// <summary>
+        /// Обрабатывает на уровне интерфейса новый ход противника
+        /// </summary>
         private void EnemyProgress_Func()
         {
             this.Invoke((MethodInvoker)delegate
@@ -759,11 +858,21 @@ namespace CartGame
 
             });
         }
+
+        /// <summary>
+        /// Обновляет время хода
+        /// </summary>
+        /// <param name="data"></param>
         private void TimeProgress_Update(string data)
         {
             if (AllowProgress) this.Invoke((MethodInvoker)delegate { MyTime.Text = data; });
             else this.Invoke((MethodInvoker)delegate { EnemyTime.Text = data; });
         }
+
+        /// <summary>
+        /// Добавляет карту в руки противнику
+        /// </summary>
+        /// <param name="count"></param>
         private void EnemyCarte_Add(int count)
         {
             try
@@ -783,6 +892,10 @@ namespace CartGame
             catch (Exception e)
             { MessageBox.Show(e.ToString()); }
         }
+
+        /// <summary>
+        /// Обрабатывает ошибку соединения с сервером на уровне итерфейса
+        /// </summary>
         private void ErrorConnectoinServer()
         {
             
@@ -824,6 +937,8 @@ namespace CartGame
             ClientContr.EnAddCardOnField += EnemyAddCardsOnMyCarte;
             ClientContr.MyAttack += MyAttackVisual;
             ClientContr.EnAttack += EnAttackVisual;
+            ClientContr.EnAttackDamageCard += EnAttackDamageCarte;
+            ClientContr.MyAttackDamageCard += UsAttackDamageCarte;
             ClientContr.EndGame += EndGame;
             ClientContr.ErrorConnectToServer += ErrorConnectoinServer;
             СomWithServer = ClientContr.DialogWithServ;//получаем класс для общения с сервером
@@ -866,8 +981,100 @@ namespace CartGame
 
 
         }
+
+        /// <summary>
+        /// Отображает на уровне интерфейса урон картой-событием по карте противника
+        /// </summary>
+        /// <param name="attacking"></param>
+        /// <param name="attacked"></param>
+        /// <param name="damage"></param>
+        private void UsAttackDamageCarte(int attacking, int attacked, int damage)
+        {  
+            //отображаем урон по карте врага
+            AnimationDamage(-2, attacked, 0, damage);
+
+            //обновляем аттакуемую карту
+            if (attacked == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQEnemy(); });
+            else this.Invoke((MethodInvoker)delegate {
+                NewPaintEnemyCard(attacked);
+            });
+
+            //удаляем карту у нас в руке
+            if (MyCarte.Controls.Count > attacking && UserCards.Count > attacking)
+                this.Invoke((MethodInvoker)delegate
+                {
+                    MyCarte.Controls.RemoveAt(attacking);
+                    UserCards.RemoveAt(attacking);
+                });
+            UpdateLocation_Cards(MyCarte, 100, 3);
+            
+        }
+        /// <summary>
+        /// Отображает на визуальном уровне атаку картой-событием наносящим урон
+        /// </summary>
+        /// <param name="attacking"></param>
+        /// <param name="attacked"></param>
+        /// <param name="damage"></param>
+        private void EnAttackDamageCarte(int attacking,int IDAttacking, int attacked, int damage)
+        {
+            //Отображаем атаку картой-событием
+            AnimationAttackDamageEvent(attacking, IDAttacking, attacked, damage);
+            //обновляем аттакуемую карту
+            if (attacked == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQUser(); });
+            else this.Invoke((MethodInvoker)delegate { NewPaintUserCard(attacked); });
+
+            //удаляем карту в руке у противника
+            if (EnemyCarte.Controls.Count > attacking)
+            this.Invoke((MethodInvoker)delegate { EnemyCarte.Controls.RemoveAt(attacking); });
+            UpdateLocation_Cards(EnemyCarte, 70, 3);
+        }
+
+        private void AnimationAttackDamageEvent(int attacking,int IDAttacking,  int attacked, int damage)
+        {
+            try
+            {
+
+                //изображение карты
+                Panel ImageCarte = Carte.GetCarte(IDAttacking).ImageCartFullMin();
+                //ищем координаты используемой карты
+                Point StartPoint = new Point(EnemyCarte.Location.X + EnemyCarte.Controls[attacking].Location.X, EnemyCarte.Location.Y + EnemyCarte.Controls[attacking].Location.Y);
+                //скрываем карту
+                this.Invoke((MethodInvoker)delegate
+                {
+                    EnemyCarte.Controls[attacking].Visible = false;
+
+                    //добавляем изображение карты
+                    this.Controls.Add(ImageCarte);
+                    ImageCarte.Location = StartPoint;
+                    ImageCarte.BringToFront();
+                });
+                //конечное положение карты
+                Point EndPoint;
+                if (attacked == -1) EndPoint = new Point(UserHQPanel.Location.X, UserHQPanel.Location.Y);
+                else EndPoint = new Point(UserMargin.Location.X + UserMargin.Controls[attacked].Location.X, UserMargin.Location.Y + UserMargin.Controls[attacked].Location.Y);
+
+                MoveCarteStartToEnd(ImageCarte, StartPoint, EndPoint);
+                AnimationDamage(attacked, -2, damage, 0);
+                Thread.Sleep(500);
+
+                //удаляем изображение карты
+                this.Invoke((MethodInvoker)delegate
+                {
+                    this.Controls.Remove(ImageCarte);
+                    ImageCarte = null;
+                });
+                
+
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
+        }
+
         private void EndGame(MsgType e)
         {
+
             this.Invoke((MethodInvoker)delegate
             {
                 if (e == MsgType.YouWin)
@@ -970,115 +1177,94 @@ namespace CartGame
                     ImageCarte.Location = StartPoint;
                     ImageCarte.BringToFront();
                 });
-
-
                 //конечное положение карты
                 Point EndPoint;
                 if (attacked == -1) EndPoint = new Point(UserHQPanel.Location.X, UserHQPanel.Location.Y);
                 else EndPoint = new Point(UserMargin.Location.X + UserMargin.Controls[attacked].Location.X, UserMargin.Location.Y + UserMargin.Controls[attacked].Location.Y);
 
+                #region Старое
                 //общее смещение карты
 
-                int DeltaX = EndPoint.X - StartPoint.X ;
-                if (DeltaX == 0) DeltaX = 1;
-                int DeltaY = EndPoint.Y - StartPoint.Y-100;
-                if (DeltaY == 0) DeltaY = 1;
-                //смещение карты за один цикл
-                int dx = DeltaX / Math.Abs(DeltaX);
-                int dy = DeltaY / Math.Abs(DeltaY);
-                int TimeAnimaton;//время анимации
-                int SmallTime;
-                double time = 0;
-                int BigTime = 0;
-                bool Logic;
-                if (Math.Abs(DeltaX) > Math.Abs(DeltaY))
-                {
-                    TimeAnimaton = Math.Abs(DeltaX);
-                    SmallTime = Math.Abs(DeltaX / DeltaY);
-                    time = Math.Abs((double)((DeltaX % DeltaY) / DeltaX));
-                    Logic = true;
-                }
-                else
-                {
-                    TimeAnimaton = Math.Abs(DeltaY);
-                    SmallTime = Math.Abs(DeltaY / DeltaX);
-                    time = Math.Abs((double)((DeltaY % DeltaX) / DeltaY));
-                    Logic = false;
-                }
+                /* int DeltaX = EndPoint.X - StartPoint.X ;
+                 if (DeltaX == 0) DeltaX = 1;
+                 int DeltaY = EndPoint.Y - StartPoint.Y-100;
+                 if (DeltaY == 0) DeltaY = 1;
+                 //смещение карты за один цикл
+                 int dx = DeltaX / Math.Abs(DeltaX);
+                 int dy = DeltaY / Math.Abs(DeltaY);
+                 int TimeAnimaton;//время анимации
+                 int SmallTime;
+                 double time = 0;
+                 int BigTime = 0;
+                 bool Logic;//если true перемещение по оси Х больше чем по У
+                 if (Math.Abs(DeltaX) > Math.Abs(DeltaY))
+                 {
+                     TimeAnimaton = Math.Abs(DeltaX);
+                     SmallTime = Math.Abs(DeltaX / DeltaY);
+                     time = Math.Abs((double)((DeltaX % DeltaY) / DeltaX));
+                     Logic = true;
+                 }
+                 else
+                 {
+                     TimeAnimaton = Math.Abs(DeltaY);
+                     SmallTime = Math.Abs(DeltaY / DeltaX);
+                     time = Math.Abs((double)((DeltaY % DeltaX) / DeltaY));
+                     Logic = false;
+                 }
 
-                if (SmallTime == 0) SmallTime = int.MaxValue;
-                //ищем BigTime
+                 if (SmallTime == 0) SmallTime = int.MaxValue;
+                 //ищем BigTime
 
-                if (time != 0)
-                {
-                    int J = 0;
-                    for (; J < 500; J++)
-                    {
-                        if (J * time >= 1)
-                        {
-                            BigTime = J;
-                            break;
-                        }
-                    }
-                    if (J == 500) BigTime = int.MaxValue;
-                }
-                else BigTime = int.MaxValue;
-
-
-                for (int i = 1; i < TimeAnimaton; i ++)
-                {
-                    if (Logic)
-                    {
-                        StartPoint.X += dx;
-                        if (i % SmallTime == 0) StartPoint.Y += dy;
-                        if (i % BigTime == 0) StartPoint.Y += dy;
+                 if (time != 0)
+                 {
+                     int J = 0;
+                     for (; J < 500; J++)
+                     {
+                         if (J * time >= 1)
+                         {
+                             BigTime = J;
+                             break;
+                         }
+                     }
+                     if (J == 500) BigTime = int.MaxValue;
+                 }
+                 else BigTime = int.MaxValue;
 
 
-                    }
-                    else
-                    {
-                        StartPoint.Y += dy;
-                        if (i % SmallTime == 0) StartPoint.X += dx;
-                        if (i % BigTime == 0) StartPoint.X += dx;
+                 for (int i = 1; i < TimeAnimaton; i ++)
+                 {
+                     if (Logic)
+                     {
+                         StartPoint.X += dx;
+                         if (i % SmallTime == 0) StartPoint.Y += dy;
+                         if (i % BigTime == 0) StartPoint.Y += dy;
 
-                    }
-                    this.Invoke((MethodInvoker)delegate { ImageCarte.Location = StartPoint; });
-                    // ImageCarte.BringToFront();
 
-                    Thread.Sleep(1);
+                     }
+                     else
+                     {
+                         StartPoint.Y += dy;
+                         if (i % SmallTime == 0) StartPoint.X += dx;
+                         if (i % BigTime == 0) StartPoint.X += dx;
 
-                }
+                     }
+                     this.Invoke((MethodInvoker)delegate { ImageCarte.Location = StartPoint; });
+                     // ImageCarte.BringToFront();
+
+                     Thread.Sleep(1);
+
+                 }*/
+                #endregion
+                MoveCarteStartToEnd(ImageCarte, StartPoint, EndPoint);
                 AnimationDamage(ImageCarte, attacked, damageUser, damageEnemy);
-                Thread.Sleep(100);
 
                 //возваращаем карту обратно
-                for (int i = 0; i < TimeAnimaton; i++)
-                {
-                    if (Logic)
-                    {
-                        StartPoint.X -= dx;
-                        if (i % SmallTime == 0) StartPoint.Y -= dy;
-                        if (i % BigTime == 0) StartPoint.Y -= dy;
+                MoveCarteStartToEnd(ImageCarte, EndPoint, StartPoint);
 
-                    }
-                    else
-                    {
-                        StartPoint.Y -= dy;
-                        if (i % SmallTime == 0) StartPoint.X -= dx;
-                        if (i % BigTime == 0) StartPoint.X -= dx;
-
-                    }
-                    this.Invoke((MethodInvoker)delegate { ImageCarte.Location = StartPoint;
-                        DamageEnemy.Location = new Point(StartPoint.X + 15, StartPoint.Y + 15);
-                    });
-                    Thread.Sleep(1);
-                }
                 //возвращаем карты обартно
                 this.Invoke((MethodInvoker)delegate { this.Controls.Remove(ImageCarte); });
                 if (attacking == -1)
                 {
-
-
                     this.Invoke((MethodInvoker)delegate
                     {
                         EnemyHQPanel.Controls.Add(ImageCarte);
@@ -1101,6 +1287,100 @@ namespace CartGame
             }
             catch (Exception e) { MessageBox.Show(e.ToString()); }
         }
+
+        /// <summary>
+        /// Перемещаем карту из одной точки в другую
+        /// </summary>
+        /// <param name="MovePanel"></param>
+        /// <param name="StartPoint"></param>
+        /// <param name="EndPoint"></param>
+        private void MoveCarteStartToEnd(Panel MovePanel,Point StartPoint, Point EndPoint)
+        {
+
+            int DeltaX = EndPoint.X - StartPoint.X;//смещение по Х
+            if (DeltaX == 0) DeltaX = 1;//оно не может быть равно 0
+            int DeltaY = 0 ;
+            if (EndPoint.Y > StartPoint.Y ) DeltaY = EndPoint.Y - StartPoint.Y - MovePanel.Height+10;//смещение по оси У
+            else DeltaY = EndPoint.Y - StartPoint.Y-10;
+
+            if (DeltaY == 0) DeltaY = 1;
+            //определяем в какую сторону будут смещаться карты
+            int dx = DeltaX / Math.Abs(DeltaX);
+            int dy = DeltaY / Math.Abs(DeltaY);
+            int TimeAnimaton;//время анимации
+            int SmallTime;//наименьшее время через которое должно смещаться карта по маленькой оси
+            double time = 0;//остаток он SmallTime
+            int BigTime = 0;
+            bool Logic;//если true перемещение по оси Х больше чем по У
+
+            if (Math.Abs(DeltaX) > Math.Abs(DeltaY))//если смещение по оси Х больше
+            {
+                TimeAnimaton = Math.Abs(DeltaX);//время анимации равно длинне наибольшего расстояния смещения
+                SmallTime = Math.Abs(DeltaX / DeltaY);//определяем через какое время карта должна смещаться по меньшей оси
+                time = Math.Abs((double)((DeltaX % DeltaY) / DeltaX));//остаток от  SmallTime
+                Logic = true;
+            }
+            else
+            {
+                TimeAnimaton = Math.Abs(DeltaY);
+                SmallTime = Math.Abs(DeltaY / DeltaX);
+                time = Math.Abs((double)((DeltaY % DeltaX) / DeltaY));
+                Logic = false;
+            }
+
+            if (SmallTime == 0) SmallTime = int.MaxValue;//если длинны осей почти равны, то карта по меньшей из осей почти не смещается
+            //ищем BigTime
+
+            if (time != 0)//если длины все же различны
+            {
+                int J = 0;
+                for (; J < 500; J++)
+                {
+                    if (J * time >= 1)//ищем кратное число
+                    {
+                        BigTime = J;//наибольшее время через которое карта будет смещаться меньшей из осей
+                        break;
+                    }
+                }
+                if (J == 500) BigTime = int.MaxValue;//если разница между осями минимальна, то опустим их разницу
+            }
+            else BigTime = int.MaxValue;//опустим разницу длинн перемещения по осям
+
+            //начинаем перемещение
+            for (int i = 1; i < TimeAnimaton; i++)
+            {
+                if (Logic)//если Х больше Y
+                {
+                    StartPoint.X += dx;
+                    if (i % SmallTime == 0) StartPoint.Y += dy;
+                    if (i % BigTime == 0) StartPoint.Y += dy;
+
+
+                }
+                else
+                {
+                    StartPoint.Y += dy;
+                    if (i % SmallTime == 0) StartPoint.X += dx;
+                    if (i % BigTime == 0) StartPoint.X += dx;
+
+                }
+                this.Invoke((MethodInvoker)delegate { MovePanel.Location = StartPoint; });
+                //если к карте привязан урон перемещаем его вместе с ней
+                this.Invoke((MethodInvoker)delegate {
+                    if (DamageEnemy != null)
+                        this.DamageEnemy.Location = new Point(StartPoint.X + 15, StartPoint.Y + 15);
+                  
+                });
+                Thread.Sleep(1);//задержка в 1 милисекунду
+
+            }
+        }
+
+        /// <summary>
+        /// Обрабатывает нажатие игроком на карточке штаба
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void HQCards_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -1118,6 +1398,11 @@ namespace CartGame
        
             }
         }
+        /// <summary>
+        /// Обрабатывает отпускание карточки штаба игроком
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void HQCars_MouseUp(object sender, MouseEventArgs e)
         {
             try

@@ -14,8 +14,9 @@ namespace CartGame
         private int[] userColoda;
         private List<Robot> usCarteOnField;//карты на поле у игрока
         private List<Robot> enCarteOnField;//карты на поле у противника
-        private List<int> carteFromUser;
+        private List<int> carteFromUser;//ИД карты в руке у игрока
         private HeadQuarters UserHq, EnemyHq;
+       
         private int countCarteEnemy;//счетчик количества карт у противника
         //и свойства доступа к ним для дальнейшей отрисовки
         public int CountCarteEnemy
@@ -99,6 +100,7 @@ namespace CartGame
         {
             get { return carteFromUser; }
         }
+      
         public DataGame()
         {
             name = null;
@@ -110,7 +112,7 @@ namespace CartGame
             UserHq = null;
             EnemyHq = null;
             CountCarteEnemy = 0;
-
+            
 
         }
         public void InicializeListCards()
@@ -121,6 +123,8 @@ namespace CartGame
             UserHq = new HeadQuarters();
             EnemyHq = new HeadQuarters();
           
+
+
         }
         public void Dispose()
         {
@@ -133,6 +137,7 @@ namespace CartGame
             enCarteOnField = null;
             UserHq = null;
             EnemyHq = null;
+           
         }
     }
 }

@@ -19,9 +19,11 @@ namespace CartGame
     public delegate void StringDel(string data);
     public delegate void Attack(int attacking, int attacked, int damageUser,int damageEnemy);
     public delegate void End(MsgType e);
-   
+    public delegate void DamageCardAttack(int attacking, int attacked, int damage);
+    public delegate void EnDamageCardAttack(int attacking,int IDAttacking, int attacked, int damage);
 
-   public class Controler
+
+    public class Controler
     {
 
         private SendAndRecMsg dialogWithServ;
@@ -42,6 +44,8 @@ namespace CartGame
         public event End EndGame;
         public event EmptyDel DeliteSeek;
         public event EmptyDel ErrorConnectToServer;
+        public event DamageCardAttack MyAttackDamageCard;
+        public event EnDamageCardAttack EnAttackDamageCard;
 
         private DataGame DataSession;
 
@@ -162,6 +166,8 @@ namespace CartGame
             MyAttack = null;
             EnAttack = null;
             EndGame = null;
+            EnAttackDamageCard = null;
+            MyAttackDamageCard = null;
 
     }
         private void ProcMsgWithData(MsgType type, byte[] data)
@@ -224,18 +230,23 @@ namespace CartGame
                 case MsgType.AddCarteOnField:
                     short NumberCarte = BitConverter.ToInt16(data, 0);
                     NumberCarte = IPAddress.NetworkToHostOrder(NumberCarte);
+
                     //удаляем карту из массива id карт на руках у игрока
                     int IdCards = DataSession.CarteFromUser[NumberCarte];
+                   
                     DataSession.CarteFromUser.RemoveAt(NumberCarte);
+
                     //добавляем карту в массив картна поле
-                    DataSession.UsCarteOnField.Add((Robot)Carte.GetCarte(IdCards));
+                    if (Carte.GetCarte(IdCards) is Robot) DataSession.UsCarteOnField.Add((Robot)Carte.GetCarte(IdCards));
+                    else MessageBox.Show(IdCards + "");//временно
                     AddCardsOnField(NumberCarte);
                     break;
 
                 case MsgType.EnemyAddCarteOnField:
                     short EnIdCarte = BitConverter.ToInt16(data, 0);
                     EnIdCarte = IPAddress.NetworkToHostOrder(EnIdCarte);
-                    DataSession.EnCarteOnField.Add((Robot)Carte.GetCarte(EnIdCarte));
+                    if (Carte.GetCarte(EnIdCarte) is Robot) DataSession.EnCarteOnField.Add((Robot)Carte.GetCarte(EnIdCarte));
+                    else MessageBox.Show(EnIdCarte + "");//временно
                     EnAddCardOnField();
                     break;
 
@@ -338,6 +349,55 @@ namespace CartGame
                    }
                     //оповещаем об атаке
                     EnAttack(Attacking, Attacked, DamageUser, DamageEnemy);
+                    break;
+
+                case MsgType.EnemyDamageEvent:
+                    //конвертируем данные
+                    short EnAttackingCard = BitConverter.ToInt16(data, 0);
+                    short IDAttacking = BitConverter.ToInt16(data, 2);
+                    short EnAttackedDamageEvent = BitConverter.ToInt16(data, 4);
+                    short EnDamageEvent = BitConverter.ToInt16(data, 6);
+                    //уменьшаем очки прочности у атакуемой карты
+                    if (EnAttackedDamageEvent == -1)
+                    {
+                        DataSession.UserHQ.Armor -= EnDamageEvent;
+                    }
+                    else
+                    {
+                        DataSession.UsCarteOnField[EnAttackedDamageEvent].Armor -= EnDamageEvent;
+                        if (DataSession.UsCarteOnField[EnAttackedDamageEvent].Armor <= 0)
+                            DataSession.UsCarteOnField.RemoveAt(EnAttackedDamageEvent);
+                    }
+                   
+
+                    //оповещаем об атаке противника
+                    EnAttackDamageCard(EnAttackingCard, IDAttacking, EnAttackedDamageEvent, EnDamageEvent);
+
+                    break;
+
+                case MsgType.UserDamageEvent:
+                    //конвертируем данные
+                    short AttackingCard = BitConverter.ToInt16(data, 0);
+                    short AttackedDamageEvent = BitConverter.ToInt16(data, 2);
+                    short DamageEvent = BitConverter.ToInt16(data, 4);
+
+                    //уменьшаем очки прочности у атакуемой карты
+                    if (AttackedDamageEvent == -1)
+                    {
+                        DataSession.EnemyHQ.Armor -= DamageEvent;
+                    }
+                    else {
+                        DataSession.EnCarteOnField[AttackedDamageEvent].Armor -= DamageEvent;
+                        if (DataSession.EnCarteOnField[AttackedDamageEvent].Armor <= 0)
+                            DataSession.EnCarteOnField.RemoveAt(AttackedDamageEvent);
+                    }
+
+                    //удаляем карту-событие
+                    DataSession.CarteFromUser.RemoveAt(AttackingCard);
+
+                    //опопвещаем об событии атаки
+                    MyAttackDamageCard(AttackingCard,AttackedDamageEvent, DamageEvent);
+
                     break;
             }
         }
@@ -459,8 +519,11 @@ namespace CartGame
         { 
 
                StopThread = false;
-               Client.Close();
-              Client = null;
+            if (Client != null)
+            {
+                Client.Close();
+                Client = null;
+            }
               ClientNetwork = null;
                
                

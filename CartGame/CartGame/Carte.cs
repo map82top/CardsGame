@@ -35,18 +35,29 @@ namespace CartGame
         TechnicalVictory,
         ClientClosing,
         EnemyNoActiv,
-        YouNoActiv
+        YouNoActiv, 
+        DamageEvent,
+        UserDamageEvent,
+        EnemyDamageEvent
 
 
 
     }
+    public enum TypeEventCard
+    {
+        DamageCard,
+        HealingCard
+    }
     public abstract class Carte
     {
         public abstract Panel ImageCartNormal();
-        public abstract Panel ImageCartMin();
         public abstract Panel ImageCartMax();
         public abstract Panel ImageCartFullMin();
-
+        static int id = 0;
+        static public int ID
+        {
+            get { return id; }
+        }
         // public abstract Panel Clone { get; }
         static public Carte GetCarte(int ID)
         {
@@ -54,13 +65,18 @@ namespace CartGame
             switch (ID)
             {
                 case 1:
-                    RetCarte = new Recruit(Properties.Resources.DescrRecruit);
+                    RetCarte = new Recruit();
                     break;
                 case 2:
-                    RetCarte = new Duelist(Properties.Resources.DescrDuelist);
+                    RetCarte = new Duelist();
                     break;
                 case 3:
-                    RetCarte = new Veteran(Properties.Resources.DescrVeteran);
+                    RetCarte = new Veteran();
+                    break;
+                case 4: RetCarte = new Ambush();
+                    break;
+                case 5:
+                    RetCarte = new Rocket();
                     break;
                 default:
                     RetCarte = null;
@@ -70,6 +86,9 @@ namespace CartGame
         }
 
     }
+    /// <summary>
+    /// Базовый класс для всез роботов
+    /// </summary>
    public class Robot : Carte
     {
         //общие характеристики каждой карты робота
@@ -92,7 +111,7 @@ namespace CartGame
             get { return valueEnergy; }
         }
 
-        protected string description;
+     
         protected string nameRobot;
         public string NameRobot
         {
@@ -103,14 +122,11 @@ namespace CartGame
             attack = 0;
             armor = 0;
             valueEnergy = 0;
-            description = "";
+           
             nameRobot = "";
 
         }
-        public string Description
-        {
-            get { return description; }
-        }
+        
         public override Panel ImageCartNormal()
         {
             Panel CarteImage = new Panel();
@@ -198,7 +214,6 @@ namespace CartGame
 
             //описание карты
             Label Descr = new Label();
-            Descr.Text = description;
             Descr.Font = new Font("Arial", 9);
             //Descr.BorderStyle = BorderStyle.Fixed3D;
             Descr.Location = new Point(50, 164);
@@ -219,7 +234,7 @@ namespace CartGame
             return CarteImage;
 
         }
-        public override Panel ImageCartMin()
+        public virtual Panel ImageCartMin()
         {
             Panel CarteImage = new Panel();
             CarteImage.Size = new Size(85, 120);
@@ -306,23 +321,180 @@ namespace CartGame
 
 
     }
-   public class Recruit : Robot
+    /// <summary>
+    /// Базовый класс для всез карт-событий
+    /// </summary>
+    abstract class Event : Carte
+    {
+        //стоимость есть у всех карт-событий
+        protected int valueEnergy;
+        public int ValueEnergy
+        {
+            get { return valueEnergy; }
+        }
+        //тип события
+        protected TypeEventCard typeEvent;
+        public TypeEventCard TypeEvent
+        {
+            get { return typeEvent; }
+        }
+
+        static int id = 4;
+        
+    }
+    /// <summary>
+    /// Базовый класс для карт, наносящих урон
+    /// </summary>
+    class DamageEvent : Event
+    {
+        //урон по противнику
+        protected int damage;
+        public int Damage
+        {
+            get { return damage; }
+        }
+        public DamageEvent()
+        {
+            typeEvent = TypeEventCard.DamageCard;
+            valueEnergy = 0;
+            damage = 0;
+        }
+
+        public override Panel ImageCartNormal()
+        {
+              Panel CarteImage = new Panel();
+              CarteImage.Size = new Size(145, 187);
+             //изображение карты
+             CarteImage.BackgroundImage = Properties.Resources.EventCard;
+             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
+    /// <summary>
+    /// Класс карты Засада
+    /// </summary>
+    class Ambush : DamageEvent
+    {
+        static int id = 4;
+        
+        public Ambush()
+        {
+            typeEvent = TypeEventCard.DamageCard;
+            valueEnergy = 0;
+            damage = 1;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.AmbushNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.AmbushNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.AmbushFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+    }
+
+    /// <summary>
+    /// Класс сверхзвуковой ракеты
+    /// </summary>
+    class Rocket : DamageEvent
+    {
+        static int id = 5;
+
+        public Rocket()
+        {
+            typeEvent = TypeEventCard.DamageCard;
+            valueEnergy = 3;
+            damage = 3;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RocketNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RocketNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RocketFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+    }
+    /// <summary>
+    /// Класс карты Рекрут
+    /// </summary>
+    public class Recruit : Robot
     {
         //уникальный идентификатор карты
         static int id = 1;
-        static public int ID
-        {
-            get { return id; }
-        }
+       
         //описание
-        public Recruit(string Description)
-        {
-            attack = 2;
-            armor = 5;
-            valueEnergy = 2;
-            description = Description;
-            nameRobot = "Рекрут";
-        }
+       
         public Recruit()
         {
             attack = 2;
@@ -331,25 +503,46 @@ namespace CartGame
 
             nameRobot = "Рекрут";
         }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RecruitNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
 
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RecruitFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
 
-    }
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RecruitNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+     }
+
+    /// <summary>
+    /// Класс карты Дуэлент
+    /// </summary>
    public class Duelist : Robot
     {
         static int id = 2;
-        static public int ID
-        {
-            get { return id; }
-        }
-        public Duelist(string Description)
-        {
-            attack = 4;
-            armor = 2;
-            valueEnergy = 3;
-            description = Description;
-            nameRobot = "Дуэлянт";
-
-        }
+        
+        
         public Duelist()
         {
             attack = 4;
@@ -358,32 +551,88 @@ namespace CartGame
             nameRobot = "Дуэлянт";
 
         }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.DuelistNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.DuelistFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.DuelistNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
     }
+
+    /// <summary>
+    /// Класс карты Ветеран
+    /// </summary>
    public class Veteran : Robot
     {
         static int id = 3;
-        static public int ID
-        {
-            get { return id; }
-        }
-        public Veteran(string Description)
-        {
-            attack = 3;
-            armor = 5;
-            valueEnergy = 4;
-            description = Description;
-            nameRobot = "Ветеран";
-        }
+       
         public Veteran()
         {
             attack = 3;
             armor = 5;
             valueEnergy = 4;
-
+            
             nameRobot = "Ветеран";
         }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.VeteranNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
 
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.VeteranNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.VeteranFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
     }
+
+    /// <summary>
+    /// Класс карты Штаба
+    /// </summary>
    public class HeadQuarters
     {
         private int attack;
