@@ -51,7 +51,7 @@
             this.panelUserCarte.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelUserCarte.Location = new System.Drawing.Point(603, 43);
             this.panelUserCarte.Name = "panelUserCarte";
-            this.panelUserCarte.Size = new System.Drawing.Size(212, 385);
+            this.panelUserCarte.Size = new System.Drawing.Size(212, 412);
             this.panelUserCarte.TabIndex = 1;
             // 
             // labelAll
@@ -78,11 +78,12 @@
             // 
             this.labelHelp.AutoSize = true;
             this.labelHelp.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.labelHelp.Location = new System.Drawing.Point(12, 433);
+            this.labelHelp.Location = new System.Drawing.Point(9, 475);
             this.labelHelp.Name = "labelHelp";
             this.labelHelp.Size = new System.Drawing.Size(409, 15);
             this.labelHelp.TabIndex = 4;
             this.labelHelp.Text = "*Выберите из доступных вам карт 7 штук. Карты могут повторяться!";
+            this.labelHelp.Click += new System.EventHandler(this.labelHelp_Click);
             // 
             // panelAllCarte
             // 
@@ -91,13 +92,13 @@
             this.panelAllCarte.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelAllCarte.Location = new System.Drawing.Point(12, 42);
             this.panelAllCarte.Name = "panelAllCarte";
-            this.panelAllCarte.Size = new System.Drawing.Size(576, 386);
+            this.panelAllCarte.Size = new System.Drawing.Size(576, 413);
             this.panelAllCarte.TabIndex = 0;
             // 
             // buttonStartSeek
             // 
             this.buttonStartSeek.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.buttonStartSeek.Location = new System.Drawing.Point(608, 436);
+            this.buttonStartSeek.Location = new System.Drawing.Point(608, 461);
             this.buttonStartSeek.Name = "buttonStartSeek";
             this.buttonStartSeek.Size = new System.Drawing.Size(207, 44);
             this.buttonStartSeek.TabIndex = 5;
@@ -134,7 +135,7 @@
             // настройкиToolStripMenuItem
             // 
             this.настройкиToolStripMenuItem.Name = "настройкиToolStripMenuItem";
-            this.настройкиToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.настройкиToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.настройкиToolStripMenuItem.Text = "Настройки";
             this.настройкиToolStripMenuItem.Click += new System.EventHandler(this.настройкиToolStripMenuItem_Click);
             // 
@@ -148,7 +149,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(827, 494);
+            this.ClientSize = new System.Drawing.Size(827, 517);
             this.Controls.Add(this.buttonStartSeek);
             this.Controls.Add(this.labelHelp);
             this.Controls.Add(this.labelUser);

@@ -14,7 +14,9 @@ namespace CarteServer
     delegate void CardOnField(User sender,int numberCard, int idCards);
     delegate void AttackDelegate(User sender, int attacking, int attacked);
     delegate void ErrorSend(User user);
-    delegate void DamageCard(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked);                          
+    delegate void DamageCard(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked);
+    delegate void RepairsCard(User user, int IDAttacking, RepairsEvent Card, int attacking, int attacked);
+
     class User
     {
         private string name = null;
@@ -37,6 +39,7 @@ namespace CarteServer
         public event DamageCard DamageCardEvent;
         public event ErrorSend FailedSendMsg;
         public event EmptyDel GetOutOfQueue;
+        public event RepairsCard RepairsCardEvent;
         public bool MyProgress
         {
             set { myProgress = value; }
@@ -130,6 +133,7 @@ namespace CarteServer
                             int ReadData = RecData(Data, MsgLength, TcpStream);
                             if (ReadData > 0)
                             {
+                                //отделить swicth от основной функции
                                 switch (msgType)
                                 {
                                     case MsgType.CarteUser:
@@ -175,6 +179,7 @@ namespace CarteServer
                                                     energy -= NewCarteRobot.ValueEnergy;
                                                     CardsOnHands.RemoveAt(NumberCarte);
                                                     CardsOnMargin.Add(NewCarteRobot);
+                                                    //уведомляем об добавление карты класс сессии
                                                     AddCardField(this, NumberCarte, IDCarte);
                                                 }
                                             }
@@ -215,6 +220,21 @@ namespace CarteServer
                                            
                                         }
                                 
+                                        break;
+                                    case MsgType.RepairsEvent:
+                                        if (myProgress)
+                                        {
+                                            short NumberCardRepairs = BitConverter.ToInt16(Data, 0);//номер карты  в руке у игрока
+                                            short Repairable = BitConverter.ToInt16(Data, 2);
+                                            int IdRepairsCard = CardsOnHands[NumberCardRepairs];
+                                            RepairsEvent Card = Carte.GetCarte(IdRepairsCard) as RepairsEvent;
+                                            if (Card.ValueEnergy <= energy)
+                                            {
+                                                energy -= Card.ValueEnergy;
+                                                CardsOnHands.RemoveAt(NumberCardRepairs);
+                                                RepairsCardEvent(this, IdRepairsCard, Card, NumberCardRepairs, Repairable);
+                                            }
+                                        }
                                         break;
 
                                 }
@@ -298,8 +318,7 @@ namespace CarteServer
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
-        }
-       
+        }  
 
         public void Send(int number, MsgType TypeMsg)
         {
@@ -429,6 +448,7 @@ namespace CarteServer
             name = null;
             Attack = null;
             DamageCardEvent = null;
+            RepairsCardEvent = null;
             carteUser = null;
 
             CardsOnHands.Clear();

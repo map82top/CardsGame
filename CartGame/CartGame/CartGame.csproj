@@ -146,19 +146,28 @@
     <None Include="Resources\damage.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\AmbushNormalCard.png" />
+    <None Include="Resources\DamageCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EventCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PointAttackSpaceCarteNormal.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PointAttackSpaceFullMin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DuelistFullMinCard.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\DuelistNormalCard.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\VeteranNormalCard.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\RecruitFullMinCard.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\DuelistFullMinCard.png" />
+    <None Include="Resources\VeteranNormalCard.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\VeteranFullMinCard.png" />
@@ -167,19 +176,28 @@
     <None Include="Resources\RecruitNormalCard.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\DamageCard.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\EventCard.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\AmbushFullMinCard.png" />
+    <None Include="Resources\RocketNormalCard.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\RocketFullMinCard.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\RocketNormalCard.png" />
+    <None Include="Resources\AmbushFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AmbushNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RepairsBoxNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\FieldRepairsFullMin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RepairsBoxFullMin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\FieldRepairsNormalCard.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -38,7 +38,10 @@ namespace CartGame
         YouNoActiv, 
         DamageEvent,
         UserDamageEvent,
-        EnemyDamageEvent
+        EnemyDamageEvent,
+        RepairsEvent,
+        UsRepairsEvent,
+        EnRepairsEvent
 
 
 
@@ -54,7 +57,7 @@ namespace CartGame
         public abstract Panel ImageCartMax();
         public abstract Panel ImageCartFullMin();
         static int id = 0;
-        static public int ID
+        public int ID
         {
             get { return id; }
         }
@@ -77,6 +80,15 @@ namespace CartGame
                     break;
                 case 5:
                     RetCarte = new Rocket();
+                    break;
+                case 6:
+                    RetCarte = new PointAttackSpace();
+                    break;
+                case 7:
+                    RetCarte = new RepairsBox();
+                    break;
+                case 8:
+                    RetCarte = new FieldRepairs();
                     break;
                 default:
                     RetCarte = null;
@@ -110,8 +122,14 @@ namespace CartGame
         {
             get { return valueEnergy; }
         }
+        protected int bonusAttack;//бонус к атаке 
 
-     
+        public int BonusAttack
+        {
+            get { return bonusAttack;  }
+            set { bonusAttack = value; }
+        }
+            
         protected string nameRobot;
         public string NameRobot
         {
@@ -122,7 +140,7 @@ namespace CartGame
             attack = 0;
             armor = 0;
             valueEnergy = 0;
-           
+            bonusAttack = 0;
             nameRobot = "";
 
         }
@@ -241,7 +259,7 @@ namespace CartGame
 
             //отображаем атаку
             Label attackLabel = new Label();
-            attackLabel.Text = Convert.ToString(attack);
+            attackLabel.Text = Convert.ToString(attack + bonusAttack);
             attackLabel.Font = new Font("Arial", 9);
             attackLabel.Location = new Point(10, 87);
             attackLabel.Size = new Size(12, 12);
@@ -392,6 +410,54 @@ namespace CartGame
             return CarteImage;
         }
     }
+
+    class RepairsEvent : Event
+    {
+        //урон по противнику
+        protected int damage;
+        public int Damage
+        {
+            get { return damage; }
+        }
+        public RepairsEvent()
+        {
+            typeEvent = TypeEventCard.HealingCard;
+            valueEnergy = 0;
+            damage = 0;
+        }
+
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
     /// <summary>
     /// Класс карты Засада
     /// </summary>
@@ -485,6 +551,147 @@ namespace CartGame
         }
 
     }
+
+    /// <summary>
+    /// Класс космической точечной атаки
+    /// </summary>
+    class PointAttackSpace : DamageEvent
+    {
+        static int id = 6;
+
+        public PointAttackSpace()
+        {
+            typeEvent = TypeEventCard.DamageCard;
+            valueEnergy = 8;
+            damage = 7;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.PointAttackSpaceCarteNormal;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.PointAttackSpaceCarteNormal;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.PointAttackSpaceFullMin;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+    }
+
+    /// <summary>
+    /// Класс ремкомплекта
+    /// </summary>
+    class RepairsBox : RepairsEvent
+    {
+        static int id = 7;
+
+        public RepairsBox()
+        {
+            typeEvent = TypeEventCard.HealingCard;
+            valueEnergy = 1;
+            damage = -1;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RepairsBoxNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RepairsBoxNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.RepairsBoxFullMin;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+    }
+
+    /// <summary>
+    /// Класс карты полевой ремонтной бригады
+    /// </summary>
+    class FieldRepairs : RepairsEvent
+    {
+        static int id = 8;
+
+        public FieldRepairs()
+        {
+            typeEvent = TypeEventCard.HealingCard;
+            valueEnergy = 4;
+            damage = -3;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.FieldRepairsNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.FieldRepairsNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.FieldRepairsFullMin;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+    }
     /// <summary>
     /// Класс карты Рекрут
     /// </summary>
@@ -502,6 +709,7 @@ namespace CartGame
             valueEnergy = 2;
 
             nameRobot = "Рекрут";
+            bonusAttack = 0;
         }
         public override Panel ImageCartNormal()
         {
@@ -549,6 +757,7 @@ namespace CartGame
             armor = 2;
             valueEnergy = 3;
             nameRobot = "Дуэлянт";
+            bonusAttack = 0;
 
         }
         public override Panel ImageCartNormal()
@@ -592,10 +801,10 @@ namespace CartGame
        
         public Veteran()
         {
-            attack = 3;
+            attack = 2;
             armor = 5;
             valueEnergy = 4;
-            
+            bonusAttack = 0;
             nameRobot = "Ветеран";
         }
         public override Panel ImageCartNormal()

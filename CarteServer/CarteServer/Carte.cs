@@ -20,7 +20,7 @@ namespace CarteServer
         //public abstract Panel ImageCartMax();
         // public abstract Panel Clone { get; }
         static int id = 0;
-        static public int ID
+        public int ID
         {
             get { return id; }
         }
@@ -44,10 +44,19 @@ namespace CarteServer
                         RetCarte = new Veteran();
                         break;
                     case 4: RetCarte = new Ambush();
-                      break;
+                        break;
                     case 5: RetCarte = new Rocket();
-                    break; 
-                    default:
+                        break;
+                    case 6:
+                    RetCarte = new PointAttackSpace();
+                        break;
+                    case 7:
+                        RetCarte = new RepairsBox();
+                        break;
+                    case 8:
+                        RetCarte = new FieldRepairs();
+                        break;
+                default:
                         RetCarte = null;
                         break;
                 }
@@ -91,10 +100,26 @@ namespace CarteServer
                 damage = 0;
             }
         }
-        /// <summary>
-        /// Класс карты Засада
-        /// </summary>
-        class Ambush : DamageEvent
+
+        class RepairsEvent : Event
+        {
+            //урон по противнику
+            protected int damage;
+            public int Damage
+            {
+                get { return damage; }
+            }
+            public RepairsEvent()
+            {
+                typeEvent = TypeEventCard.HealingCard;
+                valueEnergy = 0;
+                damage = 0;
+            }
+        }
+    /// <summary>
+    /// Класс карты Засада
+    /// </summary>
+    class Ambush : DamageEvent
         {
         static int id = 4;
        
@@ -117,6 +142,48 @@ namespace CarteServer
                 typeEvent = TypeEventCard.DamageCard;
                 valueEnergy = 3;
                 damage = 3;
+            }
+        }
+    /// <summary>
+    /// Класс карты точечного удара из космоса
+    /// </summary>
+        class PointAttackSpace : DamageEvent
+        {
+            static int id = 6;
+
+            public PointAttackSpace()
+            {
+                typeEvent = TypeEventCard.DamageCard;
+                valueEnergy = 8;
+                damage = 7;
+            }
+        }
+    /// <summary>
+    /// Класс карты Аптечка
+    /// </summary>
+        class RepairsBox : RepairsEvent
+    {
+            static int id = 7;
+
+            public RepairsBox()
+            {
+                typeEvent = TypeEventCard.HealingCard;
+                valueEnergy = 1;
+                damage = -1;
+            }
+        }
+     /// <summary>
+     /// Класс карты Полевой ремонтной бригады
+     /// </summary>
+        class FieldRepairs : RepairsEvent
+    {
+            static int id = 8;
+
+            public FieldRepairs()
+            {
+                typeEvent = TypeEventCard.HealingCard;
+                valueEnergy = 4;
+                damage = -3;
             }
         }
     /// <summary>
@@ -160,7 +227,14 @@ namespace CarteServer
                 }
                  
             }
-             public virtual void NewProgress()
+            protected int bonusAttack;//бонус к атаке 
+
+            public int BonusAttack
+            {
+                get { return bonusAttack; }
+                set { bonusAttack = value; }
+            }
+           public virtual void NewProgress()
              {
                  attackCount = 1;
              }
@@ -171,6 +245,7 @@ namespace CarteServer
                 valueEnergy = 0;
                 nameRobot = "";
                 attackCount = 0;
+                bonusAttack = 0;
 
             }
     
@@ -190,9 +265,10 @@ namespace CarteServer
              {
                  attack = 2;
                  armor = 5;
-                valueEnergy = 1;
+                valueEnergy = 2;
                 attackCount = 1;
                 nameRobot = "Рекрут";
+            bonusAttack = 0;
             }
 
 
@@ -212,15 +288,17 @@ namespace CarteServer
                 valueEnergy = 3;
                 attackCount = 1;
                 nameRobot = "Дуэлянт";
-           
+            bonusAttack = 0;
+
+
            }
 
         }
        /// <summary>
        /// Класс карты Ветеран
        /// </summary>
-        class Veteran : Robot
-        {
+      class Veteran : Robot
+      {
             static int id = 3;
             
          
@@ -231,6 +309,7 @@ namespace CarteServer
             valueEnergy = 4;
             attackCount = 1;
             nameRobot = "Ветеран";
+            bonusAttack = 0;
         }
     }
     /// <summary>

@@ -170,6 +170,26 @@ namespace CartGame.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap FieldRepairsFullMin {
+            get {
+                object obj = ResourceManager.GetObject("FieldRepairsFullMin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap FieldRepairsNormalCard {
+            get {
+                object obj = ResourceManager.GetObject("FieldRepairsNormalCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap FullMinCarte {
             get {
                 object obj = ResourceManager.GetObject("FullMinCarte", resourceCulture);
@@ -200,6 +220,26 @@ namespace CartGame.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap PointAttackSpaceCarteNormal {
+            get {
+                object obj = ResourceManager.GetObject("PointAttackSpaceCarteNormal", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PointAttackSpaceFullMin {
+            get {
+                object obj = ResourceManager.GetObject("PointAttackSpaceFullMin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap RecruitFullMinCard {
             get {
                 object obj = ResourceManager.GetObject("RecruitFullMinCard", resourceCulture);
@@ -213,6 +253,26 @@ namespace CartGame.Properties {
         internal static System.Drawing.Bitmap RecruitNormalCard {
             get {
                 object obj = ResourceManager.GetObject("RecruitNormalCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap RepairsBoxFullMin {
+            get {
+                object obj = ResourceManager.GetObject("RepairsBoxFullMin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap RepairsBoxNormalCard {
+            get {
+                object obj = ResourceManager.GetObject("RepairsBoxNormalCard", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

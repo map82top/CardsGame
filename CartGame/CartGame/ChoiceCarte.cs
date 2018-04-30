@@ -471,5 +471,10 @@ namespace CartGame
             Settings NewForm = new Settings(this);
             NewForm.ShowDialog();
         }
+
+        private void labelHelp_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
