@@ -90,6 +90,21 @@ namespace CartGame
                 case 8:
                     RetCarte = new FieldRepairs();
                     break;
+                case 9:
+                    RetCarte = new B1();
+                    break;
+                case 10:
+                    RetCarte = new Boxer();
+                    break;
+                case 11:
+                    RetCarte = new Gladiator();
+                    break;
+                case 12:
+                    RetCarte = new Turret();
+                    break;
+                case 13:
+                    RetCarte = new Destroyer();
+                    break;
                 default:
                     RetCarte = null;
                     break;
@@ -124,7 +139,7 @@ namespace CartGame
         }
         protected int bonusAttack;//бонус к атаке 
 
-        public int BonusAttack
+        public virtual int BonusAttack
         {
             get { return bonusAttack;  }
             set { bonusAttack = value; }
@@ -707,7 +722,7 @@ namespace CartGame
             attack = 2;
             armor = 5;
             valueEnergy = 2;
-
+          
             nameRobot = "Рекрут";
             bonusAttack = 0;
         }
@@ -758,6 +773,7 @@ namespace CartGame
             valueEnergy = 3;
             nameRobot = "Дуэлянт";
             bonusAttack = 0;
+          
 
         }
         public override Panel ImageCartNormal()
@@ -792,10 +808,57 @@ namespace CartGame
         }
     }
 
+    public class Destroyer : Robot
+    {
+        static int id = 13;
+
+
+        public Destroyer()
+        {
+            attack = 5;
+            armor = 10;
+            valueEnergy = 8;
+            nameRobot = "Разрушитель";
+            bonusAttack = 0;
+
+
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.DestroyerNormalCarte;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.DestroyerNormalCarte;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.DestroyerFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
+
     /// <summary>
     /// Класс карты Ветеран
     /// </summary>
-   public class Veteran : Robot
+    public class Veteran : Robot
     {
         static int id = 3;
        
@@ -806,6 +869,7 @@ namespace CartGame
             valueEnergy = 4;
             bonusAttack = 0;
             nameRobot = "Ветеран";
+            
         }
         public override Panel ImageCartNormal()
         {
@@ -840,9 +904,264 @@ namespace CartGame
     }
 
     /// <summary>
+    /// Класс робота Боксер
+    /// </summary>
+    public class Boxer : Robot
+    {
+        static int id = 10;
+
+        public Boxer()
+        {
+            attack = 2;
+            armor = 6;
+            valueEnergy = 5;
+            bonusAttack = 0;
+            nameRobot = "Боксер";
+          
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BoxerNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BoxerNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BoxerFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
+
+    /// <summary>
+    /// Класс карты Гладиатор
+    /// </summary>
+    public class Gladiator : Robot
+    {
+        static int id = 11;
+
+        public Gladiator()
+        {
+            attack = 1;
+            armor = 8;
+            valueEnergy = 6;
+            bonusAttack = 0;
+            nameRobot = "Гладиатор";
+           
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.GladiatorNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.GladiatorNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.GladiatorFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
+
+
+    public class DefenceConstr : Robot
+    {
+        //общие характеристики каждой карты робота
+        /// <summary>
+        /// У данного сооружения нет бонуса к атаке
+        /// </summary>
+        public override int BonusAttack
+        {
+            get { return bonusAttack; }
+            set { bonusAttack = 0; }
+        }
+       
+        public DefenceConstr()
+        {
+            attack = 0;
+            armor = 0;
+            valueEnergy = 0;
+            bonusAttack = 0;
+            nameRobot = "";
+           
+        }
+
+        
+        public override Panel ImageCartMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(85, 120);
+
+            //отображаем атаку
+            Label attackLabel = new Label();
+            attackLabel.Text = Convert.ToString(attack + bonusAttack);
+            attackLabel.Font = new Font("Arial", 9);
+            attackLabel.Location = new Point(10, 87);
+            attackLabel.Size = new Size(12, 12);
+            CarteImage.Controls.Add(attackLabel);
+
+
+            //отображаем очки здоровья
+            Label armorLabel = new Label();
+            armorLabel.Text = Convert.ToString(armor);
+            armorLabel.Font = new Font("Arial", 9);
+            armorLabel.Location = new Point(55, 87);
+            armorLabel.Size = new Size(21, 12);
+            CarteImage.Controls.Add(armorLabel);
+
+
+            //отображаем имя
+            Label Name = new Label();
+            Name.Text = nameRobot;
+            Name.Font = new Font("Arial", 9);
+            Name.Location = new Point(10, 45);
+            Name.Size = new Size(70, 12);
+            Name.TextAlign = ContentAlignment.MiddleCenter;
+            CarteImage.Controls.Add(Name);
+
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.CarteMin;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+       
+
+
+    }
+    
+    /// <summary>
+    /// Класс защитного сооружения Турель
+    /// </summary>
+    public class Turret : DefenceConstr
+    {
+        static int id = 12;
+
+        public Turret()
+        {
+            attack = 1;
+            armor = 10;
+            valueEnergy = 5;
+            bonusAttack = 0;
+            nameRobot = "Турель";
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.TurretNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.TurretNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.TurretFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
+    /// <summary>
+    /// Класс дроид B1
+    /// </summary>
+    public class B1 : Robot
+    {
+        static int id = 9;
+
+        public B1()
+        {
+            attack = 1;
+            armor = 1;
+            valueEnergy = 2;
+            bonusAttack = 0;
+            nameRobot = "B1";
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.B1NormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.B1NormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.B1FullMin;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
+    /// <summary>
     /// Класс карты Штаба
     /// </summary>
-   public class HeadQuarters
+    public class HeadQuarters
     {
         private int attack;
         public int Attack

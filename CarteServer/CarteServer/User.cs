@@ -58,8 +58,8 @@ namespace CarteServer
             get { return energy; }
             set { energy = value; }
         }
-        int[] carteUser;//id карт игрока
-        public int[] CarteUser
+        List<int> carteUser;//id карт игрока
+        public List<int> CarteUser
         {
             get { return carteUser; }
         }
@@ -137,12 +137,13 @@ namespace CarteServer
                                 switch (msgType)
                                 {
                                     case MsgType.CarteUser:
-                                        if (MsgLength / 2 == 7)
+                                        if (MsgLength % 2 == 0)
                                         {
+                                          
                                             int index = 0;
-                                            for (int i = 0; i < 7; i++)
+                                            for (int i = 0; i < MsgLength/2; i++)
                                             {
-                                                carteUser[i] = (int)BitConverter.ToInt16(Data, index);
+                                                carteUser.Add((int)BitConverter.ToInt16(Data, index));
 
                                                 index += 2;
                                             }
@@ -269,7 +270,7 @@ namespace CarteServer
             energy = 0;
 
             //инициализируем колоды карт
-            carteUser = new int[7];
+            carteUser = new List<int>();
             CardsOnMargin = new List<Robot>();
             CardsOnHands = new List<int>();
             userHq = new HeadQuarters();

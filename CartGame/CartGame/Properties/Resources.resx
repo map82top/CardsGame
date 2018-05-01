@@ -205,4 +205,34 @@
   <data name="RepairsBoxNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\RepairsBoxNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="B1FullMin" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\B1FullMin.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B1NormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\B1NormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BoxerFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\BoxerFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BoxerNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\BoxerNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="GladiatorFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\GladiatorFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="GladiatorNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\GladiatorNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="TurretFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TurretFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="TurretNormalCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TurretNormalCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DestroyerFullMinCard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DestroyerFullMinCard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DestroyerNormalCarte" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DestroyerNormalCarte.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

@@ -158,12 +158,6 @@
     <None Include="Resources\PointAttackSpaceFullMin.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\DuelistFullMinCard.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\DuelistNormalCard.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\RecruitFullMinCard.png" />
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +192,42 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\FieldRepairsNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\B1FullMin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\B1NormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DuelistFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DuelistNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GladiatorFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GladiatorNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BoxerFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BoxerNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TurretFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TurretNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DestroyerFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DestroyerNormalCarte.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

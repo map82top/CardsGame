@@ -53,11 +53,7 @@ namespace CartGame
         public int[] UserColoda
         {
             get { return userColoda; }
-            set
-            {
-                if (userColoda == null)
-                    userColoda = value;
-            }
+            
         }
 
         private int myMaxEnergy;//максимальная энергия за этот ход
@@ -105,7 +101,7 @@ namespace CartGame
         {
             name = null;
             enName = null;
-            userColoda = new int[7];
+            userColoda = new int[15];//максимальное количество карт в колоде игрока 15
             usCarteOnField = null;
             enCarteOnField = null;
             carteFromUser = null;

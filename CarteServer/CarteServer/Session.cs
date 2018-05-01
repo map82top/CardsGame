@@ -98,6 +98,25 @@ namespace CarteServer
 
 
          }
+
+        private int SeekVeteran(User us)
+        {
+            int ValueVeteran = 0;
+            foreach (Robot Card in us.CardsMargin)
+                if (Card is Veteran)
+                    ValueVeteran += 1;
+            return ValueVeteran;
+        }
+        private DefenceConstr SeekDefenceConstr(User us)
+        {
+            foreach (Robot Card in us.CardsMargin)
+                if (Card is DefenceConstr)//ищем самого первого защитника
+                {
+                    return Card as DefenceConstr;
+                    
+                }
+            return null;
+        }
         /// <summary>
         /// Создает эффекты при добавлении карты на поле
         /// </summary>
@@ -114,17 +133,62 @@ namespace CarteServer
                     foreach (Robot Card in us.CardsMargin)
                         if (!(Card is Veteran))
                             Card.BonusAttack += 1;
+
+                    //если у нас есть защитник, то добавляем ссылку на него новой карте
+                    us.CardsMargin[us.CardsMargin.Count - 1].Defender = SeekDefenceConstr(us);
+                    break;
+                case "B1":
+                    //добавляем на поле еще одну карту дроида B1
+                        us.CardsMargin.Add((Robot)Carte.GetCarte(idCards));
+                    //если карта не типа ветеран,то считаем сколько у нас карт ветеранов и добавляем
+                    //сответствующий размер бонуса
+                    int Bonus = SeekVeteran(us);
+                    us.CardsMargin[us.CardsMargin.Count - 1].BonusAttack += Bonus;
+                    us.CardsMargin[us.CardsMargin.Count - 2].BonusAttack += Bonus;
+
+                    //если у нас есть защитник, то добавляем ссылку на него новой карте
+                    DefenceConstr temp = SeekDefenceConstr(us);
+                    us.CardsMargin[us.CardsMargin.Count - 1].Defender = temp;
+                    us.CardsMargin[us.CardsMargin.Count - 2].Defender = temp;
+                    break;
+                case "Turret":
+                    //ищем карту, не являющуюся защитным сооружением
+                  
+                    foreach (Robot Card in us.CardsMargin)
+                        if (!(Card is DefenceConstr))
+                        {
+                            //если уже есть защитник
+                            if (Card.Defender != null)
+                            {
+                                Robot LocalCard = Card;
+                                //ищем последнего защитника
+                                while (LocalCard.Defender != null)
+                                {
+                                    LocalCard = LocalCard.Defender;
+                                }
+                                //добавляем первому защитнику ссылку на нового защитника
+                                LocalCard.Defender = (DefenceConstr)us.CardsMargin[us.CardsMargin.Count - 1];
+                            }
+                            else
+                            {
+                                //добавляем все картам ссылку на защитника
+                                foreach (Robot CardNoDefender in us.CardsMargin)
+                                    if (!(CardNoDefender is DefenceConstr)) CardNoDefender.Defender = (DefenceConstr)us.CardsMargin[us.CardsMargin.Count - 1];
+                            }
+                            //выходим из цикла
+                            break;                         
+                        }
+                         
+                        
                     break;
                 default:
                     //если карта не типа ветеран,то считаем сколько у нас карт ветеранов и добавляем
                     //сответствующий размер бонуса
-                    int ValueVeteran = 0;
-                    foreach (Robot Card in us.CardsMargin)
-                        if (Card is Veteran)
-                            ValueVeteran += 1;
+                    us.CardsMargin[us.CardsMargin.Count - 1].BonusAttack += SeekVeteran(us);
 
-                    us.CardsMargin[us.CardsMargin.Count - 1].BonusAttack += ValueVeteran;
-                    break;
+                    //если у нас есть защитник, то добавляем ссылку на него новой карте
+                    us.CardsMargin[us.CardsMargin.Count - 1].Defender = SeekDefenceConstr(us);
+                  break;
             }
         }
         private void ForAddCardOnField(User us1, User us2, int number, int idCards)
@@ -407,14 +471,105 @@ namespace CarteServer
                         //уменьшаем бонус к атаке у всех карт
                         foreach (Robot Card in Us.CardsMargin)
                             if (!(Card is Veteran))
-                               Card.BonusAttack -= 1;
+                                Card.BonusAttack -= 1;
+                        break;
+                    case "Turret":
+                       
+                        foreach(Robot CardNoDefence in Us.CardsMargin)
+                        if (!(CardNoDefence is DefenceConstr))
+                        {
+                                //если это последний защитник
+                                if (CardNoDefence.Defender == Us.CardsMargin[index])
+                                {
+                                    // обнуляем все ссылки
+                                    foreach (Robot Card in Us.CardsMargin)
+                                        if (!(Card is DefenceConstr)) Card.Defender = null;
+                                }
+                                else
+                                {
+                                    int i = index;
+                                    for (; i >= 0; i--)
+                                    {
+                                        //идем пока не встретили еще одного защитника
+                                        if(Us.CardsMargin[i] is DefenceConstr)
+                                        {
+                                            Us.CardsMargin[i].Defender = null;
+                                            break;
+                                        }
+                                    }
+                                }
+                                //выходим из цикла
+                                break;
+                        }
+                       
                         break;
 
                 }
                 Us.CardsMargin.RemoveAt(index);
             }
         }
+        /// <summary>
+        /// Определяет кого будут атаковать
+        /// </summary>
+        /// <returns></returns>
+        private int BeforeDamage(List<Robot> CardsMargin,int attacked)
+        {
+            int RealAttacked = 0;
+            //ищем карту не являющуюся защитным сооружением
+            foreach (Robot Card in CardsMargin)
+            {   if (!(Card is DefenceConstr))
+                {
+                    //если на поле есть защитник
+                    if (Card.Defender != null)
+                    {
+                        //ищем последнего защитника
+                        Robot LocalCard = Card;
+                        while(LocalCard.Defender!= null)
+                        {
+                            LocalCard = LocalCard.Defender;
+                        }
 
+                        //возвращаем индекс защитника
+                        RealAttacked = CardsMargin.IndexOf(LocalCard);
+                        break;
+                    }
+                    else//если его нет
+                    {
+                        switch (CardsMargin[attacked].GetType().Name)
+                        {
+                            case "Duelist":
+                                if (attacked != 0)
+                                {
+                                    //если карта дуэлиста не первая в списке
+                                    //то атакуем карту слева
+                                    RealAttacked = attacked - 1;
+                                }
+                                else if (attacked == CardsMargin.Count - 1)
+                                {
+                                    //если карта не последняя в списке карт находящихся на поле
+                                    //то атакуем карту находящуюся справа
+                                    RealAttacked = attacked + 1;
+                                }
+                                else
+                                {
+                                    //если кроме дуэлиста других карт на поле нет, то атакуем его
+                                    RealAttacked = attacked;
+                                }
+
+                                break;
+                            default:
+                                RealAttacked = attacked;
+                                break;
+                        }
+                        break;
+                    }
+
+                    break;
+                }
+               
+            }
+            return RealAttacked;
+        }
         /// <summary>
         /// Дробит функции обработки атаки на уровне сессии на части
         /// </summary>
@@ -434,16 +589,27 @@ namespace CarteServer
                             damageEnemy = us1.userHQ.Attack;
                             us2.userHQ.Armor -= damageUser;
                             //урон от противника
-                             damageUser = us2.userHQ.Attack;
-                            us1.userHQ.Armor -= damageUser;
+                            if (us2.userHQ.DefenseCount > 0)
+                            {
+                                damageUser = us2.userHQ.Attack;
+                                us1.userHQ.Armor -= damageUser;
+                            }
+                            
                         }
                         else
                         {
-
-                             damageEnemy = us1.userHQ.Attack;
-                            us2.CardsMargin[attacked].Armor -= damageEnemy;
-                            damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
-                            us1.userHQ.Armor -= damageUser;
+                            if (us2.CardsMargin[attacked].DefenseCount > 0)
+                            {
+                                //атака по карте пользователя
+                                damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
+                                us1.userHQ.Armor -= damageUser;
+                            }
+                             //урон по карте врага
+                            damageEnemy = us1.userHQ.Attack;
+                            //определяем кто на самом деле дожен быть атакован
+                            attacked = BeforeDamage(us2.CardsMargin, attacked);
+                             us2.CardsMargin[attacked].Armor -= damageEnemy;
+                          
                             //если очков прочности меньше 0 удаляем карту
                             EffectDeliteCard(us2, attacked);
                  
@@ -451,23 +617,37 @@ namespace CarteServer
                     }
                     else
                     {
-                        if (attacked == -1)
-                        {
-                            damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
-                            us2.userHQ.Armor -= damageEnemy;
-                            damageUser = us2.userHQ.Attack;
-                            us1.CardsMargin[attacking].Armor -= damageUser;
-                            //если очков прочности меньше 0 удаляем карту
-                            EffectDeliteCard(us1, attacking);
-                            
-                        }
-                        else
-                        {
+                if (attacked == -1)
+                {
+                    //урон от игрока по врагу
+                    damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
+                    us2.userHQ.Armor -= damageEnemy;
+
+                    if (us2.userHQ.DefenseCount > 0)
+                    {
+                        //урон от врага по игроку
+                        damageUser = us2.userHQ.Attack;
+                        us1.CardsMargin[attacking].Armor -= damageUser;
+                    }
+
+                    //если очков прочности меньше 0 удаляем карту
+                    EffectDeliteCard(us1, attacking);
+
+                }
+                else
+                {
                             //карты атакуют друг друга
-                            damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
-                            us2.CardsMargin[attacked].Armor -= damageEnemy;
-                            damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
-                            us1.CardsMargin[attacking].Armor -= damageUser;
+                            //урон по карте игрока
+                            if (us2.CardsMargin[attacked].DefenseCount > 0)
+                             {
+                                damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
+                                us1.CardsMargin[attacking].Armor -= damageUser;
+                             }
+                                         //урон по карте противника  
+                             damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
+                             attacked = BeforeDamage(us2.CardsMargin, attacked);
+                              us2.CardsMargin[attacked].Armor -= damageEnemy;
+
                             //если их очки прочности меньше 0, то удаляем их
                             EffectDeliteCard(us1, attacking);
                             EffectDeliteCard(us2, attacked);
@@ -475,7 +655,7 @@ namespace CarteServer
                         }
                     }
 
-            Debug.WriteLine("Урон по карте пользователя " + damageUser + "  Урон по карте врага " + damageEnemy);
+            Debug.WriteLine("Урон по пользователю " + damageUser + "   Урон по врагу  " + damageEnemy); 
                     //отправляем о сообщение об удачной атаке
                     us1.Send(new int[] { attacking, attacked, damageUser, damageEnemy }, MsgType.MyAttackSucc);
                     us2.Send(new int[] { attacking, attacked, damageUser, damageEnemy }, MsgType.EnAttackSucc);//поменял уроны местами из-за ввода универсальной функции AttackSucc
@@ -584,8 +764,10 @@ namespace CarteServer
                     UsProgress = Us2;
                     Us1.MyProgress = false;
                     Us2.MyProgress = true;
+
                     //добавляем  игроку карту
-                    int IdCarte = Us2.CarteUser[rand.Next(0, 6)];
+                    int Length = Us2.CarteUser.Count - 1;//всего карт у игрока
+                    int IdCarte = Us2.CarteUser[rand.Next(0, Length)];
                     Us2.CartsHand.Add(IdCarte);
                     Us1.Send(MsgType.AddEnemyCarte);
                     Us2.Send(IdCarte, MsgType.AddUserCarte);
@@ -646,9 +828,11 @@ namespace CarteServer
                 int count = 0;
                 if (user == UsProgress) count = 7;
                 else count = 6;
+
+                int Length = user.CarteUser.Count - 1;//всего выбрано карт у игрока
                 for (int i = 0; i < count; i++)
                 {
-                    int IdCarte = user.CarteUser[rand.Next(0, 6)];
+                    int IdCarte = user.CarteUser[rand.Next(0, Length)];
                     //добавляем id в массив карт, находящихся в руках у игрока
                     user.CartsHand.Add(IdCarte);
 

@@ -103,7 +103,14 @@ namespace CartGame
             switch (type)
             {
                 case MsgType.StartSession:
-                    dialogWithServ.Send(DataSession.UserColoda, MsgType.CarteUser);
+                    //отправляем только те карты которые не равны 0
+                    List<int> temp = new List<int>();
+                    int count = DataSession.UserColoda.Length;
+                    for (int i = 0; i < count; i++)
+                        if (DataSession.UserColoda[i] > 0) temp.Add(DataSession.UserColoda[i]);
+
+                    //отправляем полученный массив
+                    dialogWithServ.Send(temp.ToArray(), MsgType.CarteUser);
                     break;
                 case MsgType.GetName:
                     dialogWithServ.Send(DataSession.UsName, MsgType.GetName);
@@ -180,6 +187,15 @@ namespace CartGame
             EnRepairsCard = null;
 
        }
+
+        private int SeekVeteran(List<Robot>CardsOnField)
+        {
+            int ValueVeteran = 0;
+            foreach (Robot Card in CardsOnField)
+                if (Card is Veteran)
+                    ValueVeteran += 1;
+            return ValueVeteran;
+        }
         /// <summary>
         /// Управляет эффектами, возникающими при добавлении карточки
         /// </summary>
@@ -197,15 +213,21 @@ namespace CartGame
                                 Card.BonusAttack += 1;
 
                         break;
+                    case "B1":
+                        //добавляем карту в массив карт на поле                       
+                       CarteOnField.Add((Robot)Carte.GetCarte(9));
+                        //добавляем бонус к карте
+                        int count = CarteOnField.Count;
+                        int bonus = SeekVeteran(CarteOnField);
+                        CarteOnField[count - 1].BonusAttack += bonus;
+                        CarteOnField[count - 2].BonusAttack += bonus;
+                        break;
                     default:
 
                         //если карта не типа ветеран,то считаем сколько у нас карт ветеранов и добавляем
                         //сответствующий размер бонуса
-                        int ValueVeteran = 0;
-                        foreach (Robot Card in CarteOnField)
-                            if (Card is Veteran)
-                                ValueVeteran += 1;
-                        CarteOnField[CarteOnField.Count - 1].BonusAttack += ValueVeteran;
+                        
+                        CarteOnField[CarteOnField.Count - 1].BonusAttack += SeekVeteran(CarteOnField);
                         break;
                 }
             }
@@ -228,6 +250,8 @@ namespace CartGame
                                 if (!(Card is Veteran))
                                    Card.BonusAttack -= 1;
                             break;
+                       
+                            
 
                     }
                     //удаляем карту

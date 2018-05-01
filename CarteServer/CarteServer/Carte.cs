@@ -56,6 +56,18 @@ namespace CarteServer
                     case 8:
                         RetCarte = new FieldRepairs();
                         break;
+                    case 9:
+                        RetCarte = new B1();
+                        break;
+                    case 10:
+                        RetCarte = new Boxer();
+                        break;
+                    case 11:
+                        RetCarte = new Gladiator();
+                        break;
+                    case 12:
+                        RetCarte = new Turret();
+                        break;
                 default:
                         RetCarte = null;
                         break;
@@ -227,9 +239,28 @@ namespace CarteServer
                 }
                  
             }
-            protected int bonusAttack;//бонус к атаке 
+            protected int defenseCount;
+            public int  DefenseCount
+            {
+                get
+                {
+                    int count = defenseCount;
+                    defenseCount--;
+                    return count;
+                }
 
-            public int BonusAttack
+            }
+
+        //защитник этой карты
+        protected DefenceConstr defender;
+        public DefenceConstr Defender
+        {
+            get { return defender; }
+            set { defender = value; }
+        }
+        protected int bonusAttack;//бонус к атаке 
+
+            public virtual int BonusAttack
             {
                 get { return bonusAttack; }
                 set { bonusAttack = value; }
@@ -237,6 +268,7 @@ namespace CarteServer
            public virtual void NewProgress()
              {
                  attackCount = 1;
+                 defenseCount = 1; 
              }
             public Robot()
             {
@@ -246,6 +278,8 @@ namespace CarteServer
                 nameRobot = "";
                 attackCount = 0;
                 bonusAttack = 0;
+                defenseCount = 0;
+                defender = null;
 
             }
     
@@ -268,10 +302,10 @@ namespace CarteServer
                 valueEnergy = 2;
                 attackCount = 1;
                 nameRobot = "Рекрут";
-            bonusAttack = 0;
-            }
-
-
+                bonusAttack = 0;
+                defenseCount = 1;
+                defender = null;
+        }
        }
         /// <summary>
         ///Класс карты Дуэлянт
@@ -288,10 +322,11 @@ namespace CarteServer
                 valueEnergy = 3;
                 attackCount = 1;
                 nameRobot = "Дуэлянт";
-            bonusAttack = 0;
+                bonusAttack = 0;
+                defenseCount = 1;
+                defender = null;
 
-
-           }
+        }
 
         }
        /// <summary>
@@ -310,6 +345,148 @@ namespace CarteServer
             attackCount = 1;
             nameRobot = "Ветеран";
             bonusAttack = 0;
+            defenseCount = 1;
+            defender = null;
+        }
+    }
+    class Destroyer : Robot
+    {
+        static int id = 13;
+
+
+        public Destroyer()
+        {
+            attack = 5;
+            armor = 10;
+            valueEnergy = 8;
+            attackCount = 1;
+            nameRobot = "Разрушитель";
+            bonusAttack = 0;
+            defenseCount = 1;
+            defender = null;
+        }
+    }
+    /// <summary>
+    /// Класс дроида B1
+    /// </summary>
+    class B1 : Robot
+    {
+        static int id = 9;
+
+
+        public B1()
+        {
+            attack = 1;
+            armor = 1;
+            valueEnergy = 2;
+            attackCount = 1;
+            nameRobot = "B1";
+            bonusAttack = 0;
+            defenseCount = 1;
+            defender = null;
+        }
+    }
+
+    //класс карты Боксер
+    class Boxer: Robot
+    {
+        static int id = 10;
+
+
+        public Boxer()
+        {
+            attack = 2;
+            armor = 6;
+            valueEnergy = 5;
+            attackCount = 1;
+            nameRobot = "Боксер";
+            bonusAttack = 0;
+            defenseCount = 2;
+            defender = null;
+        }
+        public override void NewProgress()
+        {
+            attackCount = 1;
+            defenseCount = 2;
+        }
+    }
+
+    //класс карты Гладиатор
+    class Gladiator : Robot
+    {
+        static int id = 11;
+
+
+        public Gladiator()
+        {
+            attack = 1;
+            armor = 8;
+            valueEnergy = 6;
+            attackCount = 3;
+            nameRobot = "Гладиатор";
+            defender = null;
+            bonusAttack = 0;
+            defenseCount = 1;
+        }
+        public override void NewProgress()
+        {
+            attackCount = 3;
+            defenseCount = 1;
+        }
+    }
+
+    /// <summary>
+    /// Класс базового класс всех защитных сооружения
+    /// </summary>
+    class DefenceConstr : Robot
+    {
+        //общие характеристики каждой карты робота
+       
+        //защитиком этой карты может быть только более новая карта
+        
+      
+        //бонус всегда равен 0
+        public override int BonusAttack
+        {
+            get { return bonusAttack; }
+            set { bonusAttack = 0; }
+        }
+
+        public DefenceConstr()
+        {
+            attack = 0;
+            armor = 0;
+            valueEnergy = 0;
+            nameRobot = "";
+            attackCount = 0;
+            bonusAttack = 0;
+            defenseCount = 0;
+            defender = null;
+            
+
+        }
+
+
+    }
+
+    //Класс Турели
+    class Turret : DefenceConstr
+    {
+        //уникальный идентификатор карты
+        static int id = 12;
+
+        //описание
+
+        public Turret()
+        {
+            attack = 1;
+            armor = 10;
+            valueEnergy = 5;
+            attackCount = 1;
+            nameRobot = "Турель";
+            bonusAttack = 0;
+            defenseCount = 1;
+            defender = null;
         }
     }
     /// <summary>
@@ -326,9 +503,21 @@ namespace CarteServer
                 attackCount--;
                 return count; }
         }
+        protected int defenseCount;
+        public int DefenseCount
+        {
+            get
+            {
+                int count = defenseCount;
+                defenseCount--;
+                return count;
+            }
+
+        }
         public void NewProgress()
         {
             attackCount = 1;
+            defenseCount = 1;
         }
         public int Attack
         {
@@ -351,6 +540,7 @@ namespace CarteServer
             armor = 28;
             name = "Штаб";
             attackCount = 1;
+            defenseCount = 1;
 
         }
     }

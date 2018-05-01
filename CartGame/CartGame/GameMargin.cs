@@ -127,11 +127,12 @@ namespace CartGame
         /// </summary>
         /// <param name="temp"></param>
         /// <returns></returns>
-        private int Which_Сard_Is_Attacked(Panel temp)
+        private int Which_Сard_Is_Attacked(Panel temp, int index)
         {
             //если мышка находится на поле вражеского штаба
             if (temp.Location.X + temp.Width / 2 >= EnemyHQPanel.Location.X && temp.Location.X + temp.Width / 2 <= EnemyHQPanel.Location.X + EnemyHQPanel.Width &&
-                temp.Location.Y + temp.Height / 4 >= EnemyHQPanel.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyHQPanel.Location.Y + EnemyHQPanel.Height)
+                temp.Location.Y + temp.Height / 4 >= EnemyHQPanel.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyHQPanel.Location.Y + EnemyHQPanel.Height &&
+                !(DataSession.UsCarteOnField[index] is DefenceConstr))
             {
 
                 //атака на штаб
@@ -171,7 +172,7 @@ namespace CartGame
                     {
                         case TypeEventCard.DamageCard:
                             //узнаем какую карту атакует игрок
-                            attacked = Which_Сard_Is_Attacked(temp);
+                            attacked = Which_Сard_Is_Attacked(temp, NumberCarte);
                             ReturnDropCard(temp, MyCarte, UserCards);
                             if (attacked != int.MinValue && AllowProgress)
                                 СomWithServer.Send(new int[] { NumberCarte, attacked }, MsgType.DamageEvent);
@@ -302,6 +303,20 @@ namespace CartGame
             }
         }
 
+
+        private void AddCardOnField(List<Robot> CarteOnField, int index, List<Panel> CardsOnMargin, Panel Margin)
+        {
+            //добавляем еще одну карту на игровое поле
+            Panel temp = CarteOnField[index].ImageCartMin();
+            temp.MouseEnter += Carte_MouseEnter;
+            temp.MouseLeave += Carte_MouseLeave;
+            temp.MouseDown += MarginCarte_MouseDown;
+            temp.MouseMove += Carte_MouseMove;
+            temp.MouseUp += MarginCarte_MouseUp;
+
+            CardsOnMargin.Add(temp);
+            Margin.Controls.Add(temp);
+        }
         /// <summary>
         /// Выполняет эффект появляющейся при добавлении определенной карты
         /// </summary>
@@ -313,6 +328,13 @@ namespace CartGame
             {
                 case "Veteran":
                     AllPaintCard(CardsOnMargin, Margin, CarteOnField);
+                    break;
+                case "B1":
+                    //добавляем еще одну карту на игровое поле
+                    AddCardOnField(CarteOnField, index, CardsOnMargin, Margin);
+
+                    //обновляем положение карт
+                    UpdateLocation_Cards(Margin, 90, 3);
                     break;
                 default:
                     UpdateLocation_Cards(Margin, 90, 3);
@@ -333,20 +355,12 @@ namespace CartGame
                     MyCarte.Controls.RemoveAt(number);
                     UserCards.RemoveAt(number);
                     UpdateLocation_Cards(MyCarte, 100, 3);
-                
+
 
                 //добавляем карту на панель
-
                 int i = DataSession.UsCarteOnField.Count - 1;
-                Panel temp = DataSession.UsCarteOnField[i].ImageCartMin();
-                temp.MouseEnter += Carte_MouseEnter;
-                temp.MouseLeave += Carte_MouseLeave;
-                temp.MouseDown += MarginCarte_MouseDown;
-                temp.MouseMove += Carte_MouseMove;
-                temp.MouseUp += MarginCarte_MouseUp;
-
-                UserCardsOfMargin.Add(temp);
-                UserMargin.Controls.Add(temp);
+                AddCardOnField(DataSession.UsCarteOnField, i, UserCardsOfMargin, UserMargin);
+                
                 //обновляем карты, если эта карта ветеран, или просто обновляем положение карт
                 EffectAddCart(DataSession.UsCarteOnField, i, UserCardsOfMargin, UserMargin);
             });
@@ -371,10 +385,10 @@ namespace CartGame
                     {
                         if (UserMargin.Controls[NumberCarte] == temp) break;
                     }
-                    Debug.WriteLine("Выбрана карта "+ NumberCarte);
+                    
                     //удаляем карту
                     UserMargin.Controls.RemoveAt(NumberCarte);
-
+                Debug.WriteLine("NumberCarte равна " + NumberCarte);
                     this.Controls.Add(temp);
                     temp.BringToFront();
                     MousePoint = new Point(e.X, e.Y);
@@ -393,7 +407,7 @@ namespace CartGame
                 {
                     Panel temp = (Panel)sender;
                     //узнаем какую карту атакует игрок
-                    attacked = Which_Сard_Is_Attacked(temp);
+                    attacked = Which_Сard_Is_Attacked(temp, NumberCarte);
 
                     ReturnDropCard(temp, UserMargin, UserCardsOfMargin);
                    
@@ -704,31 +718,38 @@ namespace CartGame
             Point damageLoc;
             Panel DamageEnemy = null, DamageUser = null;//изображение урона во врагу и по игроку
             //отображаем урон на карте пользователя
-            if (attacked == -1)
+            if (damageUser != 0)
             {
-                damageLoc = new Point();
-                damageLoc.X = UserHQPanel.Location.X + 15;
-                damageLoc.Y = UserHQPanel.Location.Y + 15;
+                if (attacked == -1)
+                {
+                    damageLoc = new Point();
+                    damageLoc.X = UserHQPanel.Location.X + 15;
+                    damageLoc.Y = UserHQPanel.Location.Y + 15;
+                }
+                else
+                {
+                    damageLoc = new Point();
+                    damageLoc.X = UserMargin.Location.X + UserMargin.Controls[attacked].Location.X + 15;
+                    damageLoc.Y = UserMargin.Location.Y + UserMargin.Controls[attacked].Location.Y + 15;
+                }
+                DamageUser = CreateDamagePanel(damageUser);
+
+                DamageUser.Location = damageLoc;
+                this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); });
             }
-            else
+            if (damageEnemy != 0)
             {
-                damageLoc = new Point();
-                damageLoc.X = UserMargin.Location.X + UserMargin.Controls[attacked].Location.X + 15;
-                damageLoc.Y = UserMargin.Location.Y + UserMargin.Controls[attacked].Location.Y + 15;
-            }
-            DamageUser = CreateDamagePanel(damageUser);
-            DamageUser.Location = damageLoc;
-            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); });
-            //отображаем урон на карте врага
+                //отображаем урон на карте врага
                 damageLoc = new Point();
                 damageLoc.X = MoveEnemyPanel.Location.X + 15;
                 damageLoc.Y = MoveEnemyPanel.Location.Y + 15;
 
-            //создаем элемент показывающией урон и устанавливаем текущую позиции карточки врага которая будет перемещатсься
-            DamageEnemy = CreateDamagePanel(damageEnemy);
-            DamageEnemy.Location = damageLoc;
-            this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageEnemy); DamageEnemy.BringToFront(); });
+                //создаем элемент показывающией урон и устанавливаем текущую позиции карточки врага которая будет перемещатсься
+                DamageEnemy = CreateDamagePanel(damageEnemy);
 
+                DamageEnemy.Location = damageLoc;
+                this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageEnemy); DamageEnemy.BringToFront(); });
+            }
             /*System.Timers.Timer timerPaint = new System.Timers.Timer();
             timerPaint.Interval = 1200;
             timerPaint.Elapsed += Elapsed_TimerPaint;
@@ -764,10 +785,10 @@ namespace CartGame
                 damageLoc.X = UserMargin.Location.X + UserMargin.Controls[attacking].Location.X + 15;
                 damageLoc.Y = UserMargin.Location.Y + UserMargin.Controls[attacking].Location.Y + 15;
             }
-
                 DamageUser = CreateDamagePanel(damageUser);
-                DamageUser.Location = damageLoc;
-                this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); });
+                
+                    DamageUser.Location = damageLoc;
+                    this.Invoke((MethodInvoker)delegate { this.Controls.Add(DamageUser); DamageUser.BringToFront(); });
             }
 
             if (damageEnemy != 0)
@@ -843,11 +864,12 @@ namespace CartGame
                 ValueDamage.Size = new Size(36, 30);
                 ValueDamage.Font = new Font("Arial", 17);
             }
-            else { ValueDamage.Text = "+" + Math.Abs(damage);
+            else if (damage < 0)
+            {
+                ValueDamage.Text = "+" + Math.Abs(damage);
                 ValueDamage.Size = new Size(40, 30);
                 ValueDamage.Font = new Font("Arial", 16);
             }
-
            
             ValueDamage.Location = new Point(11,18);
            
@@ -1556,34 +1578,7 @@ namespace CartGame
                 {
                     Panel temp = (Panel)sender;
                     int attacked = int.MinValue;
-                        //если мышка находится на поле вражеского штаба
-                        if (temp.Location.X + temp.Width / 2 >= EnemyHQPanel.Location.X && temp.Location.X + temp.Width / 2 <= EnemyHQPanel.Location.X + EnemyHQPanel.Width &&
-                            temp.Location.Y + temp.Height / 4 >= EnemyHQPanel.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyHQPanel.Location.Y + EnemyHQPanel.Height)
-                        {
-
-                        //атака на штаб
-                        attacked = -1;
-                            
-                        }
-                        //если мышка находится на поле карт
-                        if ((temp.Location.X + temp.Width / 2 >= EnemyMargin.Location.X && temp.Location.X + temp.Width / 2 <= EnemyMargin.Location.X + EnemyMargin.Width &&
-                            temp.Location.Y + temp.Height / 4 >= EnemyMargin.Location.Y && temp.Location.Y + temp.Height / 4 <= EnemyMargin.Location.Y + EnemyMargin.Height))
-                        {
-                            int count = EnemyMargin.Controls.Count;
-                            for (int i = 0; i < count; i++)
-                            {
-                                if (temp.Location.X + temp.Width / 2 >= EnemyMargin.Location.X + EnemyMargin.Controls[i].Location.X &&
-                                    temp.Location.X + temp.Width / 2 <= EnemyMargin.Location.X + EnemyMargin.Controls[i].Location.X + EnemyMargin.Controls[i].Width &&
-                                    temp.Location.Y + temp.Height / 4 >= EnemyMargin.Location.Y + EnemyMargin.Controls[i].Location.Y &&
-                                   temp.Location.Y + temp.Height / 4 <= EnemyMargin.Location.Y + EnemyMargin.Controls[i].Location.Y + EnemyMargin.Controls[i].Height)
-                                {
-                                //атака на карточку
-                                attacked = i;
-                                   
-                                    break;
-                                }
-                            }
-                        }
+                    attacked = Which_Сard_Is_Attacked(temp, NumberCarte);
                    
 
                     //удаляем перетаскиваемую карточку
@@ -1595,7 +1590,8 @@ namespace CartGame
                 if (AllowProgress && attacked!= int.MinValue)//если разрешена отпрака сообщений 
                 {
                         СomWithServer.Send(new int[] { -1, attacked }, MsgType.Attack);
-                    }
+                }
+                    NumberCarte = 0;
               }
             }
             catch (Exception E)
@@ -1623,7 +1619,8 @@ namespace CartGame
         private void StepEnd_Click(object sender, EventArgs e)
         {
             СomWithServer.Send(MsgType.EndProgress);
-            (sender as Button).Enabled = false;
+           // (sender as Button).Enabled = false;
+           //убрал, так как не всегда сообшение доходило до сервера
         }
     }
 }

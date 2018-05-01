@@ -25,8 +25,8 @@ namespace CartGame
         bool OpenSeekForm = true;
         Controler controler;
         DataGame ChoiceCards;
-       
-        
+        const int ValueCardsUser = 15;//максимальное количество карт в колоде равно 15
+
         public ChoiceForm( Controler controler)
         {
             InitializeComponent();
@@ -83,12 +83,13 @@ namespace CartGame
         private void AddUserCarte(object sender)
         {
             int id = SeekIDAllCarte(sender);
-            bool AllBusy = true;//показывает, что все слоты заняты
+            bool AllBusy = true;//показывает, что все слоты заняты при 
             if (id != -1)
             {
                 //если не все слоты заняты
-                int count = ChoiceCards.UserColoda.Length;
-                for (int i = 0; i < count; i++)
+                // int count = ChoiceCards.UserColoda.Count;
+                
+                for (int i = 0; i < ValueCardsUser; i++)
                 {
                     if (ChoiceCards.UserColoda[i] == 0)
                     { 
@@ -108,7 +109,7 @@ namespace CartGame
 
                 if (AllBusy)//добавляем в конец
                 {
-                    int Last = ChoiceCards.UserColoda.Length - 1;
+                    int Last = ValueCardsUser-1;
                     CarteSlot[Last] = Carte.GetCarte(id).ImageCartNormal();
                     CarteSlot[Last].MouseClick += new MouseEventHandler(Back_MouseClick);
                     CarteSlot[Last].MouseEnter += new EventHandler(Panel_MouseEnter);
@@ -155,8 +156,8 @@ namespace CartGame
         {
 
             //если не все слоты заняты
-            int count = ChoiceCards.UserColoda.Length;
-            for (int i = 0; i <count; i++)
+            
+            for (int i = 0; i < ValueCardsUser; i++)
             {
                 if (CarteSlot[i] == (Panel)sender)
                 {
@@ -260,6 +261,7 @@ namespace CartGame
         {
             this.Controls.Remove((Control)sender);
         }
+
         private void ChoiceForm_Load(object sender, EventArgs e)
         {
             //выводим на экран все доступные карты
@@ -289,8 +291,7 @@ namespace CartGame
             
             //выводим на экран пустые карты для наглядности
             X = 15; Y = 3;
-            int count = ChoiceCards.UserColoda.Length;
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < ValueCardsUser; i++)
             {
                 if (ChoiceCards.UserColoda[i] == 0)
                     CarteSlot.Add(CreateEmptyCarte());
@@ -384,18 +385,18 @@ namespace CartGame
        
         private void buttonStartSeek_Click(object sender, EventArgs e)
         {
-            
 
-            
-            int count = ChoiceCards.UserColoda.Length;
-            for (int i = 0; i < count; i++)
+
+
+            int CountCardNONull = 0;
+            for (int i = 0; i < ValueCardsUser; i++)
+                if (ChoiceCards.UserColoda[i] != 0) CountCardNONull++;
+            if (CountCardNONull < 3)//если карт меньше 3 в бой выйти нельзя
             {
-                if(ChoiceCards.UserColoda[i]==0)
-                {
-                    FewCarte.SetError(buttonStartSeek, ".Вы выбрали недостаточно карт для начал игры \n!");
-                    return;
-                }
+                FewCarte.SetError(buttonStartSeek, ".Вы выбрали недостаточно карт для начал игры \n!");
+                return;
             }
+            
 
             //добавить в ручную выбирать адрес и порт
 
