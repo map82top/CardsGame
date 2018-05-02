@@ -103,6 +103,46 @@ namespace CartGame.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap BigAttackFullMinCard {
+            get {
+                object obj = ResourceManager.GetObject("BigAttackFullMinCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BigAttackNormalCard {
+            get {
+                object obj = ResourceManager.GetObject("BigAttackNormalCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BombAttackFullMinCard {
+            get {
+                object obj = ResourceManager.GetObject("BombAttackFullMinCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BombAttackNormalCard {
+            get {
+                object obj = ResourceManager.GetObject("BombAttackNormalCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap BoxerFullMinCard {
             get {
                 object obj = ResourceManager.GetObject("BoxerFullMinCard", resourceCulture);
@@ -293,6 +333,26 @@ namespace CartGame.Properties {
         internal static System.Drawing.Bitmap InvertedCarte {
             get {
                 object obj = ResourceManager.GetObject("InvertedCarte", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap MedicFullMinlCart {
+            get {
+                object obj = ResourceManager.GetObject("MedicFullMinlCart", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap MedicNormalCart {
+            get {
+                object obj = ResourceManager.GetObject("MedicNormalCart", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

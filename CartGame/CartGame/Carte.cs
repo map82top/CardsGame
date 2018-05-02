@@ -41,7 +41,10 @@ namespace CartGame
         EnemyDamageEvent,
         RepairsEvent,
         UsRepairsEvent,
-        EnRepairsEvent
+        EnRepairsEvent, 
+        AllDamageEvent,
+        UsAllDeliteEvent,
+        EnAllDeliteEvent
 
 
 
@@ -49,14 +52,15 @@ namespace CartGame
     public enum TypeEventCard
     {
         DamageCard,
-        HealingCard
+        HealingCard,
+        AllDamageCard
     }
     public abstract class Carte
     {
         public abstract Panel ImageCartNormal();
         public abstract Panel ImageCartMax();
         public abstract Panel ImageCartFullMin();
-        static int id = 0;
+        protected static int id = 0;
         public int ID
         {
             get { return id; }
@@ -104,6 +108,15 @@ namespace CartGame
                     break;
                 case 13:
                     RetCarte = new Destroyer();
+                    break;
+                case 14:
+                    RetCarte = new BombAttack();
+                    break;
+                case 15:
+                    RetCarte = new BigAttack();
+                    break;
+                case 16:
+                    RetCarte = new Medic();
                     break;
                 default:
                     RetCarte = null;
@@ -285,8 +298,8 @@ namespace CartGame
             Label armorLabel = new Label();
             armorLabel.Text = Convert.ToString(armor);
             armorLabel.Font = new Font("Arial", 9);
-            armorLabel.Location = new Point(59, 87);
-            armorLabel.Size = new Size(12, 12);
+            armorLabel.Location = new Point(55, 87);
+            armorLabel.Size = new Size(21, 12);
             CarteImage.Controls.Add(armorLabel);
 
 
@@ -426,6 +439,150 @@ namespace CartGame
         }
     }
 
+    /// <summary>
+    /// Общий класс для всех карт наносящих урон по всем картам находящися на игровом поле
+    /// </summary>
+    class AllDamageEvent : Event
+    {
+        //урон по противнику
+        protected int allDamage;
+        public int AllDamage
+        {
+            get { return allDamage; }
+        }
+        public AllDamageEvent()
+        {
+            typeEvent = TypeEventCard.AllDamageCard;
+            valueEnergy = 0;
+            allDamage = 0;
+        }
+
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.EventCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
+
+    /// <summary>
+    /// Класс карты ковровая бомбандировка
+    /// </summary>
+    /// 
+    class BombAttack : AllDamageEvent
+    {
+     
+
+        public BombAttack()
+        {
+            typeEvent = TypeEventCard.AllDamageCard;
+            valueEnergy = 3;
+            allDamage = 1;
+            id = 14;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BombAttackNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BombAttackNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BombAttackFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+    }
+
+    class BigAttack : AllDamageEvent
+    {
+
+        public BigAttack()
+        {
+            typeEvent = TypeEventCard.AllDamageCard;
+            valueEnergy = 6;
+            allDamage = 3;
+            id = 15;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BigAttackNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BigAttackNormalCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BigAttackFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+
+    }
+
     class RepairsEvent : Event
     {
         //урон по противнику
@@ -478,13 +635,14 @@ namespace CartGame
     /// </summary>
     class Ambush : DamageEvent
     {
-        static int id = 4;
+        
         
         public Ambush()
         {
             typeEvent = TypeEventCard.DamageCard;
             valueEnergy = 0;
             damage = 1;
+            id = 4;
         }
         public override Panel ImageCartNormal()
         {
@@ -525,13 +683,14 @@ namespace CartGame
     /// </summary>
     class Rocket : DamageEvent
     {
-        static int id = 5;
 
         public Rocket()
         {
             typeEvent = TypeEventCard.DamageCard;
             valueEnergy = 3;
             damage = 3;
+            id = 5;
+
         }
         public override Panel ImageCartNormal()
         {
@@ -572,13 +731,13 @@ namespace CartGame
     /// </summary>
     class PointAttackSpace : DamageEvent
     {
-        static int id = 6;
 
         public PointAttackSpace()
         {
             typeEvent = TypeEventCard.DamageCard;
             valueEnergy = 8;
             damage = 7;
+            id = 6;
         }
         public override Panel ImageCartNormal()
         {
@@ -619,13 +778,13 @@ namespace CartGame
     /// </summary>
     class RepairsBox : RepairsEvent
     {
-        static int id = 7;
 
         public RepairsBox()
         {
             typeEvent = TypeEventCard.HealingCard;
             valueEnergy = 1;
             damage = -1;
+            id = 7;
         }
         public override Panel ImageCartNormal()
         {
@@ -666,13 +825,13 @@ namespace CartGame
     /// </summary>
     class FieldRepairs : RepairsEvent
     {
-        static int id = 8;
 
         public FieldRepairs()
         {
             typeEvent = TypeEventCard.HealingCard;
             valueEnergy = 4;
             damage = -3;
+            id = 8;
         }
         public override Panel ImageCartNormal()
         {
@@ -713,8 +872,6 @@ namespace CartGame
     public class Recruit : Robot
     {
         //уникальный идентификатор карты
-        static int id = 1;
-       
         //описание
        
         public Recruit()
@@ -722,7 +879,7 @@ namespace CartGame
             attack = 2;
             armor = 5;
             valueEnergy = 2;
-          
+            id = 1;
             nameRobot = "Рекрут";
             bonusAttack = 0;
         }
@@ -758,14 +915,57 @@ namespace CartGame
         }
      }
 
+
+    public class Medic : Robot
+    {
+        //уникальный идентификатор карты
+        //описание
+        public Medic()
+        {
+            attack = 1;
+            armor = 4;
+            valueEnergy = 5;
+            id = 16;
+            nameRobot = "Медик";
+            bonusAttack = 0;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.MedicNormalCart;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.MedicNormalCart;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.MedicFullMinlCart;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+
+            return CarteImage;
+        }
+    }
     /// <summary>
     /// Класс карты Дуэлент
     /// </summary>
-   public class Duelist : Robot
+    public class Duelist : Robot
     {
-        static int id = 2;
-        
-        
+      
         public Duelist()
         {
             attack = 4;
@@ -773,7 +973,7 @@ namespace CartGame
             valueEnergy = 3;
             nameRobot = "Дуэлянт";
             bonusAttack = 0;
-          
+            id = 2;
 
         }
         public override Panel ImageCartNormal()
@@ -810,9 +1010,7 @@ namespace CartGame
 
     public class Destroyer : Robot
     {
-        static int id = 13;
-
-
+       
         public Destroyer()
         {
             attack = 5;
@@ -820,7 +1018,7 @@ namespace CartGame
             valueEnergy = 8;
             nameRobot = "Разрушитель";
             bonusAttack = 0;
-
+            id = 13;
 
         }
         public override Panel ImageCartNormal()
@@ -860,8 +1058,7 @@ namespace CartGame
     /// </summary>
     public class Veteran : Robot
     {
-        static int id = 3;
-       
+      
         public Veteran()
         {
             attack = 2;
@@ -869,7 +1066,7 @@ namespace CartGame
             valueEnergy = 4;
             bonusAttack = 0;
             nameRobot = "Ветеран";
-            
+            id = 3;
         }
         public override Panel ImageCartNormal()
         {
@@ -908,7 +1105,6 @@ namespace CartGame
     /// </summary>
     public class Boxer : Robot
     {
-        static int id = 10;
 
         public Boxer()
         {
@@ -917,7 +1113,7 @@ namespace CartGame
             valueEnergy = 5;
             bonusAttack = 0;
             nameRobot = "Боксер";
-          
+            id = 10;
         }
         public override Panel ImageCartNormal()
         {
@@ -956,8 +1152,7 @@ namespace CartGame
     /// </summary>
     public class Gladiator : Robot
     {
-        static int id = 11;
-
+  
         public Gladiator()
         {
             attack = 1;
@@ -965,7 +1160,7 @@ namespace CartGame
             valueEnergy = 6;
             bonusAttack = 0;
             nameRobot = "Гладиатор";
-           
+            id = 11;
         }
         public override Panel ImageCartNormal()
         {
@@ -1071,8 +1266,7 @@ namespace CartGame
     /// </summary>
     public class Turret : DefenceConstr
     {
-        static int id = 12;
-
+    
         public Turret()
         {
             attack = 1;
@@ -1080,6 +1274,7 @@ namespace CartGame
             valueEnergy = 5;
             bonusAttack = 0;
             nameRobot = "Турель";
+            id = 12;
         }
         public override Panel ImageCartNormal()
         {
@@ -1117,7 +1312,6 @@ namespace CartGame
     /// </summary>
     public class B1 : Robot
     {
-        static int id = 9;
 
         public B1()
         {
@@ -1126,6 +1320,7 @@ namespace CartGame
             valueEnergy = 2;
             bonusAttack = 0;
             nameRobot = "B1";
+            id = 9;
         }
         public override Panel ImageCartNormal()
         {

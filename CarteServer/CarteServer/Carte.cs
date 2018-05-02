@@ -8,7 +8,8 @@ using System.Windows.Forms;
 public enum TypeEventCard
 {
     DamageCard,
-    HealingCard
+    HealingCard,
+    AllDamageCard
 }
 namespace CarteServer
 {
@@ -19,7 +20,7 @@ namespace CarteServer
         //public abstract Panel ImageCartMin();
         //public abstract Panel ImageCartMax();
         // public abstract Panel Clone { get; }
-        static int id = 0;
+        protected static int id = 0;
         public int ID
         {
             get { return id; }
@@ -68,6 +69,18 @@ namespace CarteServer
                     case 12:
                         RetCarte = new Turret();
                         break;
+                    case 13:
+                        RetCarte = new Destroyer();
+                        break;
+                    case 14:
+                        RetCarte = new BombAttack();
+                        break;
+                    case 15:
+                        RetCarte = new BigAttack();
+                        break;
+                case 16:
+                    RetCarte = new Medic();
+                    break;
                 default:
                         RetCarte = null;
                         break;
@@ -112,10 +125,28 @@ namespace CarteServer
                 damage = 0;
             }
         }
-
-        class RepairsEvent : Event
+    /// <summary>
+    /// Базовый класс для всех карт наносящих массовый урон по картам
+    /// </summary>
+        class AllDamageEvent : Event
         {
             //урон по противнику
+            protected int allDamage;
+            public int AllDamage
+            {
+                get { return allDamage; }
+            }
+            public AllDamageEvent()
+            {
+                typeEvent = TypeEventCard.AllDamageCard;
+                valueEnergy = 0;
+                allDamage = 0;
+            }
+        }
+
+       class RepairsEvent : Event
+        {
+            //количество добавленных очков прочности 
             protected int damage;
             public int Damage
             {
@@ -133,13 +164,15 @@ namespace CarteServer
     /// </summary>
     class Ambush : DamageEvent
         {
-        static int id = 4;
+              
        
         public Ambush()
             {
                 typeEvent = TypeEventCard.DamageCard;
                 valueEnergy = 0;
                 damage = 1;
+                id = 4;
+           
             }
         }
     /// <summary>
@@ -147,41 +180,72 @@ namespace CarteServer
     /// </summary>
         class Rocket : DamageEvent
         {
-            static int id = 5;
+            
 
             public Rocket()
             {
                 typeEvent = TypeEventCard.DamageCard;
                 valueEnergy = 3;
                 damage = 3;
+                id = 5;
             }
         }
+       /// <summary>
+       /// Класс карты ковровая бомбандировка
+       /// </summary>
+        class BombAttack : AllDamageEvent
+        {
+            
+
+            public BombAttack()
+            {
+                typeEvent = TypeEventCard.AllDamageCard;
+                valueEnergy = 3;
+                allDamage = 1;
+                 id = 14;
+            }
+        }
+
+    class BigAttack : AllDamageEvent
+    {
+
+
+        public BigAttack()
+        {
+            typeEvent = TypeEventCard.AllDamageCard;
+            valueEnergy = 6;
+            allDamage = 3;
+            id = 15;
+        }
+    }
     /// <summary>
     /// Класс карты точечного удара из космоса
     /// </summary>
-        class PointAttackSpace : DamageEvent
+    class PointAttackSpace : DamageEvent
         {
-            static int id = 6;
+            
 
             public PointAttackSpace()
             {
                 typeEvent = TypeEventCard.DamageCard;
                 valueEnergy = 8;
                 damage = 7;
-            }
+                id = 6;
+           }
         }
     /// <summary>
     /// Класс карты Аптечка
     /// </summary>
         class RepairsBox : RepairsEvent
     {
-            static int id = 7;
+            
 
             public RepairsBox()
             {
                 typeEvent = TypeEventCard.HealingCard;
                 valueEnergy = 1;
                 damage = -1;
+                id = 7;
             }
         }
      /// <summary>
@@ -189,13 +253,14 @@ namespace CarteServer
      /// </summary>
         class FieldRepairs : RepairsEvent
     {
-            static int id = 8;
+            
 
             public FieldRepairs()
             {
                 typeEvent = TypeEventCard.HealingCard;
                 valueEnergy = 4;
                 damage = -3;
+               id = 8;
             }
         }
     /// <summary>
@@ -291,7 +356,7 @@ namespace CarteServer
         class Recruit : Robot
         {
             //уникальный идентификатор карты
-            static int id = 1;
+           
             
             //описание
             
@@ -305,14 +370,36 @@ namespace CarteServer
                 bonusAttack = 0;
                 defenseCount = 1;
                 defender = null;
-        }
+                id = 1;
+            }
        }
-        /// <summary>
-        ///Класс карты Дуэлянт
-        /// </summary>
-        class Duelist : Robot
+
+        class Medic : Robot
         {
-            static int id = 2;
+            //уникальный идентификатор карты
+
+
+            //описание
+
+            public Medic()
+            {
+                attack = 1;
+                armor = 4;
+                valueEnergy = 5;
+                attackCount = 1;
+                nameRobot = "Медик";
+                bonusAttack = 0;
+                defenseCount = 1;
+                defender = null;
+                id = 16;
+            }
+        }
+    /// <summary>
+    ///Класс карты Дуэлянт
+    /// </summary>
+    class Duelist : Robot
+        {
+           
             
            
             public Duelist()
@@ -325,8 +412,9 @@ namespace CarteServer
                 bonusAttack = 0;
                 defenseCount = 1;
                 defender = null;
+                id = 2; 
 
-        }
+           }
 
         }
        /// <summary>
@@ -334,7 +422,7 @@ namespace CarteServer
        /// </summary>
       class Veteran : Robot
       {
-            static int id = 3;
+            
             
          
         public Veteran()
@@ -347,13 +435,12 @@ namespace CarteServer
             bonusAttack = 0;
             defenseCount = 1;
             defender = null;
+            id = 3;
         }
     }
     class Destroyer : Robot
     {
-        static int id = 13;
-
-
+      
         public Destroyer()
         {
             attack = 5;
@@ -364,6 +451,7 @@ namespace CarteServer
             bonusAttack = 0;
             defenseCount = 1;
             defender = null;
+            id = 13;
         }
     }
     /// <summary>
@@ -371,8 +459,7 @@ namespace CarteServer
     /// </summary>
     class B1 : Robot
     {
-        static int id = 9;
-
+        
 
         public B1()
         {
@@ -384,15 +471,14 @@ namespace CarteServer
             bonusAttack = 0;
             defenseCount = 1;
             defender = null;
+            id = 9;
         }
     }
 
     //класс карты Боксер
     class Boxer: Robot
     {
-        static int id = 10;
-
-
+        
         public Boxer()
         {
             attack = 2;
@@ -403,6 +489,7 @@ namespace CarteServer
             bonusAttack = 0;
             defenseCount = 2;
             defender = null;
+            id = 10;
         }
         public override void NewProgress()
         {
@@ -414,9 +501,7 @@ namespace CarteServer
     //класс карты Гладиатор
     class Gladiator : Robot
     {
-        static int id = 11;
-
-
+        
         public Gladiator()
         {
             attack = 1;
@@ -427,6 +512,7 @@ namespace CarteServer
             defender = null;
             bonusAttack = 0;
             defenseCount = 1;
+            id = 11;
         }
         public override void NewProgress()
         {
@@ -473,7 +559,7 @@ namespace CarteServer
     class Turret : DefenceConstr
     {
         //уникальный идентификатор карты
-        static int id = 12;
+       
 
         //описание
 
@@ -487,6 +573,7 @@ namespace CarteServer
             bonusAttack = 0;
             defenseCount = 1;
             defender = null;
+            id = 12;
         }
     }
     /// <summary>

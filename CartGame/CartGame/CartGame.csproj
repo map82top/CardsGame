@@ -229,6 +229,24 @@
   <ItemGroup>
     <None Include="Resources\DestroyerNormalCarte.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BombAttackNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BigAttackFullMinCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MedicNormalCart.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MedicFullMinlCart.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BigAttackNormalCard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BombAttackFullMinCard.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -16,6 +16,7 @@ namespace CarteServer
     delegate void ErrorSend(User user);
     delegate void DamageCard(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked);
     delegate void RepairsCard(User user, int IDAttacking, RepairsEvent Card, int attacking, int attacked);
+    delegate void AllDamageCard(User user, int IDAttacking, AllDamageEvent Card, int attacking);
 
     class User
     {
@@ -40,6 +41,7 @@ namespace CarteServer
         public event ErrorSend FailedSendMsg;
         public event EmptyDel GetOutOfQueue;
         public event RepairsCard RepairsCardEvent;
+        public event AllDamageCard AllDamageEvent;
         public bool MyProgress
         {
             set { myProgress = value; }
@@ -92,6 +94,7 @@ namespace CarteServer
         public event EmptyDel NameRec;
         public event EmptyDel EndProgress;
         public event CardOnField AddCardField;
+       
         public User()
         {
             UserTcpClient = null;
@@ -237,6 +240,20 @@ namespace CarteServer
                                             }
                                         }
                                         break;
+                                    case MsgType.AllDamageEvent:
+                                        if (myProgress)
+                                        {
+                                            short NumberCard = BitConverter.ToInt16(Data, 0);//номер карты  в руке у игрока
+                                            int IdRepairsCard = CardsOnHands[NumberCard];
+                                            AllDamageEvent Card = Carte.GetCarte(IdRepairsCard) as AllDamageEvent;
+                                            if (Card.ValueEnergy <= energy)
+                                            {
+                                                energy -= Card.ValueEnergy;
+                                                CardsOnHands.RemoveAt(NumberCard);
+                                                AllDamageEvent(this, IdRepairsCard, Card, NumberCard);
+                                            }
+                                        }
+                                     break;
 
                                 }
                             }
@@ -450,6 +467,7 @@ namespace CarteServer
             Attack = null;
             DamageCardEvent = null;
             RepairsCardEvent = null;
+            AllDamageEvent = null;
             carteUser = null;
 
             CardsOnHands.Clear();

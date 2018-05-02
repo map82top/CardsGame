@@ -46,7 +46,11 @@ namespace CarteServer
         EnemyDamageEvent,
         RepairsEvent,
         UsRepairsEvent,
-        EnRepairsEvent
+        EnRepairsEvent,
+        AllDamageEvent,
+        UsAllDeliteEvent,
+        EnAllDeliteEvent
+
 
 
 
@@ -125,10 +129,10 @@ namespace CarteServer
         private void EffectAddCardOfField(User us, int idCards)
         {
             
-            switch (Carte.GetCarte(idCards).GetType().Name)
+            switch (Carte.GetCarte(idCards).ID)
             {
                 //если эта карта ветеран
-                case "Veteran":
+                case 3:
                     //добавляем бонус всем картам кроме карт типа ветеран
                     foreach (Robot Card in us.CardsMargin)
                         if (!(Card is Veteran))
@@ -137,7 +141,7 @@ namespace CarteServer
                     //если у нас есть защитник, то добавляем ссылку на него новой карте
                     us.CardsMargin[us.CardsMargin.Count - 1].Defender = SeekDefenceConstr(us);
                     break;
-                case "B1":
+                case 9:
                     //добавляем на поле еще одну карту дроида B1
                         us.CardsMargin.Add((Robot)Carte.GetCarte(idCards));
                     //если карта не типа ветеран,то считаем сколько у нас карт ветеранов и добавляем
@@ -151,7 +155,7 @@ namespace CarteServer
                     us.CardsMargin[us.CardsMargin.Count - 1].Defender = temp;
                     us.CardsMargin[us.CardsMargin.Count - 2].Defender = temp;
                     break;
-                case "Turret":
+                case 12:
                     //ищем карту, не являющуюся защитным сооружением
                   
                     foreach (Robot Card in us.CardsMargin)
@@ -180,6 +184,18 @@ namespace CarteServer
                         }
                          
                         
+                    break;
+                case 16:
+                    //добавляем бонус ко всем картам
+                    int count = us.CardsMargin.Count - 1;
+                        for(int i =0; i < count; i++) us.CardsMargin[i].Armor += 2;
+
+                    //если карта не типа ветеран,то считаем сколько у нас карт ветеранов и добавляем
+                    //сответствующий размер бонуса
+                    us.CardsMargin[us.CardsMargin.Count - 1].BonusAttack += SeekVeteran(us);
+
+                    //если у нас есть защитник, то добавляем ссылку на него новой карте
+                    us.CardsMargin[us.CardsMargin.Count - 1].Defender = SeekDefenceConstr(us);
                     break;
                 default:
                     //если карта не типа ветеран,то считаем сколько у нас карт ветеранов и добавляем
@@ -332,6 +348,9 @@ namespace CarteServer
                 //привязываем обработчик ремонта 
                 Us1.RepairsCardEvent += RepairsEventFunc;
                 Us2.RepairsCardEvent += RepairsEventFunc;
+                //привязываем обработчик массовой атаки
+                Us1.AllDamageEvent += AllDamageEvent;
+                Us2.AllDamageEvent += AllDamageEvent;
                 //привязываем обработчик окночания хода игрока
                 Us1.EndProgress += NewProgress;
                 Us2.EndProgress += NewProgress;
@@ -346,6 +365,53 @@ namespace CarteServer
             { Console.WriteLine(e.ToString()); }
         }
 
+
+        private void ForAllDamageEvent(User us1,User us2,  int IdCard, AllDamageEvent Card, int NumberCard)
+        {
+            //наносим всем картам урон
+            int count = us2.CardsMargin.Count;
+            for (int i = 0; i < count; i++)
+            {
+                us2.CardsMargin[i].Armor -= Card.AllDamage;
+
+            }
+            //удаляем карты если их hp меньше 0
+            for (int i = 0; i < count; i++)
+            {
+                EffectDeliteCard(us2, i);
+                if (us2.CardsMargin.Count < count)
+                {
+                    i--;
+                    count--;
+                }
+
+            }
+           
+            //отправляем о сообщение об удачной атаке
+            us1.Send(Us1.Energy, MsgType.YourEnergy);
+            us2.Send(Us1.Energy, MsgType.EnemyEnergy);
+            us1.Send(new int[] { NumberCard, Card.AllDamage }, MsgType.UsAllDeliteEvent);
+            us2.Send(new int[] { IdCard, NumberCard, Card.AllDamage }, MsgType.EnAllDeliteEvent);
+        }
+        /// <summary>
+        /// Обрабатывает события связанные с использованием карт массового урона
+        /// </summary>
+        /// <param name="us"></param>
+        /// <param name="IdCard"></param>
+        /// <param name="Card"></param>
+        /// <param name="NumberCard"></param>
+        private void AllDamageEvent(User user, int IdCard, AllDamageEvent Card,int NumberCard)
+        {
+            if (user == Us1)
+            {
+                ForAllDamageEvent(Us1, Us2, IdCard, Card, NumberCard);
+               
+            }
+            else
+            {
+                ForAllDamageEvent(Us2, Us1, IdCard, Card, NumberCard);
+            }
+        }
         private void TempProgress_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
@@ -390,11 +456,15 @@ namespace CarteServer
                 if (attacked == -1)
                 {
                     Us2.userHQ.Armor -= Card.Damage;
+                    //проверяем на конец игры
+                    TestEndGame();
                 }
                 else
                 {
                     Us2.CardsMargin[attacked].Armor -= Card.Damage;
-                    if(Us2.CardsMargin[attacked].Armor <= 0) Us2.CardsMargin.RemoveAt(attacked);
+                    //удаляем карту
+                    EffectDeliteCard(user, attacked);
+                    
                 }
                 //отправляем о сообщение об удачной атаке
                 Us1.Send(Us1.Energy, MsgType.YourEnergy);
@@ -465,15 +535,15 @@ namespace CarteServer
 
             if (Us.CardsMargin[index].Armor <= 0)
             {
-                switch (Us.CardsMargin[index].GetType().Name)
+                switch (Us.CardsMargin[index].ID)
                 {//если эта карта ветеран
-                    case "Veteran":
+                    case 3:
                         //уменьшаем бонус к атаке у всех карт
                         foreach (Robot Card in Us.CardsMargin)
                             if (!(Card is Veteran))
                                 Card.BonusAttack -= 1;
                         break;
-                    case "Turret":
+                    case 12:
                        
                         foreach(Robot CardNoDefence in Us.CardsMargin)
                         if (!(CardNoDefence is DefenceConstr))
@@ -535,9 +605,9 @@ namespace CarteServer
                     }
                     else//если его нет
                     {
-                        switch (CardsMargin[attacked].GetType().Name)
+                        switch (CardsMargin[attacked].ID)
                         {
-                            case "Duelist":
+                            case 2:
                                 if (attacked != 0)
                                 {
                                     //если карта дуэлиста не первая в списке
@@ -655,7 +725,6 @@ namespace CarteServer
                         }
                     }
 
-            Debug.WriteLine("Урон по пользователю " + damageUser + "   Урон по врагу  " + damageEnemy); 
                     //отправляем о сообщение об удачной атаке
                     us1.Send(new int[] { attacking, attacked, damageUser, damageEnemy }, MsgType.MyAttackSucc);
                     us2.Send(new int[] { attacking, attacked, damageUser, damageEnemy }, MsgType.EnAttackSucc);//поменял уроны местами из-за ввода универсальной функции AttackSucc
@@ -749,7 +818,7 @@ namespace CarteServer
                 }
 
                 //обновляем показатели энергии
-                if (UsProgress.MaxEnergy < 11) UsProgress.MaxEnergy++;
+                if (UsProgress.MaxEnergy < 10) UsProgress.MaxEnergy++;
                 UsProgress.Energy = UsProgress.MaxEnergy;
 
 
@@ -766,7 +835,7 @@ namespace CarteServer
                     Us2.MyProgress = true;
 
                     //добавляем  игроку карту
-                    int Length = Us2.CarteUser.Count - 1;//всего карт у игрока
+                    int Length = Us2.CarteUser.Count;//всего карт у игрока
                     int IdCarte = Us2.CarteUser[rand.Next(0, Length)];
                     Us2.CartsHand.Add(IdCarte);
                     Us1.Send(MsgType.AddEnemyCarte);
@@ -787,7 +856,8 @@ namespace CarteServer
                     Us2.MyProgress = false;
 
                     //добавляем  игроку карту
-                    int IdCarte = Us1.CarteUser[rand.Next(0, 6)];
+                    int Length = Us1.CarteUser.Count;//всего карт у игрока
+                    int IdCarte = Us1.CarteUser[rand.Next(0, Length)];
                     Us1.CartsHand.Add(IdCarte);
                     Us1.Send(IdCarte, MsgType.AddUserCarte);
                     Us2.Send(MsgType.AddEnemyCarte);
@@ -795,7 +865,7 @@ namespace CarteServer
                 }
 
 
-                //отправляем карты, которые находятся у него в руках
+                //отправляем время начального отсчета
                 Us1.Send("2:00", MsgType.ProgressTime);
                 Us2.Send("2:00", MsgType.ProgressTime);
 
@@ -829,7 +899,7 @@ namespace CarteServer
                 if (user == UsProgress) count = 7;
                 else count = 6;
 
-                int Length = user.CarteUser.Count - 1;//всего выбрано карт у игрока
+                int Length = user.CarteUser.Count;//всего выбрано карт у игрока
                 for (int i = 0; i < count; i++)
                 {
                     int IdCarte = user.CarteUser[rand.Next(0, Length)];

@@ -21,6 +21,9 @@ namespace CartGame
     public delegate void End(MsgType e);
     public delegate void DamageCardAttack(int attacking, int attacked, int damage);
     public delegate void EnDamageCardAttack(int attacking,int IDAttacking, int attacked, int damage);
+    public delegate void AllDamage(int number, int damage);
+    public delegate void EnAllDamage(int number,int idCard, int damage);
+
 
 
     public class Controler
@@ -50,6 +53,10 @@ namespace CartGame
         public event EnDamageCardAttack EnAttackDamageCard;
         public event DamageCardAttack MyRepairsCard;
         public event EnDamageCardAttack EnRepairsCard;
+        public event AllDamage UsAllDamage;
+        public event EnAllDamage EnAllDamage;
+
+
 
         private DataGame DataSession;
 
@@ -185,6 +192,8 @@ namespace CartGame
             MyAttackDamageCard = null;
             MyRepairsCard = null;
             EnRepairsCard = null;
+            UsAllDamage = null;
+            EnAllDamage = null;
 
        }
 
@@ -203,17 +212,17 @@ namespace CartGame
         private void EffectAddCardOnField(Robot AddCarte, List<Robot> CarteOnField)
         {     try
             {
-                switch (AddCarte.GetType().Name)
+                switch (AddCarte.ID)
                 {
                     //если эта карта ветеран
-                    case "Veteran":
+                    case 3:
                         //добавляем бонус всем картам кроме карт типа ветеран
                         foreach (Robot Card in CarteOnField)
                             if (!(Card is Veteran))
                                 Card.BonusAttack += 1;
 
                         break;
-                    case "B1":
+                    case 9:
                         //добавляем карту в массив карт на поле                       
                        CarteOnField.Add((Robot)Carte.GetCarte(9));
                         //добавляем бонус к карте
@@ -221,6 +230,14 @@ namespace CartGame
                         int bonus = SeekVeteran(CarteOnField);
                         CarteOnField[count - 1].BonusAttack += bonus;
                         CarteOnField[count - 2].BonusAttack += bonus;
+                        break;
+                    case 16:
+                        //добавляем бонус всем картам 
+                        int CountCards = CarteOnField.Count-1;
+                        for (int i = 0; i < CountCards; i++)
+                            CarteOnField[i].Armor += 2;
+                        //добавляем бонус к карте
+                        CarteOnField[CountCards].BonusAttack += SeekVeteran(CarteOnField);
                         break;
                     default:
 
@@ -242,9 +259,9 @@ namespace CartGame
             {
                 if (CardOnMargin[index].Armor <= 0)
                 {
-                    switch (CardOnMargin[index].GetType().Name)
+                    switch (CardOnMargin[index].ID)
                     {
-                        case "Veteran":
+                        case 3:
                             //уменьшаем бонус к атаке у всех карт
                             foreach (Robot Card in CardOnMargin)
                                 if (!(Card is Veteran))
@@ -432,8 +449,7 @@ namespace CartGame
                         else
                         {
                             DataSession.UsCarteOnField[EnAttackedDamageEvent].Armor -= EnDamageEvent;
-                            if (DataSession.UsCarteOnField[EnAttackedDamageEvent].Armor <= 0)
-                                DataSession.UsCarteOnField.RemoveAt(EnAttackedDamageEvent);
+                            EffectDeliteCard(DataSession.UsCarteOnField, EnAttackedDamageEvent);
                         }
 
 
@@ -456,8 +472,7 @@ namespace CartGame
                         else
                         {
                             DataSession.EnCarteOnField[AttackedDamageEvent].Armor -= DamageEvent;
-                            if (DataSession.EnCarteOnField[AttackedDamageEvent].Armor <= 0)
-                                DataSession.EnCarteOnField.RemoveAt(AttackedDamageEvent);
+                            EffectDeliteCard(DataSession.EnCarteOnField, AttackedDamageEvent);
                         }
 
                         //удаляем карту-событие
@@ -500,6 +515,57 @@ namespace CartGame
                         //оповещаем об атаке противника
                         EnRepairsCard(EnNumberCardRepairs, IDRepairs, EnRepairable, EnDamage);
 
+                        break;
+          
+                    case MsgType.UsAllDeliteEvent:
+                        short NumberCard = BitConverter.ToInt16(data, 0);
+                        short damage = BitConverter.ToInt16(data, 2);
+                        //уменьшаем очки прочности у удаляемых карт
+                        int count = DataSession.EnCarteOnField.Count;
+                        for (int i = 0; i < count; i++)
+                            DataSession.EnCarteOnField[i].Armor -= damage;
+
+                        //удаляем карты с HP меньше 0
+                        for (int i = 0; i < count; i++)
+                        {
+                            EffectDeliteCard(DataSession.EnCarteOnField, i);
+                            if (count > DataSession.EnCarteOnField.Count)
+                            {
+                                count--;
+                                i--;
+                            }
+                        }
+
+                        //удаляем карту-событие
+                        DataSession.CarteFromUser.RemoveAt(NumberCard);
+
+                        //опопвещаем об атаке
+                        UsAllDamage(NumberCard, damage);
+                        break;
+                    case MsgType.EnAllDeliteEvent:
+                        short IDCards = BitConverter.ToInt16(data, 0);
+                        short NumberEnCard = BitConverter.ToInt16(data, 2);
+                        short TotalDamage = BitConverter.ToInt16(data, 4);
+
+                        //уменьшаем очки прочности у удаляемых карт
+                        int Count = DataSession.UsCarteOnField.Count;
+                        for (int i = 0; i < Count; i++)
+                            DataSession.UsCarteOnField[i].Armor -= TotalDamage;
+                            
+
+                        //удаляем карты с HP меньше 0
+                        for (int i = 0; i < Count; i++)
+                        {
+                            EffectDeliteCard(DataSession.UsCarteOnField, i);
+                            if (Count > DataSession.UsCarteOnField.Count)
+                            {
+                                Count--;
+                                i--;
+                            }
+                        }
+
+                        //опопвещаем об атаке
+                        EnAllDamage(NumberEnCard, IDCards, TotalDamage);
                         break;
                 }
             }
@@ -585,16 +651,12 @@ namespace CartGame
                             int ReadData = RecData(Data, MsgLength, ClientNetwork);
                             if (ReadData > 0)
                             {
-
                                 RecMsgWithData(msgType, Data);
-
                             }
                         }
                     }
                     Thread.Sleep(1);
-
                 }
-
             }
             
             catch (Exception e)
