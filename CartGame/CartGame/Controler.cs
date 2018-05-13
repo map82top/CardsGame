@@ -99,10 +99,19 @@ namespace CartGame
         }
         private void ErrorConnection()
         {
-            dialogWithServ.ErrorConnectToServer -= ErrorConnection;
-            ErrorConnectToServer();
-            //освобождаем ресурсы
-            this.Dispose();
+            try
+            {
+                dialogWithServ.ErrorConnectToServer -= ErrorConnection;
+                if (MyProgress != null)
+                {//если окно не закрыл пользователь
+                    ErrorConnectToServer();//предупреждаем форму, что сервер завершил сессию
+                                           //освобождаем ресурсы
+                    this.Dispose();
+                }
+            }
+            catch(Exception e) {
+                MessageBox.Show(e.ToString());
+            }
         }
         private void ProcMsgWithoutData(MsgType type)
         {
@@ -231,8 +240,8 @@ namespace CartGame
                         CarteOnField[count - 1].BonusAttack += bonus;
                         CarteOnField[count - 2].BonusAttack += bonus;
                         break;
-                    case 16:
-                        //добавляем бонус всем картам 
+                    case 16://если эта карта медик
+                        //добавляем бонус всем картам кроме самого медика
                         int CountCards = CarteOnField.Count-1;
                         for (int i = 0; i < CountCards; i++)
                             CarteOnField[i].Armor += 2;
@@ -268,8 +277,6 @@ namespace CartGame
                                    Card.BonusAttack -= 1;
                             break;
                        
-                            
-
                     }
                     //удаляем карту
                     CardOnMargin.RemoveAt(index);
@@ -288,24 +295,31 @@ namespace CartGame
         /// <param name=""></param>
         public int[] AttackSucc(byte[] data, HeadQuarters UserHq, HeadQuarters EnemyHq, List<Robot> UsCardOnMargin, List<Robot> EnCardOnMargin)
         {
-            short attacking = BitConverter.ToInt16(data, 0);
-            short attacked = BitConverter.ToInt16(data, 2);
-            short damageUser = BitConverter.ToInt16(data, 4);//если это враг, то это урон по врагу
-            short damageEnemy = BitConverter.ToInt16(data, 6);//если это враг, то это урон по игроку
-            
+            //преобразуем данные из вида передачи по сети в тип данного компьютера
+            short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+            short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+            short damageUser = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));//если это враг, то это урон по врагу
+            short damageEnemy = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6));//если это враг, то это урон по игроку
+            short attackCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 8));//количество атак у атакующей карты
+            short defenderCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 10));//количество возможностей ответить на атаку
             if (attacking == -1)
             {
                 if (attacked == -1)
                 {
                     EnemyHq.Armor -= damageEnemy;
                     UserHq.Armor -= damageUser;
+                    //обновляем счетчики атак и оборон
+                    EnemyHq.DefenseCount = defenderCount;
+                    UserHq.AttackCount = attackCount;
                 }
                 else
                 {
                     EnCardOnMargin[attacked].Armor -= damageEnemy;
                     UserHq.Armor -= damageUser;
                     EffectDeliteCard(EnCardOnMargin, attacked);
-
+                    //обновляем счетчики атак и оборон
+                    UserHq.AttackCount = attackCount;
+                    EnCardOnMargin[attacked].DefenseCount = defenderCount;
 
                 }
             }
@@ -316,15 +330,21 @@ namespace CartGame
                     UsCardOnMargin[attacking].Armor -= damageUser;
                     EnemyHq.Armor -= damageEnemy;
                     EffectDeliteCard(UsCardOnMargin, attacking);
+                    //обновляем счетчики атак и оборон
+                    EnemyHq.DefenseCount = defenderCount;
+                    UsCardOnMargin[attacking].AttackCount = attackCount;
 
                 }
                 else
                 {
                     UsCardOnMargin[attacking].Armor -= damageUser;
                     EnCardOnMargin[attacked].Armor -= damageEnemy;
+                    //обновляем счетчики атак и оборон
+                    UsCardOnMargin[attacking].AttackCount = attackCount;
+                    EnCardOnMargin[attacked].DefenseCount = defenderCount;
+
                     //удаляем карты у которых очки прочности меньше 0
                     EffectDeliteCard(UsCardOnMargin, attacking);
-
                     EffectDeliteCard(EnCardOnMargin, attacked);
 
 
@@ -436,11 +456,11 @@ namespace CartGame
                         break;
 
                     case MsgType.EnemyDamageEvent:
-                        //конвертируем данные
-                        short EnAttackingCard = BitConverter.ToInt16(data, 0);
-                        short IDAttacking = BitConverter.ToInt16(data, 2);
-                        short EnAttackedDamageEvent = BitConverter.ToInt16(data, 4);
-                        short EnDamageEvent = BitConverter.ToInt16(data, 6);
+                        //конвертируем данные в тип предсавления данных на данном компьютере
+                        short EnAttackingCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+                        short IDAttacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+                        short EnAttackedDamageEvent = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
+                        short EnDamageEvent = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6));
                         //уменьшаем очки прочности у атакуемой карты
                         if (EnAttackedDamageEvent == -1)
                         {
@@ -460,9 +480,9 @@ namespace CartGame
 
                     case MsgType.UserDamageEvent:
                         //конвертируем данные
-                        short AttackingCard = BitConverter.ToInt16(data, 0);
-                        short AttackedDamageEvent = BitConverter.ToInt16(data, 2);
-                        short DamageEvent = BitConverter.ToInt16(data, 4);
+                        short AttackingCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+                        short AttackedDamageEvent = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+                        short DamageEvent = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
 
                         //уменьшаем очки прочности у атакуемой карты
                         if (AttackedDamageEvent == -1)
@@ -484,9 +504,9 @@ namespace CartGame
                         break;
                     case MsgType.UsRepairsEvent:
                         //конвертируем данные
-                        short NumberCardRepairs = BitConverter.ToInt16(data, 0);
-                        short Repairable = BitConverter.ToInt16(data, 2);
-                        short Damage = BitConverter.ToInt16(data, 4);
+                        short NumberCardRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+                        short Repairable = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+                        short Damage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
 
                         //увеличиваем очки прочности у атакуемой карты
                         if (Repairable == -1)
@@ -501,10 +521,10 @@ namespace CartGame
                         break;
                     case MsgType.EnRepairsEvent:
                         //конвертируем данные
-                        short EnNumberCardRepairs = BitConverter.ToInt16(data, 0);
-                        short IDRepairs = BitConverter.ToInt16(data, 2);
-                        short EnRepairable = BitConverter.ToInt16(data, 4);
-                        short EnDamage = BitConverter.ToInt16(data, 6);
+                        short EnNumberCardRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+                        short IDRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+                        short EnRepairable = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
+                        short EnDamage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6));
                         //увеличиваем очки прочности у атакуемой карты
                         if (EnRepairable == -1)
                             DataSession.EnemyHQ.Armor -= EnDamage;
@@ -518,8 +538,8 @@ namespace CartGame
                         break;
           
                     case MsgType.UsAllDeliteEvent:
-                        short NumberCard = BitConverter.ToInt16(data, 0);
-                        short damage = BitConverter.ToInt16(data, 2);
+                        short NumberCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+                        short damage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
                         //уменьшаем очки прочности у удаляемых карт
                         int count = DataSession.EnCarteOnField.Count;
                         for (int i = 0; i < count; i++)
@@ -543,9 +563,9 @@ namespace CartGame
                         UsAllDamage(NumberCard, damage);
                         break;
                     case MsgType.EnAllDeliteEvent:
-                        short IDCards = BitConverter.ToInt16(data, 0);
-                        short NumberEnCard = BitConverter.ToInt16(data, 2);
-                        short TotalDamage = BitConverter.ToInt16(data, 4);
+                        short IDCards = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+                        short NumberEnCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+                        short TotalDamage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
 
                         //уменьшаем очки прочности у удаляемых карт
                         int Count = DataSession.UsCarteOnField.Count;
@@ -575,6 +595,7 @@ namespace CartGame
             }
             
         }
+        //свойство получения экземпляра класса ответчающего за отправку и первичную обработку полученных данных
         public SendAndRecMsg DialogWithServ
         {
             get { return dialogWithServ; }
@@ -655,7 +676,7 @@ namespace CartGame
                             }
                         }
                     }
-                    Thread.Sleep(1);
+                    
                 }
             }
             
@@ -669,16 +690,22 @@ namespace CartGame
                 int ReadBytes = 0;
                 while (ReadBytes != length)
                 {
-                    int readed = stream.Read(data, 0, length - ReadBytes);
-                    ReadBytes += readed;
-                    if (readed == 0) return 0;
+                    if (stream != null)
+                    {
+                        int readed = stream.Read(data, 0, length - ReadBytes);
+                        ReadBytes += readed;
+                        if (readed == 0) return 0;
+                    }
                 }
                 return ReadBytes;
             }
             catch (IOException e)
             {
-                ErrorConnectToServer();
-                MessageBox.Show("Связь с сервером потеряна!");
+                if (Client != null)
+                {
+                    ErrorConnectToServer();
+                    MessageBox.Show("Связь с сервером потеряна!");
+                }
                 return 0;
             }
             catch (Exception e)
@@ -689,15 +716,17 @@ namespace CartGame
         { 
 
                StopThread = false;
+            RecMsgWithoutData = null;
+            RecMsgWithData = null;
+            ErrorConnectToServer = null;
             if (Client != null)
             {
                 Client.Close();
                 Client = null;
             }
               ClientNetwork = null;
-               
-               
-        }
+
+    }
         public void Send(MsgType TypeMsg)
         {
             try
@@ -735,7 +764,7 @@ namespace CartGame
                     for (int i = 0; i < Length; i++)
                     {
                         byte[] temp;
-                        temp = BitConverter.GetBytes((short)IDCarte[i]);
+                        temp = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((short)IDCarte[i]));
                         data[index] = temp[0];
                         data[index + 1] = temp[1];
                         index += 2;

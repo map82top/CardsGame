@@ -12,7 +12,7 @@ namespace CarteServer
 {
     delegate void EmptyDel();//делегат для функций без аргументов
     delegate void CardOnField(User sender,int numberCard, int idCards);
-    delegate void AttackDelegate(User sender, int attacking, int attacked);
+    delegate void AttackDelegate(User sender, int attacking, int attacked, int attackCount);
     delegate void ErrorSend(User user);
     delegate void DamageCard(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked);
     delegate void RepairsCard(User user, int IDAttacking, RepairsEvent Card, int attacking, int attacked);
@@ -146,7 +146,7 @@ namespace CarteServer
                                             int index = 0;
                                             for (int i = 0; i < MsgLength/2; i++)
                                             {
-                                                carteUser.Add((int)BitConverter.ToInt16(Data, index));
+                                                carteUser.Add(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, index)));
 
                                                 index += 2;
                                             }
@@ -167,8 +167,7 @@ namespace CarteServer
                                     case MsgType.AddCarteOnField:
                                         if (myProgress)
                                         {
-                                            short value = BitConverter.ToInt16(Data, 0);
-                                            int NumberCarte = IPAddress.NetworkToHostOrder(value);
+                                            int NumberCarte = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));
 
                                             //получаем ID карты
                                             int IDCarte = CardsOnHands[NumberCarte];
@@ -192,27 +191,29 @@ namespace CarteServer
                                     case MsgType.Attack:
                                         if (myProgress)//если мой ход
                                         {
-                                            short attacking = BitConverter.ToInt16(Data, 0);
-                                            short attacked = BitConverter.ToInt16(Data, 2);
+                                            short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));
+                                            short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
                                             if (attacking == -1)
                                             {
-                                                if (userHq.AttackCount > 0)
-                                                    Attack(this, -1, attacked);
+                                                int attackCount = userHq.AttackCount;
+                                                if (attackCount > 0)
+                                                    Attack(this, -1, attacked, attackCount-1);
 
 
                                             }
                                             else
                                             {
-                                                if (CardsOnMargin[attacking].AttackCount > 0)
-                                                    Attack(this, attacking, attacked);
+                                                int attackCount = CardsOnMargin[attacking].AttackCount;
+                                                if (attackCount > 0)
+                                                    Attack(this, attacking, attacked, attackCount-1);
                                             }
                                         }
                                         break;
                                     case MsgType.DamageEvent:
                                         if (myProgress)
                                         {
-                                            short attacking = BitConverter.ToInt16(Data, 0);//номер карты  в руке у игрока
-                                            short attacked = BitConverter.ToInt16(Data, 2);
+                                            short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
+                                            short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
                                             int IdAttackingCard = CardsOnHands[attacking];
                                             DamageEvent Card = Carte.GetCarte(IdAttackingCard) as DamageEvent;
                                             if (Card.ValueEnergy <= energy)
@@ -228,8 +229,8 @@ namespace CarteServer
                                     case MsgType.RepairsEvent:
                                         if (myProgress)
                                         {
-                                            short NumberCardRepairs = BitConverter.ToInt16(Data, 0);//номер карты  в руке у игрока
-                                            short Repairable = BitConverter.ToInt16(Data, 2);
+                                            short NumberCardRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
+                                            short Repairable = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
                                             int IdRepairsCard = CardsOnHands[NumberCardRepairs];
                                             RepairsEvent Card = Carte.GetCarte(IdRepairsCard) as RepairsEvent;
                                             if (Card.ValueEnergy <= energy)
@@ -243,7 +244,7 @@ namespace CarteServer
                                     case MsgType.AllDamageEvent:
                                         if (myProgress)
                                         {
-                                            short NumberCard = BitConverter.ToInt16(Data, 0);//номер карты  в руке у игрока
+                                            short NumberCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
                                             int IdRepairsCard = CardsOnHands[NumberCard];
                                             AllDamageEvent Card = Carte.GetCarte(IdRepairsCard) as AllDamageEvent;
                                             if (Card.ValueEnergy <= energy)
@@ -307,6 +308,11 @@ namespace CarteServer
             }
             catch (IOException e)
             {
+                if (GetOutOfQueue != null)
+                {
+                    GetOutOfQueue();
+                    return 0;
+                }
                 if (FailedSendMsg != null)
                 {
                     FailedSendMsg(this);
@@ -410,8 +416,9 @@ namespace CarteServer
                     int index = 0;
                     for (int i = 0; i < Length; i++)
                     {
-                        byte[] temp;
-                        temp = BitConverter.GetBytes((short)IDCarte[i]);
+                        byte[] temp; 
+                        //конвертируем чилсо для передачи по сети и преобразуем в байты  
+                        temp = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((short)IDCarte[i]));
                         data[index] = temp[0];
                         data[index + 1] = temp[1];
                         index += 2;

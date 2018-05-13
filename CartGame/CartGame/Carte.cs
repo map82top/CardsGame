@@ -60,7 +60,7 @@ namespace CartGame
         public abstract Panel ImageCartNormal();
         public abstract Panel ImageCartMax();
         public abstract Panel ImageCartFullMin();
-        protected static int id = 0;
+        protected int id = 0;
         public int ID
         {
             get { return id; }
@@ -71,6 +71,9 @@ namespace CartGame
             Carte RetCarte;
             switch (ID)
             {
+                case 0:
+                    RetCarte = new HeadQuarters();
+                    break;
                 case 1:
                     RetCarte = new Recruit();
                     break;
@@ -118,6 +121,7 @@ namespace CartGame
                 case 16:
                     RetCarte = new Medic();
                     break;
+
                 default:
                     RetCarte = null;
                     break;
@@ -143,6 +147,41 @@ namespace CartGame
         {
             get { return armor; }
             set { armor = value; }
+        }
+        public virtual void NewProgress()
+        {
+            attackCount = 1;
+            defenseCount = 1;
+        }
+        protected int attackCount;
+        public int AttackCount
+        {
+            get
+            {
+                return attackCount;
+            }
+            set
+            {
+                if (value > 0)
+                    attackCount = value;
+                else attackCount = 0;
+            }
+
+        }
+        protected int defenseCount;
+        public int DefenseCount
+        {
+            get
+            {
+                return defenseCount;
+            }
+            set
+            {
+                if (value > 0)
+                    defenseCount = value;
+                else defenseCount = 0;
+            }
+
         }
 
         protected int valueEnergy;
@@ -170,6 +209,8 @@ namespace CartGame
             valueEnergy = 0;
             bonusAttack = 0;
             nameRobot = "";
+            attackCount = 1;
+            defenseCount = 1;
 
         }
         
@@ -216,7 +257,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.TestCart;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -276,7 +317,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.TestCart;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
 
         }
@@ -315,7 +356,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.CarteMin;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -361,7 +402,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.FullMinCarte;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -384,8 +425,6 @@ namespace CartGame
         {
             get { return typeEvent; }
         }
-
-        static int id = 4;
         
     }
     /// <summary>
@@ -512,7 +551,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BombAttackNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -523,7 +562,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BombAttackNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -533,7 +572,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BombAttackFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -556,7 +595,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BigAttackNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -567,7 +606,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BigAttackNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -577,7 +616,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BigAttackFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -651,7 +690,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.AmbushNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -662,7 +701,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.AmbushNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -672,7 +711,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.AmbushFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -699,7 +738,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RocketNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -710,7 +749,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RocketNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -720,7 +759,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RocketFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -746,7 +785,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.PointAttackSpaceCarteNormal;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -757,7 +796,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.PointAttackSpaceCarteNormal;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -767,7 +806,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.PointAttackSpaceFullMin;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -793,7 +832,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RepairsBoxNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -804,7 +843,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RepairsBoxNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -814,7 +853,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RepairsBoxFullMin;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -840,7 +879,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.FieldRepairsNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -851,7 +890,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.FieldRepairsNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -861,7 +900,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.FieldRepairsFullMin;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
 
@@ -882,6 +921,8 @@ namespace CartGame
             id = 1;
             nameRobot = "Рекрут";
             bonusAttack = 0;
+            attackCount = 1;
+            defenseCount = 1;
         }
         public override Panel ImageCartNormal()
         {
@@ -890,7 +931,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RecruitNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -900,7 +941,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RecruitFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -910,7 +951,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.RecruitNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
      }
@@ -928,6 +969,8 @@ namespace CartGame
             id = 16;
             nameRobot = "Медик";
             bonusAttack = 0;
+            attackCount = 1;
+            defenseCount = 1;
         }
         public override Panel ImageCartNormal()
         {
@@ -936,7 +979,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.MedicNormalCart;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -944,9 +987,9 @@ namespace CartGame
             Panel CarteImage = new Panel();
             CarteImage.Size = new Size(100, 120);
             //изображение карты
-            CarteImage.BackgroundImage = Properties.Resources.MedicNormalCart;
+            CarteImage.BackgroundImage = Properties.Resources.MedicFullMinlCart;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -954,9 +997,9 @@ namespace CartGame
             Panel CarteImage = new Panel();
             CarteImage.Size = new Size(218, 280);
             //изображение карты
-            CarteImage.BackgroundImage = Properties.Resources.MedicFullMinlCart;
+            CarteImage.BackgroundImage = Properties.Resources.MedicNormalCart;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
@@ -974,6 +1017,8 @@ namespace CartGame
             nameRobot = "Дуэлянт";
             bonusAttack = 0;
             id = 2;
+            attackCount = 1;
+            defenseCount = 1;
 
         }
         public override Panel ImageCartNormal()
@@ -983,7 +1028,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.DuelistNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -993,7 +1038,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.DuelistFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -1003,7 +1048,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.DuelistNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
@@ -1019,6 +1064,8 @@ namespace CartGame
             nameRobot = "Разрушитель";
             bonusAttack = 0;
             id = 13;
+            attackCount = 1;
+            defenseCount = 1;
 
         }
         public override Panel ImageCartNormal()
@@ -1028,7 +1075,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.DestroyerNormalCarte;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -1036,9 +1083,9 @@ namespace CartGame
             Panel CarteImage = new Panel();
             CarteImage.Size = new Size(100, 120);
             //изображение карты
-            CarteImage.BackgroundImage = Properties.Resources.DestroyerNormalCarte;
+            CarteImage.BackgroundImage = Properties.Resources.DestroyerFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -1046,9 +1093,9 @@ namespace CartGame
             Panel CarteImage = new Panel();
             CarteImage.Size = new Size(218, 280);
             //изображение карты
-            CarteImage.BackgroundImage = Properties.Resources.DestroyerFullMinCard;
+            CarteImage.BackgroundImage = Properties.Resources.DestroyerNormalCarte;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
@@ -1067,6 +1114,8 @@ namespace CartGame
             bonusAttack = 0;
             nameRobot = "Ветеран";
             id = 3;
+            attackCount = 1;
+            defenseCount = 1;
         }
         public override Panel ImageCartNormal()
         {
@@ -1075,7 +1124,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.VeteranNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -1085,7 +1134,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.VeteranNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -1095,7 +1144,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.VeteranFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
@@ -1114,6 +1163,13 @@ namespace CartGame
             bonusAttack = 0;
             nameRobot = "Боксер";
             id = 10;
+            attackCount = 1;
+            defenseCount = 2;
+        }
+        public override void NewProgress()
+        {
+            attackCount = 1;
+            defenseCount = 2;
         }
         public override Panel ImageCartNormal()
         {
@@ -1122,7 +1178,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BoxerNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -1132,7 +1188,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BoxerNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -1142,7 +1198,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.BoxerFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
@@ -1161,6 +1217,13 @@ namespace CartGame
             bonusAttack = 0;
             nameRobot = "Гладиатор";
             id = 11;
+            attackCount = 3;
+            defenseCount = 1;
+        }
+        public override void NewProgress()
+        {
+            attackCount = 3;
+            defenseCount = 1;
         }
         public override Panel ImageCartNormal()
         {
@@ -1169,7 +1232,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.GladiatorNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -1179,7 +1242,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.GladiatorNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -1189,7 +1252,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.GladiatorFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
@@ -1275,6 +1338,8 @@ namespace CartGame
             bonusAttack = 0;
             nameRobot = "Турель";
             id = 12;
+            attackCount = 1;
+            defenseCount = 1;
         }
         public override Panel ImageCartNormal()
         {
@@ -1283,7 +1348,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.TurretNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -1293,7 +1358,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.TurretNormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -1303,7 +1368,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.TurretFullMinCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
@@ -1321,6 +1386,8 @@ namespace CartGame
             bonusAttack = 0;
             nameRobot = "B1";
             id = 9;
+            attackCount = 1;
+            defenseCount = 1;
         }
         public override Panel ImageCartNormal()
         {
@@ -1329,7 +1396,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.B1NormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartMax()
@@ -1339,7 +1406,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.B1NormalCard;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
         public override Panel ImageCartFullMin()
@@ -1349,14 +1416,14 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.B1FullMin;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;//id карты
             return CarteImage;
         }
     }
     /// <summary>
     /// Класс карты Штаба
     /// </summary>
-    public class HeadQuarters
+    public class HeadQuarters: Carte
     {
         private int attack;
         public int Attack
@@ -1379,9 +1446,114 @@ namespace CartGame
             attack = 2;
             armor = 28;
             name = "Штаб";
+            id = 0;
+            attackCount = 1;
+            defenseCount = 1;
 
         }
-        public Panel ImageCartMin()
+        public void NewProgress()
+        {
+            attackCount = 1;
+            defenseCount = 1;
+        }
+        protected int attackCount;
+        public int AttackCount
+        {
+            get
+            {
+                return attackCount;
+            }
+            set
+            {
+                if (value > 0)
+                    attackCount = value;
+                else attackCount = 0;
+            }
+
+        }
+
+        protected int defenseCount;
+        public int DefenseCount
+        {
+            get
+            {
+                return defenseCount;
+            }
+            set
+            {
+                if (value > 0)
+                    defenseCount = value;
+                else defenseCount = 0;
+            }
+
+        }
+
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+
+
+            //отображаем атаку
+            Label attackLabel = new Label();
+            attackLabel.Text = Convert.ToString(attack);
+            attackLabel.Font = new Font("Arial", 9);
+            attackLabel.Location = new Point(12, 16);
+            attackLabel.Size = new Size(13, 13);
+            CarteImage.Controls.Add(attackLabel);
+
+
+            //отображаем очки здоровья
+            Label armorLabel = new Label();
+            armorLabel.Text = Convert.ToString(armor);
+            armorLabel.Font = new Font("Arial", 9);
+            armorLabel.Location = new Point(11, 149);
+            armorLabel.Size = new Size(13, 13);
+            CarteImage.Controls.Add(armorLabel);
+
+            //отображаем имя робота
+            Label Name = new Label();
+            Name.Text = name;
+            Name.Font = new Font("Arial", 9);
+            Name.Location = new Point(38, 20);
+            Name.Size = new Size(65, 15);
+            Name.TextAlign = ContentAlignment.MiddleCenter;
+            CarteImage.Controls.Add(Name);
+
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.TestCart;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+
+            //отображаем атаку
+            Label attackLabel = new Label();
+            attackLabel.Text = Convert.ToString(attack);
+            attackLabel.Font = new Font("Arial", 14);
+            attackLabel.Location = new Point(19, 25);
+            attackLabel.Size = new Size(20, 20);
+            CarteImage.Controls.Add(attackLabel);
+
+            //отображаем очки здоровья
+            Label armorLabel = new Label();
+            armorLabel.Text = Convert.ToString(armor);
+            armorLabel.Font = new Font("Arial", 14);
+            armorLabel.Location = new Point(12, 224);
+            armorLabel.Size = new Size(32, 20);
+            CarteImage.Controls.Add(armorLabel);
+
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.HQCardMax;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
         {
             Panel CarteImage = new Panel();
             CarteImage.Size = new Size(90, 120);
@@ -1416,7 +1588,7 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.HQMinCarte;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
-
+            CarteImage.Tag = id;
             return CarteImage;
         }
     }

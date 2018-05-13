@@ -125,11 +125,8 @@ namespace CartGame
         public void Dispose()
         {
             enName = null;
-            if(usCarteOnField!=null) usCarteOnField.Clear();
             usCarteOnField = null;
-            if(carteFromUser!=null) carteFromUser.Clear();
             carteFromUser = null;
-            if (enCarteOnField != null)enCarteOnField.Clear();
             enCarteOnField = null;
             UserHq = null;
             EnemyHq = null;

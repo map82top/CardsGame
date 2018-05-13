@@ -20,7 +20,7 @@ namespace CarteServer
         //public abstract Panel ImageCartMin();
         //public abstract Panel ImageCartMax();
         // public abstract Panel Clone { get; }
-        protected static int id = 0;
+        protected int id = 0;
         public int ID
         {
             get { return id; }

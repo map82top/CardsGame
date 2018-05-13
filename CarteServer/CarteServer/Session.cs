@@ -388,8 +388,8 @@ namespace CarteServer
             }
            
             //отправляем о сообщение об удачной атаке
-            us1.Send(Us1.Energy, MsgType.YourEnergy);
-            us2.Send(Us1.Energy, MsgType.EnemyEnergy);
+            us1.Send(us1.Energy, MsgType.YourEnergy);
+            us2.Send(us2.Energy, MsgType.EnemyEnergy);
             us1.Send(new int[] { NumberCard, Card.AllDamage }, MsgType.UsAllDeliteEvent);
             us2.Send(new int[] { IdCard, NumberCard, Card.AllDamage }, MsgType.EnAllDeliteEvent);
         }
@@ -456,8 +456,7 @@ namespace CarteServer
                 if (attacked == -1)
                 {
                     Us2.userHQ.Armor -= Card.Damage;
-                    //проверяем на конец игры
-                    TestEndGame();
+                   
                 }
                 else
                 {
@@ -471,13 +470,16 @@ namespace CarteServer
                 Us2.Send(Us1.Energy, MsgType.EnemyEnergy);
                 Us1.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
                 Us2.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
+                //проверяем на уничтожение одного из штабов
+                TestEndGame();
+               
             }
             else if (user == Us2)
             {
                 if (attacked == -1)
                 {
                     Us1.userHQ.Armor -= Card.Damage;
-
+                    
                 }
                 else
                 {
@@ -489,18 +491,21 @@ namespace CarteServer
                 Us1.Send(Us2.Energy, MsgType.EnemyEnergy);
                 Us2.Send(new int[] {attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
                 Us1.Send(new int[] {attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
+                //проверяем на конец игры
+                TestEndGame();
+              
             }
-            //проверяем на уничтожение одного из штабов
-            TestEndGame();
+            Debug.WriteLine($"Прочность штаба игрока {Us1.Name} равна {Us1.userHQ.Armor}");
+            Debug.WriteLine($"Прочность штаба игрока {Us2.Name} равна {Us2.userHQ.Armor}");
         }
         private void RepairsEventFunc(User user, int IDRepairs, RepairsEvent Card, int NumberCardRepairs, int Repairable)
         {
             if (user == Us1)
             {
                 if( Repairable == -1)
-                    Us1.userHQ.Armor -= Card.Damage;
+                    user.userHQ.Armor -= Card.Damage;
                 else
-                    Us1.CardsMargin[Repairable].Armor -= Card.Damage;
+                    user.CardsMargin[Repairable].Armor -= Card.Damage;
                    
                 //отправляем о сообщение об удачной атаке
                 Us1.Send(Us1.Energy, MsgType.YourEnergy);
@@ -511,10 +516,10 @@ namespace CarteServer
             else if (user == Us2)
             {
                 if (Repairable == -1)
-                    Us2.userHQ.Armor -= Card.Damage;
+                    user.userHQ.Armor -= Card.Damage;
 
                 else
-                    Us1.CardsMargin[Repairable].Armor -= Card.Damage;
+                    user.CardsMargin[Repairable].Armor -= Card.Damage;
                    
                 //отправляем о сообщение об удачной атаке
                 Us2.Send(Us2.Energy, MsgType.YourEnergy);
@@ -522,8 +527,8 @@ namespace CarteServer
                 Us2.Send(new int[] { NumberCardRepairs, Repairable, Card.Damage }, MsgType.UsRepairsEvent);
                 Us1.Send(new int[] { NumberCardRepairs, IDRepairs, Repairable, Card.Damage }, MsgType.EnRepairsEvent);
             }
-            //проверяем на уничтожение одного из штабов
-            TestEndGame();
+            Debug.WriteLine($"Прочность штаба игрока {Us1.Name} равна {Us1.userHQ.Armor}");
+            Debug.WriteLine($"Прочность штаба игрока {Us2.Name} равна {Us2.userHQ.Armor}");
         }
         /// <summary>
         /// Выполняет нектороый действия происходящие при удалении некоторой карты
@@ -614,7 +619,7 @@ namespace CarteServer
                                     //то атакуем карту слева
                                     RealAttacked = attacked - 1;
                                 }
-                                else if (attacked == CardsMargin.Count - 1)
+                                else if (attacked != CardsMargin.Count - 1)
                                 {
                                     //если карта не последняя в списке карт находящихся на поле
                                     //то атакуем карту находящуюся справа
@@ -634,7 +639,6 @@ namespace CarteServer
                         break;
                     }
 
-                    break;
                 }
                
             }
@@ -647,28 +651,30 @@ namespace CarteServer
         /// <param name="Us2"></param>
         /// <param name="attacking"></param>
         /// <param name="attacked"></param>
-        private void ForAttackFunc(User us1,User us2, int attacking, int attacked)
+        private void ForAttackFunc(User us1,User us2, int attacking, int attacked, int attackCount)
         {
              int damageEnemy = 0, damageUser = 0;
-           
+            int defenceCount = 0;
                     if (attacking == -1)
                     {
                         if (attacked == -1)
                         {
                             //урон по противнику
                             damageEnemy = us1.userHQ.Attack;
-                            us2.userHQ.Armor -= damageUser;
+                            us2.userHQ.Armor -= damageEnemy;
                             //урон от противника
-                            if (us2.userHQ.DefenseCount > 0)
+                            defenceCount = us2.userHQ.DefenseCount;
+                            if (defenceCount > 0)
                             {
                                 damageUser = us2.userHQ.Attack;
                                 us1.userHQ.Armor -= damageUser;
                             }
                             
-                        }
+                         }
                         else
                         {
-                            if (us2.CardsMargin[attacked].DefenseCount > 0)
+                             defenceCount = us2.CardsMargin[attacked].DefenseCount;
+                            if (defenceCount > 0)
                             {
                                 //атака по карте пользователя
                                 damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
@@ -680,54 +686,61 @@ namespace CarteServer
                             attacked = BeforeDamage(us2.CardsMargin, attacked);
                              us2.CardsMargin[attacked].Armor -= damageEnemy;
                           
+                            
                             //если очков прочности меньше 0 удаляем карту
                             EffectDeliteCard(us2, attacked);
                  
                         }
+                         
                     }
-                    else
+                    else //если атакует не штаб
                     {
-                if (attacked == -1)
-                {
-                    //урон от игрока по врагу
-                    damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
-                    us2.userHQ.Armor -= damageEnemy;
-
-                    if (us2.userHQ.DefenseCount > 0)
-                    {
-                        //урон от врага по игроку
-                        damageUser = us2.userHQ.Attack;
-                        us1.CardsMargin[attacking].Armor -= damageUser;
-                    }
-
-                    //если очков прочности меньше 0 удаляем карту
-                    EffectDeliteCard(us1, attacking);
-
-                }
-                else
-                {
-                            //карты атакуют друг друга
-                            //урон по карте игрока
-                            if (us2.CardsMargin[attacked].DefenseCount > 0)
-                             {
-                                damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
+                        if (attacked == -1)
+                        {
+                            //урон от игрока по врагу
+                            damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
+                            us2.userHQ.Armor -= damageEnemy;
+                            defenceCount = us2.userHQ.DefenseCount;
+                            if (defenceCount > 0)
+                            {
+                                //урон от врага по игроку
+                                damageUser = us2.userHQ.Attack;
                                 us1.CardsMargin[attacking].Armor -= damageUser;
-                             }
-                                         //урон по карте противника  
-                             damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
-                             attacked = BeforeDamage(us2.CardsMargin, attacked);
-                              us2.CardsMargin[attacked].Armor -= damageEnemy;
+                            }
 
-                            //если их очки прочности меньше 0, то удаляем их
+                            //если очков прочности меньше 0 удаляем карту
                             EffectDeliteCard(us1, attacking);
-                            EffectDeliteCard(us2, attacked);
-                           
+                            
                         }
-                    }
+                        else
+                        {
+                                //карты атакуют друг друга
+                                //урон по карте игрока
+                                defenceCount = us2.CardsMargin[attacked].DefenseCount;
+                                if (defenceCount > 0)
+                                 {
+                                   damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
+                                   us1.CardsMargin[attacking].Armor -= damageUser;
+                                 }
+                                    //урон по карте противника  
+                                   damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
+                                   attacked = BeforeDamage(us2.CardsMargin, attacked);
+                                   us2.CardsMargin[attacked].Armor -= damageEnemy;
+
+                                 //если их очки прочности меньше 0, то удаляем их
+                                 EffectDeliteCard(us1, attacking);
+                                 EffectDeliteCard(us2, attacked);
+                           
+                                }
+                            }
 
                     //отправляем о сообщение об удачной атаке
-                    us1.Send(new int[] { attacking, attacked, damageUser, damageEnemy }, MsgType.MyAttackSucc);
-                    us2.Send(new int[] { attacking, attacked, damageUser, damageEnemy }, MsgType.EnAttackSucc);//поменял уроны местами из-за ввода универсальной функции AttackSucc
+                    us1.Send(new int[] { attacking, attacked, damageUser, damageEnemy, attackCount, defenceCount-1 }, MsgType.MyAttackSucc);
+                    us2.Send(new int[] { attacking, attacked, damageUser, damageEnemy, attackCount, defenceCount-1 }, MsgType.EnAttackSucc);//поменял уроны местами из-за ввода универсальной функции AttackSucc
+                                                                                                               //проверяем на конец игры
+                    TestEndGame();
+            Debug.WriteLine($"Прочность штаба игрока {us1.Name} равна {us1.userHQ.Armor}");
+            Debug.WriteLine($"Прочность штаба игрока {us2.Name} равна {us2.userHQ.Armor}");
         }
 
         /// <summary>
@@ -736,18 +749,18 @@ namespace CarteServer
         /// <param name="sender"></param>
         /// <param name="attacking"></param>
         /// <param name="attacked"></param>
-        private void AttackFunc(User sender, int attacking, int attacked)
+        private void AttackFunc(User sender, int attacking, int attacked, int attackCount)
         {
             try
             {
                 
                 if (sender == Us1)
                 {
-                    ForAttackFunc(Us1, Us2, attacking, attacked);
+                    ForAttackFunc(Us1, Us2, attacking, attacked, attackCount);
                 }
                 else//если пользователь Us2
                 {
-                    ForAttackFunc(Us2, Us1, attacking, attacked);
+                    ForAttackFunc(Us2, Us1, attacking, attacked, attackCount);
                 }
                 //проверяем на уничтожение одного из штабов
                 TestEndGame();

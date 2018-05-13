@@ -38,6 +38,7 @@
             this.Save = new System.Windows.Forms.Button();
             this.errorIPAdress = new System.Windows.Forms.ErrorProvider(this.components);
             this.errorPort = new System.Windows.Forms.ErrorProvider(this.components);
+            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.errorIPAdress)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorPort)).BeginInit();
             this.SuspendLayout();
@@ -102,7 +103,7 @@
             // Save
             // 
             this.Save.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.Save.Location = new System.Drawing.Point(86, 176);
+            this.Save.Location = new System.Drawing.Point(86, 186);
             this.Save.Name = "Save";
             this.Save.Size = new System.Drawing.Size(121, 36);
             this.Save.TabIndex = 6;
@@ -120,11 +121,22 @@
             this.errorPort.ContainerControl = this;
             this.errorPort.RightToLeft = true;
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label4.Location = new System.Drawing.Point(36, 163);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(231, 15);
+            this.label4.TabIndex = 7;
+            this.label4.Text = "Все поля обзательны для заполения!!!";
+            // 
             // Settings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(290, 224);
+            this.ClientSize = new System.Drawing.Size(290, 234);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.Save);
             this.Controls.Add(this.nickname);
             this.Controls.Add(this.port);
@@ -155,5 +167,6 @@
         private System.Windows.Forms.Button Save;
         private System.Windows.Forms.ErrorProvider errorIPAdress;
         private System.Windows.Forms.ErrorProvider errorPort;
+        private System.Windows.Forms.Label label4;
     }
 }

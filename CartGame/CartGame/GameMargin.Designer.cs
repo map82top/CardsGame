@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.UserHQPanel = new System.Windows.Forms.Panel();
             this.EnemyHQPanel = new System.Windows.Forms.Panel();
             this.MyCarte = new System.Windows.Forms.Panel();
@@ -43,6 +44,9 @@
             this.EnemyMargin = new System.Windows.Forms.Panel();
             this.MyName = new System.Windows.Forms.Label();
             this.EnemyName = new System.Windows.Forms.Label();
+            this.toolTipHelp = new System.Windows.Forms.ToolTip(this.components);
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // UserHQPanel
@@ -69,6 +73,8 @@
             this.MyCarte.Name = "MyCarte";
             this.MyCarte.Size = new System.Drawing.Size(827, 125);
             this.MyCarte.TabIndex = 4;
+            this.toolTipHelp.SetToolTip(this.MyCarte, "Это карты, которые находятся у вас в руке\r\nВы можете использовать любое количеств" +
+        "о этих карт, \r\nесли у вас достаточно энергии");
             // 
             // EnemyCarte
             // 
@@ -78,6 +84,8 @@
             this.EnemyCarte.Name = "EnemyCarte";
             this.EnemyCarte.Size = new System.Drawing.Size(827, 70);
             this.EnemyCarte.TabIndex = 5;
+            this.toolTipHelp.SetToolTip(this.EnemyCarte, "Карты находящиеся в руке противника.\r\nВы не можете видеть их, как и противник не " +
+        "может \r\nвидеть ваши карты");
             // 
             // label1
             // 
@@ -119,6 +127,7 @@
             this.EnemyTime.Size = new System.Drawing.Size(60, 24);
             this.EnemyTime.TabIndex = 10;
             this.EnemyTime.Text = "00:00";
+            this.toolTipHelp.SetToolTip(this.EnemyTime, "Время, оставшееся до конца хода противника");
             // 
             // MyTime
             // 
@@ -129,6 +138,7 @@
             this.MyTime.Size = new System.Drawing.Size(60, 24);
             this.MyTime.TabIndex = 11;
             this.MyTime.Text = "00:00";
+            this.toolTipHelp.SetToolTip(this.MyTime, "Время оставшееся до конца вашего хода");
             // 
             // MyEnergy
             // 
@@ -137,6 +147,7 @@
             this.MyEnergy.Name = "MyEnergy";
             this.MyEnergy.Size = new System.Drawing.Size(332, 28);
             this.MyEnergy.TabIndex = 12;
+            this.toolTipHelp.SetToolTip(this.MyEnergy, "Без денег не обходится ни одна война");
             // 
             // EnemyEnergy
             // 
@@ -145,6 +156,7 @@
             this.EnemyEnergy.Name = "EnemyEnergy";
             this.EnemyEnergy.Size = new System.Drawing.Size(332, 28);
             this.EnemyEnergy.TabIndex = 13;
+            this.toolTipHelp.SetToolTip(this.EnemyEnergy, "Без денег не обходится ни одна война");
             // 
             // UserMargin
             // 
@@ -153,6 +165,7 @@
             this.UserMargin.Name = "UserMargin";
             this.UserMargin.Size = new System.Drawing.Size(827, 120);
             this.UserMargin.TabIndex = 1;
+            this.toolTipHelp.SetToolTip(this.UserMargin, "Поле для высадки ваших роботов");
             // 
             // EnemyMargin
             // 
@@ -161,6 +174,7 @@
             this.EnemyMargin.Name = "EnemyMargin";
             this.EnemyMargin.Size = new System.Drawing.Size(827, 120);
             this.EnemyMargin.TabIndex = 0;
+            this.toolTipHelp.SetToolTip(this.EnemyMargin, "Поле для высадки роботов противника");
             // 
             // MyName
             // 
@@ -182,11 +196,33 @@
             this.EnemyName.TabIndex = 15;
             this.EnemyName.Text = "Ник противника: ";
             // 
+            // toolTipHelp
+            // 
+            this.toolTipHelp.AutoPopDelay = 7000;
+            this.toolTipHelp.InitialDelay = 500;
+            this.toolTipHelp.ReshowDelay = 100;
+            this.toolTipHelp.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Info;
+            this.toolTipHelp.ToolTipTitle = "Подсказка";
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::CartGame.Properties.Resources.helpCardsGame1;
+            this.pictureBox1.Location = new System.Drawing.Point(885, 522);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(32, 32);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox1.TabIndex = 16;
+            this.pictureBox1.TabStop = false;
+            this.toolTipHelp.SetToolTip(this.pictureBox1, "Чтобы увеличить карту, кликните по ней правой кнопкой мыши.\t\r\nЧтобы перетащить ка" +
+        "рту, нажмите и удерживайте левую кнопку мыши.\r\nКак только вы отпустите кнопку, к" +
+        "арта будет считаться отпущенной.");
+            // 
             // GameMargin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1074, 696);
+            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.EnemyName);
             this.Controls.Add(this.MyName);
             this.Controls.Add(this.EnemyEnergy);
@@ -208,6 +244,7 @@
             this.Text = "GameMargin";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GameMargin_FormClosing);
             this.Load += new System.EventHandler(this.GameMargin_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -229,5 +266,7 @@
         private System.Windows.Forms.Panel EnemyMargin;
         private System.Windows.Forms.Label MyName;
         private System.Windows.Forms.Label EnemyName;
+        private System.Windows.Forms.ToolTip toolTipHelp;
+        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }

@@ -181,29 +181,11 @@ namespace CartGame.Properties {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Пока на поле боя он не один, получает дополнительный бонус к защите.
+        ///   Ищет локализованную строку, похожую на Класс карты: Оборонительное сооружение.
         /// </summary>
-        internal static string DescrDuelist {
+        internal static string DefenderConstrClass {
             get {
-                return ResourceManager.GetString("DescrDuelist", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Рекрут может показывать отличный результат в опытных руках.
-        /// </summary>
-        internal static string DescrRecruit {
-            get {
-                return ResourceManager.GetString("DescrRecruit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на +1 к атаке остальных воинов, когда ветеран находится на поле боя.
-        /// </summary>
-        internal static string DescrVeteran {
-            get {
-                return ResourceManager.GetString("DescrVeteran", resourceCulture);
+                return ResourceManager.GetString("DefenderConstrClass", resourceCulture);
             }
         }
         
@@ -318,6 +300,139 @@ namespace CartGame.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Вы можете добавить эту карту на свое игровое поле..
+        /// </summary>
+        internal static string HelpAddMargin {
+            get {
+                return ResourceManager.GetString("HelpAddMargin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Вы можете атаковать карты противника, находящиеся на его игровом поле..
+        /// </summary>
+        internal static string HelpAttackDefenderConstr {
+            get {
+                return ResourceManager.GetString("HelpAttackDefenderConstr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Вы можете атаковать штаб и карты противника, находящиеся на его игровом поле..
+        /// </summary>
+        internal static string HelpAttackRobot {
+            get {
+                return ResourceManager.GetString("HelpAttackRobot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
+        internal static byte[] HelpCardsGame {
+            get {
+                object obj = ResourceManager.GetObject("HelpCardsGame", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap helpCardsGame1 {
+            get {
+                object obj = ResourceManager.GetObject("helpCardsGame1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Пятиугольник - урон, наносимы данной картой по противнику.
+        ///Шестиугольник - очки прочности данной карты..
+        /// </summary>
+        internal static string HelpCardsMargin {
+            get {
+                return ResourceManager.GetString("HelpCardsMargin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Вы можете нанести урон штабу или роботу врага на игровом поле. 
+        ///Для этого перетащите событие к нужной карте..
+        /// </summary>
+        internal static string HelpDamageEvent {
+            get {
+                return ResourceManager.GetString("HelpDamageEvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Класс данной карты: Защитное сооружение
+        ///Треугольник - цена добавления защитного сооружения, на игровое поле
+        ///Пятиугольник - урон, наносимы данным защитным сооружением по противнику
+        ///Шестиугольник - очки прочности данной карты
+        ///Защитные сооружения не могут атаковать штаб.
+        /// </summary>
+        internal static string HelpDefenderConstr {
+            get {
+                return ResourceManager.GetString("HelpDefenderConstr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Класс данной карты: Событие
+        ///Треугольник - цена использования события
+        ///Пятиугольник - количество очков, добавляемых/забираемых
+        ///данным событием.
+        /// </summary>
+        internal static string HelpEvent {
+            get {
+                return ResourceManager.GetString("HelpEvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Вы можете вылечить штаб или робота на игровом поле. 
+        ///Для этого перетащите событие к нужной карте..
+        /// </summary>
+        internal static string HelpRepairsEvent {
+            get {
+                return ResourceManager.GetString("HelpRepairsEvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Класс данной карты: Робот
+        ///Треугольник - цена добавления робота, на игровое поле
+        ///Пятиугольник - урон, наносимы данным роботом по противнику
+        ///Шестиугольник - очки прочности данной карты.
+        /// </summary>
+        internal static string HelpRobot {
+            get {
+                return ResourceManager.GetString("HelpRobot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap HQCardMax {
+            get {
+                object obj = ResourceManager.GetObject("HQCardMax", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Класс карты: Штаб.
+        /// </summary>
+        internal static string HQClass {
+            get {
+                return ResourceManager.GetString("HQClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap HQMinCarte {
@@ -414,6 +529,15 @@ namespace CartGame.Properties {
             get {
                 object obj = ResourceManager.GetObject("RepairsBoxNormalCard", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Класс карты: Робот.
+        /// </summary>
+        internal static string RobotClass {
+            get {
+                return ResourceManager.GetString("RobotClass", resourceCulture);
             }
         }
         

@@ -14,59 +14,65 @@ namespace CartGame
 {
     public partial class SeekForm : Form
     {
-        Controler ClientContr; 
-       
+        Controler ClientContr;
+        private bool BoolLoadGame = false;//если true, то игровая форма уже создана
+        Mutex LoadGameMutex = new Mutex();
         
         public SeekForm(Controler controler)
         {
             InitializeComponent();
             ClientContr = controler;
             ClientContr.StartGame += LoadGameInterface;
-            ClientContr.DeliteSeek += FindAnswerDeliteSeek;
             ClientContr.ErrorConnectToServer += ErrorConnectionServer;
         }
         private void ErrorConnectionServer()
         {
+            ChoiceForm NewForm = new ChoiceForm(ClientContr);
             this.Invoke((MethodInvoker)delegate
             {
-               
-                ChoiceForm NewForm = new ChoiceForm(ClientContr);
                 NewForm.Show();
                 this.Close();
             });
          }
+        /// <summary>
+        /// Обработичк события начала игры
+        /// </summary>
         private void LoadGameInterface()
         {
-            ClientContr.ErrorConnectToServer -= ErrorConnectionServer;
-            //отвязываем этот обработчик
-            ClientContr.StartGame -= LoadGameInterface;
-            GameMargin NewForm = new GameMargin(ClientContr);
-            this.Invoke((MethodInvoker)delegate {
-              
-                NewForm.Show();
-                this.Close();
-               
-            });
-            
+
+            LoadGameMutex.WaitOne();//мьютекс запрещает выполнять это метод повторно
+                if (!BoolLoadGame)
+                {
+                    BoolLoadGame = true;
+                    ClientContr.ErrorConnectToServer -= ErrorConnectionServer;
+                    //отвязываем этот обработчик
+                    ClientContr.StartGame -= LoadGameInterface;
+                 GameMargin NewForm = new GameMargin(ClientContr);
+                this.Invoke((MethodInvoker)delegate
+                    {
+                        
+                        NewForm.Show();
+                        this.Close();
+
+                    });
+                }
+            LoadGameMutex.ReleaseMutex();
+           
         }
-        private void FindAnswerDeliteSeek()
-        {
-            ClientContr.DeliteSeek -= FindAnswerDeliteSeek;
-            ClientContr.DialogWithServ.Disconnect();
-            this.Invoke((MethodInvoker)delegate {
-                ChoiceForm NewForm = new ChoiceForm(ClientContr);
-                NewForm.Show();
-                this.Close();
-            });
-        }
+        
         private void buttonBack_Click(object sender, EventArgs e)
         {
             //посылаем сообщение отмены
             ClientContr.DialogWithServ.Send(MsgType.DeliteSeek);
+            ClientContr.Dispose();
+            ChoiceForm NewForm = new ChoiceForm(ClientContr);
+            this.Invoke((MethodInvoker)delegate
+           {          
+               NewForm.Show();
+                this.Close();
+
+            });
         }
-        /// <summary>
-        /// Отправляет сообщение без данных
-        /// </summary>
-        /// <param name="TypeMsg"></param>
+
     }
 }

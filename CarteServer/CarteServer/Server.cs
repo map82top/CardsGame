@@ -12,8 +12,9 @@ namespace CarteServer
     class Server
     {
          User ExpectUser;//клиент ожидающий соединения
-         int CountSession;
-
+         int CountSession;//счетчик количества сессий
+        private Object ObjectLockDeliteSession = new Object();
+        private Object ObjectLockDeliteOfQueue = new Object();
         public  List<Session> AllSession = new List<Session>();
         public  Server()
         {
@@ -54,23 +55,27 @@ namespace CarteServer
         }
         private void DeliteOfQueue()
         {
-            if (ExpectUser != null)
-            {
-                ExpectUser.Send(MsgType.DeliteSeek);
-                ExpectUser.DisposeUserToSeek();
-                ExpectUser = null;
-                Console.WriteLine("Пользователь находящийся в очереди удален!");
+            lock(ObjectLockDeliteOfQueue)
+                {
+                if (ExpectUser != null)
+                {
+                    ExpectUser.DisposeUserToSeek();
+                    ExpectUser = null;
+                    Console.WriteLine("Пользователь находящийся в очереди удален!");
+                }
             }
         }
         private  void DeliteSession(Session sender)
         {
-          if (AllSession.Count != 0)
-            {
-                AllSession.Remove(sender);
-                Console.WriteLine("Сессия удалена...");
-                CountSession--;
+            lock(ObjectLockDeliteSession)
+                {
+                if (AllSession.Count != 0)
+                {
+                    AllSession.Remove(sender);
+                    Console.WriteLine("Сессия удалена...");
+                    CountSession--;
+                }
             }
-
         }
 
 

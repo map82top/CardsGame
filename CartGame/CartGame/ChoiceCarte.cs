@@ -16,26 +16,23 @@ namespace CartGame
     {
         const string text = "system_info/info_server.txt";
        
-       // int[] IDUserCarte = new int[7];//всего можно выбрать 7 карт
-        //bool[] BusySlot = new bool[7];
         List<Panel> CarteSlot = new List<Panel>(); //помогает узнать какие слоты заняты
         List<Panel> AllCarte = new List<Panel>();//все доступные карты
-        bool MouseState = false;//показывает, что в данное время элемент перетаскивается
-        Point MousePoint; //координаты мыши при перетаскивании
+        //bool MouseState = false;//показывает, что в данное время элемент перетаскивается
+        //Point MousePoint; //координаты мыши при перетаскивании
         bool OpenSeekForm = true;
         Controler controler;
         DataGame ChoiceCards;
         const int ValueCardsUser = 15;//максимальное количество карт в колоде равно 15
-
+       
         public ChoiceForm( Controler controler)
         {
             InitializeComponent();
             this.controler = controler;
-            ChoiceCards = controler.GetDataGame;
-           
+            ChoiceCards = controler.GetDataGame;        
         }
 
-        private void BackCarte_MouseDown(object sender, MouseEventArgs e)
+       /*private void BackCarte_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
@@ -61,47 +58,45 @@ namespace CartGame
         }
         private void BackCarte_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Right && MouseState)
             {
                 Panel temp = (Panel)sender;
 
-                //если данная карта находится в panelUserCarte
-                if (panelAllCarte.Location.X <= temp.Location.X && temp.Location.X <= panelAllCarte.Location.X + panelAllCarte.Width && panelAllCarte.Location.Y <= temp.Location.Y && temp.Location.Y <= panelAllCarte.Location.Y + panelAllCarte.Height)
-                {
-                    DeliteUserCarte(sender);
-                }
-
+                //ничего не деламе так как карта все равно будет дабавлена, так как произошло событие click
+              
                 this.Controls.Remove(temp);
                 PaintUserCarte();
                 MouseState = false;
             }
-        }
+        }*/
         /// <summary>
         /// Добавляет карту в карты игрока
         /// </summary>
         /// <param name="sender"></param>
         private void AddUserCarte(object sender)
         {
-            int id = SeekIDAllCarte(sender);
+            int id = (int)(sender as Panel).Tag;
             bool AllBusy = true;//показывает, что все слоты заняты при 
             if (id != -1)
             {
                 //если не все слоты заняты
-                // int count = ChoiceCards.UserColoda.Count;
-                
+                 
                 for (int i = 0; i < ValueCardsUser; i++)
                 {
                     if (ChoiceCards.UserColoda[i] == 0)
-                    { 
-                        CarteSlot[i] = Carte.GetCarte(id).ImageCartNormal();//необходимо получить id для получения копии карты
+                    {
+                        Carte TempCarte = Carte.GetCarte(id);//необходимо получить id для получения копии карты
+                        CarteSlot[i] = TempCarte.ImageCartNormal();
                         AllBusy = false;
                         ChoiceCards.UserColoda[i] = id;
                         CarteSlot[i].MouseClick += new MouseEventHandler(Back_MouseClick);
                         CarteSlot[i].MouseEnter += new EventHandler(Panel_MouseEnter);
                         CarteSlot[i].MouseLeave += new EventHandler(Panel_MouseLeave);
-                        CarteSlot[i].MouseDown += new MouseEventHandler(BackCarte_MouseDown);
+                        /*CarteSlot[i].MouseDown += new MouseEventHandler(BackCarte_MouseDown);
                         CarteSlot[i].MouseMove += new MouseEventHandler(BackCarte_MouseMove);
-                        CarteSlot[i].MouseUp += new MouseEventHandler(BackCarte_MouseUp);
+                        CarteSlot[i].MouseUp += new MouseEventHandler(BackCarte_MouseUp);*/
+                        //добавляем подсказку
+                        AddCardHelp(CarteSlot[i], TempCarte, false);
                         break;
 
                     }
@@ -110,14 +105,15 @@ namespace CartGame
                 if (AllBusy)//добавляем в конец
                 {
                     int Last = ValueCardsUser-1;
-                    CarteSlot[Last] = Carte.GetCarte(id).ImageCartNormal();
+                    Carte TempCarte = Carte.GetCarte(id);
+                    CarteSlot[Last] = TempCarte.ImageCartNormal();
                     CarteSlot[Last].MouseClick += new MouseEventHandler(Back_MouseClick);
                     CarteSlot[Last].MouseEnter += new EventHandler(Panel_MouseEnter);
                     CarteSlot[Last].MouseLeave += new EventHandler(Panel_MouseLeave);
-                    CarteSlot[Last].MouseDown += new MouseEventHandler(BackCarte_MouseDown);
+                    /*CarteSlot[Last].MouseDown += new MouseEventHandler(BackCarte_MouseDown);
                     CarteSlot[Last].MouseMove += new MouseEventHandler(BackCarte_MouseMove);
-                    CarteSlot[Last].MouseUp += new MouseEventHandler(BackCarte_MouseUp);
-                    ChoiceCards.UserColoda[Last] = id;
+                    CarteSlot[Last].MouseUp += new MouseEventHandler(BackCarte_MouseUp);*/
+                    AddCardHelp(CarteSlot[Last], TempCarte, false);
                 }
 
                 PaintUserCarte();//перерисовываем
@@ -125,32 +121,14 @@ namespace CartGame
         }
         private void Carte_Click(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left) AddUserCarte(sender);
-            else//показываем пользователя полную версия карты
+
+            if (e.Button == MouseButtons.Left)
             {
-                if (!MouseState)
-                {
-                    //получаем координаты карты
-                    Panel temp = (Panel)sender;
-                    Point Location = new Point(panelAllCarte.Location.X + temp.Location.X - 40, panelAllCarte.Location.Y + temp.Location.Y - 40);
-                    if (Location.X < panelAllCarte.Location.X) Location.X = 0;
-                    if (Location.Y + temp.Height > panelAllCarte.Location.Y + panelAllCarte.Height - Location.Y) Location.Y -= 40;
-                    int Length = AllCarte.Count;
-                    int id = SeekIDAllCarte(sender);
 
-                    Panel CarteMax = Carte.GetCarte(id).ImageCartMax();
-                    CarteMax.Location = Location;
-                    CarteMax.BackColor = SystemColors.Window;
-                    CarteMax.MouseLeave += new EventHandler(MaxCarte_MouseLeave);
-
-                    //добавяем в коллекцию формы
-
-                    this.Controls.Add(CarteMax);
-                    CarteMax.BringToFront();
-                }
-                
+                AddUserCarte(sender);
             }
-
+            else  ShowMaxCard(sender, panelAllCarte);
+            
         }
         private void DeliteUserCarte(object sender)
         {
@@ -172,49 +150,59 @@ namespace CartGame
             }
             PaintUserCarte();//перерисовываем
         }
+        public void ShowMaxCard(object sender, Panel ParentPanel)
+        {
+                //получаем координаты карты
+                Panel temp = (Panel)sender;
+                Point Location = new Point(ParentPanel.Location.X + temp.Location.X - 40, ParentPanel.Location.Y + temp.Location.Y - 40);
+                //cоздаем изображение карты
+                int id = (int)(sender as Panel).Tag;
+                Panel CarteMax = Carte.GetCarte(id).ImageCartMax();
+                //проверка на выход за границы формы по оси y
+                if (Location.Y + CarteMax.Height > this.Height) Location.Y -= Math.Abs(this.Height - 35 - Location.Y - CarteMax.Height);
+                else if (Location.Y < 0) Location.Y = 5;
+
+                if (Location.X + CarteMax.Width > this.Width) Location.Y -= Math.Abs(this.Width - 5 - Location.X - CarteMax.Width);
+                else if (Location.X < 0) Location.X = 5;
+                //получаем id карты
+                
+                
+                CarteMax.Location = Location;
+                CarteMax.BackColor = SystemColors.Window;
+                CarteMax.MouseLeave += new EventHandler(MaxCarte_Delite);
+                CarteMax.MouseClick += new MouseEventHandler(MaxCarte_Delite);
+
+
+                //добавяем в коллекцию формы
+
+                this.Controls.Add(CarteMax);
+                CarteMax.BringToFront();
+        }
         private void Back_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left) DeliteUserCarte(sender);
             else//показываем пользователю полную версию карты
             {
-                if (!MouseState)
-                {
-                    //получаем координаты карты
-                    Panel temp = (Panel)sender;
-                    Point Location = new Point(panelAllCarte.Location.X + temp.Location.X - 40, panelAllCarte.Location.Y + temp.Location.Y - 40);
-
-                    if (Location.Y + temp.Height > panelUserCarte.Location.Y + panelUserCarte.Height - Location.Y) Location.Y -= 40;
-                    int Length = AllCarte.Count;
-                    int id = SeekIDUserCarte(sender);
-
-                    Panel CarteMax = Carte.GetCarte(id).ImageCartMax();
-                    CarteMax.Location = Location;
-                    CarteMax.BackColor = SystemColors.Window;
-                    CarteMax.MouseLeave += new EventHandler(MaxCarte_MouseLeave);
-
-
-                    //добавяем в коллекцию формы
-
-                    this.Controls.Add(CarteMax);
-                    CarteMax.BringToFront();
-                }
+                ShowMaxCard(sender, panelUserCarte);
             }
 
         }
-        private void Carte_MouseDown(object sender, MouseEventArgs e)
+        /*private void Carte_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
-            {
-                Panel temp = (Panel)sender;
-                //удаяляем их panel и добавляем в основуню форму, чтобы можно было перетаскивать в другую panel 
-                panelAllCarte.Controls.Remove(temp);
-                
-                this.Controls.Add(temp);
-                temp.BringToFront();
-                MousePoint = new Point(e.X, e.Y);
-                MouseState = true;
-            }
+            
+                if (e.Button == MouseButtons.Right)
+                {
+                 
+                    Panel temp = (Panel)sender;
+                    //удаяляем их panel и добавляем в основуню форму, чтобы можно было перетаскивать в другую panel 
+                    panelAllCarte.Controls.Remove(temp);
 
+                    this.Controls.Add(temp);
+                    temp.BringToFront();
+                    MousePoint = new Point(e.X, e.Y);
+                    MouseState = true;
+
+                }
         }
         private void Carte_MouseMove(object sender, MouseEventArgs e)
         {
@@ -228,21 +216,18 @@ namespace CartGame
         }
         private void Carte_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
-            {
-                Panel temp = (Panel)sender;
-
-                //если данная карта находится в panelUserCarte
-                if (panelUserCarte.Location.X <= temp.Location.X && temp.Location.X <= panelUserCarte.Location.X + panelUserCarte.Width && panelUserCarte.Location.Y <= temp.Location.Y && temp.Location.Y <= panelUserCarte.Location.Y + panelUserCarte.Height)
+            
+                if (e.Button == MouseButtons.Right && MouseState)
                 {
-                    AddUserCarte(sender);
-                }
+                    Panel temp = (Panel)sender;
+                    //ничего не деламе так как карта все равно будет дабавлена, так как произошло событие click
 
-                this.Controls.Remove(temp);
-                PaintAllCarte();
-                MouseState = false;
-            }
-        }
+                    this.Controls.Remove(temp);
+                    PaintAllCarte();
+                    MouseState = false;
+
+                }
+        }*/
         private void PaintAllCarte()
         {
             int X = 3, Y = 3;
@@ -257,11 +242,27 @@ namespace CartGame
             }
         }
         
-        private void MaxCarte_MouseLeave(object sender, EventArgs e)
+        private void MaxCarte_Delite(object sender, EventArgs e)
         {
             this.Controls.Remove((Control)sender);
         }
 
+        /// <summary>
+        /// Присоединяет к изображению карты подсказку
+        /// </summary>
+        /// <param name="panel"></param>
+        /// <param name="card"></param>
+        private void AddCardHelp(Panel panel, Carte card, bool UserOrAll)
+        {
+            string HelpMsg = null;
+
+            if (card is Event) HelpMsg = Properties.Resources.HelpEvent; 
+                else if (card is DefenceConstr) HelpMsg = Properties.Resources.HelpDefenderConstr; 
+                else HelpMsg = Properties.Resources.HelpRobot; 
+             toolTipHelp.SetToolTip(panel, HelpMsg );
+           
+            
+        }
         private void ChoiceForm_Load(object sender, EventArgs e)
         {
             //выводим на экран все доступные карты
@@ -278,24 +279,36 @@ namespace CartGame
                     NewPanel.MouseClick += new MouseEventHandler(Carte_Click);
                     NewPanel.MouseEnter += new EventHandler(Panel_MouseEnter);
                     NewPanel.MouseLeave += new EventHandler(Panel_MouseLeave);
-                    NewPanel.MouseDown += new MouseEventHandler(Carte_MouseDown);
+                    /*NewPanel.MouseDown += new MouseEventHandler(Carte_MouseDown);
                     NewPanel.MouseMove += new MouseEventHandler(Carte_MouseMove);
-                    NewPanel.MouseUp += new MouseEventHandler(Carte_MouseUp);
+                    NewPanel.MouseUp += new MouseEventHandler(Carte_MouseUp);*/
+                   
                     AllCarte.Add(NewPanel);
                     if (i % 2 != 0) Y += 190;
                     else { X += 148; Y = 3;}
                     panelAllCarte.Controls.Add(NewPanel);
-                    
+                    //добавляем подсказку
+                    AddCardHelp(NewPanel, TempCarte, true);
+
+
                 }
             }
             
             //выводим на экран пустые карты для наглядности
-            X = 15; Y = 3;
+            //или карты из предудущей колоды игрока
+           
             for (int i = 0; i < ValueCardsUser; i++)
             {
                 if (ChoiceCards.UserColoda[i] == 0)
                     CarteSlot.Add(CreateEmptyCarte());
-                else CarteSlot.Add(Carte.GetCarte(ChoiceCards.UserColoda[i]).ImageCartNormal());
+                else
+                {
+                    CarteSlot.Add(Carte.GetCarte(ChoiceCards.UserColoda[i]).ImageCartNormal());//необходимо получить id для получения копии карты
+                    //привязываем обработчики к данным картам
+                    CarteSlot[i].MouseClick += new MouseEventHandler(Back_MouseClick);
+                    CarteSlot[i].MouseEnter += new EventHandler(Panel_MouseEnter);
+                    CarteSlot[i].MouseLeave += new EventHandler(Panel_MouseLeave);
+                } 
                 
             }
             PaintUserCarte();//отрисовываем
@@ -348,93 +361,63 @@ namespace CartGame
 
         }
 
-
-        private int SeekIDAllCarte(object sender)
-        {
-
-            Panel temp = (Panel)sender;
-            int Max = AllCarte.Count;
-            for (int i = 0; i < Max; i++)
-            {
-                 
-                if (AllCarte[i] == temp)
-                    return i + 1;
-            }
-           
-            
-            return -1;
-        }
-
-        private int SeekIDUserCarte(object sender)
-        {
-
-            Panel temp = (Panel)sender;
-            int Max = CarteSlot.Count;
-           
-            for (int i = 0; i < Max; i++)
-            {
-
-                if (CarteSlot[i] == temp)
-                    return ChoiceCards.UserColoda[i];
-            }
-
-
-            return -1;
-        }
-
-       
         private void buttonStartSeek_Click(object sender, EventArgs e)
         {
 
-
-
-            int CountCardNONull = 0;
-            for (int i = 0; i < ValueCardsUser; i++)
-                if (ChoiceCards.UserColoda[i] != 0) CountCardNONull++;
-            if (CountCardNONull < 3)//если карт меньше 3 в бой выйти нельзя
-            {
-                FewCarte.SetError(buttonStartSeek, ".Вы выбрали недостаточно карт для начал игры \n!");
-                return;
-            }
-            
-
-            //добавить в ручную выбирать адрес и порт
-
             try
             {
-                var StreamInfo = new FileStream(text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                var StreamRead = new StreamReader(StreamInfo);
-                string[] Data = StreamRead.ReadLine().Split(':');
-                //закрываем поток обработки файла
-                StreamRead.Close();
-                StreamInfo.Close();
-                if (Data != null)
-                {
-                    //подключаемся к серверу
-                    buttonStartSeek.Enabled = false;
-                    controler.SucConnect += SuccessConnect;
-                    controler.Start(IPAddress.Parse(Data[0]), int.Parse(Data[1]), Data[2]);
-                }
-                else throw new DirectoryNotFoundException();
 
+                int CountCardNONull = 0;//считчик количества карт в колоде игрока
+                for (int i = 0; i < ValueCardsUser; i++)
+                    if (ChoiceCards.UserColoda[i] != 0) CountCardNONull++;
+                if (CountCardNONull < 3)//если карт меньше 3 в бой выйти нельзя
+                {
+                    FewCarte.SetError(buttonStartSeek, ".Вы выбрали недостаточно карт для начал игры \n!");
+                    return;
+                }
+
+                //добавить в ручную выбирать адрес и порт
+
+
+                using (var StreamInfo = new FileStream(text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using (var StreamRead = new StreamReader(StreamInfo))
+                    {
+                        string[] Data = StreamRead.ReadLine().Split(':');//данные считываемые из файла
+
+                        //если данные существуют
+                        if (Data != null)
+                        {
+                            //подключаемся к серверу
+                            buttonStartSeek.Enabled = false;
+                            //привязваем обработчик  для обработчки сообщения о неудачном сообщении
+                            controler.SucConnect += SuccessConnect;
+                            controler.Start(IPAddress.Parse(Data[0]), int.Parse(Data[1]), Data[2]);
+                        }
+                        else throw new DirectoryNotFoundException();
+                    }
+                }
             }
 
             catch (FormatException)
             {
-                buttonStartSeek.Enabled = false;
+                MessageBox.Show("Неверный формат данных");
                 Settings NewSettings = new Settings(this);
-                MessageBox.Show("Неверный формат данных");  
+                NewSettings.ShowDialog();
+               
             }
 
             catch (DirectoryNotFoundException)
             {
-                buttonStartSeek.Enabled = false;
-                Settings NewSettings = new Settings(this);
                 MessageBox.Show("Ошибка к доступу к фалу с настройками!");
+                Settings NewSettings = new Settings(this);
+                NewSettings.ShowDialog();
+               
 
             }
             catch (SocketException)
             {
+                controler.SucConnect -= SuccessConnect;
                 MessageBox.Show("Неудалось подключиться к серверу!");
                 buttonStartSeek.Enabled = true;
             }
@@ -443,14 +426,9 @@ namespace CartGame
                 MessageBox.Show(E.ToString());
             }
         }
-        public void buttonEnabled()
-        {
-            buttonStartSeek.Enabled = true;
-        }
-
+       
         private void SuccessConnect(Controler sender)
-        {
-            
+        {    
             //отвязываем этот обработчик
             sender.SucConnect -= SuccessConnect;
             SeekForm NewForm = new SeekForm(sender);
@@ -461,19 +439,33 @@ namespace CartGame
 
         private void ChoiceForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-
            if(OpenSeekForm) Application.Exit();
-
         }
 
         private void настройкиToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-   
+        { 
             Settings NewForm = new Settings(this);
             NewForm.ShowDialog();
         }
 
-        private void labelHelp_Click(object sender, EventArgs e)
+        private void помощьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Help.ShowHelp(this, "HelpCardsGame.chm");
+            }
+            catch (Exception E)
+            {
+                MessageBox.Show("Ошибка доступа к справке!");
+            }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
         {
 
         }

@@ -9,8 +9,10 @@ using System.Threading;
 
 namespace CarteServer
 {
+   
     class Program
     {
+        static Object ObjectLockSyncAddUser = new Object();
         static void Main(string[] args)
         {
             try
@@ -24,13 +26,14 @@ namespace CarteServer
                 List = new TcpListener(ipServer, portServer);
                 List.Start();
                 //загрузка сервера
-               Server NewServer = new Server();
+                Server NewServer = new Server();
                 while (true)
                 {
-                    //добавляем пользователя в сервер
-                    NewServer.AddUser(new User(List.AcceptTcpClient()));
-                    Thread.Sleep(2);
-
+                    lock (ObjectLockSyncAddUser)
+                    {
+                        //добавляем пользователя в сервер
+                        NewServer.AddUser(new User(List.AcceptTcpClient()));
+                    }
                 }
             }
             catch (FormatException)
