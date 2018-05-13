@@ -1872,5 +1872,15 @@ namespace CartGame
             }
             toolTipHelp.SetToolTip(panel, HelpMsg);
         }
+
+        private void GameMargin_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.H)
+            {
+                
+                    Help.ShowHelp(this, "HelpCardsGame.chm");
+                e.SuppressKeyPress = false;
+            }
+        }
     }
 }

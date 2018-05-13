@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GameMargin));
             this.UserHQPanel = new System.Windows.Forms.Panel();
             this.EnemyHQPanel = new System.Windows.Forms.Panel();
             this.MyCarte = new System.Windows.Forms.Panel();
@@ -213,9 +214,7 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 16;
             this.pictureBox1.TabStop = false;
-            this.toolTipHelp.SetToolTip(this.pictureBox1, "Чтобы увеличить карту, кликните по ней правой кнопкой мыши.\t\r\nЧтобы перетащить ка" +
-        "рту, нажмите и удерживайте левую кнопку мыши.\r\nКак только вы отпустите кнопку, к" +
-        "арта будет считаться отпущенной.");
+            this.toolTipHelp.SetToolTip(this.pictureBox1, resources.GetString("pictureBox1.ToolTip"));
             // 
             // GameMargin
             // 
@@ -244,6 +243,7 @@
             this.Text = "GameMargin";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GameMargin_FormClosing);
             this.Load += new System.EventHandler(this.GameMargin_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GameMargin_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

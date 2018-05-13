@@ -450,14 +450,7 @@ namespace CartGame
 
         private void помощьToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
                 Help.ShowHelp(this, "HelpCardsGame.chm");
-            }
-            catch (Exception E)
-            {
-                MessageBox.Show("Ошибка доступа к справке!");
-            }
         }
 
         private void label1_Click(object sender, EventArgs e)
