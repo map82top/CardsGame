@@ -44,7 +44,8 @@ namespace CartGame
         EnRepairsEvent, 
         AllDamageEvent,
         UsAllDeliteEvent,
-        EnAllDeliteEvent
+        EnAllDeliteEvent,
+        ChatMsg
 
 
 

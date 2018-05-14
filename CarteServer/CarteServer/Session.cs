@@ -49,7 +49,8 @@ namespace CarteServer
         EnRepairsEvent,
         AllDamageEvent,
         UsAllDeliteEvent,
-        EnAllDeliteEvent
+        EnAllDeliteEvent,
+        ChatMsg
 
 
 
@@ -354,6 +355,9 @@ namespace CarteServer
                 //привязываем обработчик окночания хода игрока
                 Us1.EndProgress += NewProgress;
                 Us2.EndProgress += NewProgress;
+                //добавляем обработчик пересылки собщения из чата
+                Us1.NewChatMsg += ForwardMsg;
+                Us2.NewChatMsg += ForwardMsg;
                 //инициализируем таймер
                 SecProgress = 120;
                 TempProgress = new System.Timers.Timer();
@@ -365,7 +369,12 @@ namespace CarteServer
             { Console.WriteLine(e.ToString()); }
         }
 
+        private void ForwardMsg(User user, string message)
+        {
+            if (user == Us1) Us2.Send(message, MsgType.ChatMsg);
+            else Us1.Send(message, MsgType.ChatMsg);
 
+        }
         private void ForAllDamageEvent(User us1,User us2,  int IdCard, AllDamageEvent Card, int NumberCard)
         {
             //наносим всем картам урон

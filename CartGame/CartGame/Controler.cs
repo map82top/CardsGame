@@ -23,10 +23,10 @@ namespace CartGame
     public delegate void EnDamageCardAttack(int attacking,int IDAttacking, int attacked, int damage);
     public delegate void AllDamage(int number, int damage);
     public delegate void EnAllDamage(int number,int idCard, int damage);
+   
 
 
-
-    public class Controler
+    public class Controler: IDisposable
     {
 
         private SendAndRecMsg dialogWithServ;
@@ -55,7 +55,7 @@ namespace CartGame
         public event EnDamageCardAttack EnRepairsCard;
         public event AllDamage UsAllDamage;
         public event EnAllDamage EnAllDamage;
-
+        public event StringDel ChatMsg;
 
 
         private DataGame DataSession;
@@ -64,11 +64,12 @@ namespace CartGame
         {
            get { return DataSession; }
         }
+   
         public Controler()
         {
 
            DataSession = new DataGame();
-          
+            dialogWithServ = null;
 
         }
         public void Start(IPAddress IpAdress, int Port, string Name)
@@ -123,8 +124,7 @@ namespace CartGame
                     List<int> temp = new List<int>();
                     int count = DataSession.UserColoda.Length;
                     for (int i = 0; i < count; i++)
-                        if (DataSession.UserColoda[i] > 0) temp.Add(DataSession.UserColoda[i]);
-
+                        if (DataSession.UserColoda[i] > 0) temp.Add(DataSession.UserColoda[i]); 
                     //отправляем полученный массив
                     dialogWithServ.Send(temp.ToArray(), MsgType.CarteUser);
                     break;
@@ -178,9 +178,9 @@ namespace CartGame
         /// </summary>
         public void Dispose()
         {
-            DataSession.Dispose();
-            dialogWithServ.Disconnect();
-             SucConnect = null;
+             DataSession.Dispose();
+            if(dialogWithServ!=null) dialogWithServ.Disconnect();
+            SucConnect = null;
             FailConnect =null;
             StartGame = null;
             DeliteSeek = null;
@@ -203,6 +203,7 @@ namespace CartGame
             EnRepairsCard = null;
             UsAllDamage = null;
             EnAllDamage = null;
+
 
        }
 
@@ -586,6 +587,10 @@ namespace CartGame
 
                         //опопвещаем об атаке
                         EnAllDamage(NumberEnCard, IDCards, TotalDamage);
+                        break;
+                    case MsgType.ChatMsg:
+                        //получения сообщения для чата
+                        ChatMsg(Encoding.UTF8.GetString(data));
                         break;
                 }
             }

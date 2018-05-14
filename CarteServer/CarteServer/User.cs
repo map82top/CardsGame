@@ -17,6 +17,7 @@ namespace CarteServer
     delegate void DamageCard(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked);
     delegate void RepairsCard(User user, int IDAttacking, RepairsEvent Card, int attacking, int attacked);
     delegate void AllDamageCard(User user, int IDAttacking, AllDamageEvent Card, int attacking);
+    delegate void StringDel(User user, string data);
 
     class User
     {
@@ -36,12 +37,14 @@ namespace CarteServer
         private NetworkStream TcpStream;
         private bool myProgress;
         private bool StopThread;
+
         public event AttackDelegate Attack;
         public event DamageCard DamageCardEvent;
         public event ErrorSend FailedSendMsg;
         public event EmptyDel GetOutOfQueue;
         public event RepairsCard RepairsCardEvent;
         public event AllDamageCard AllDamageEvent;
+        public event StringDel NewChatMsg;
         public bool MyProgress
         {
             set { myProgress = value; }
@@ -255,6 +258,10 @@ namespace CarteServer
                                             }
                                         }
                                      break;
+                                    case MsgType.ChatMsg:
+                                        string Message = Encoding.UTF8.GetString(Data);
+                                        NewChatMsg(this, Message);
+                                        break;
 
                                 }
                             }
@@ -276,7 +283,6 @@ namespace CarteServer
                             }
                         }
                     }
-                    Thread.Sleep(1);
                 }
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }

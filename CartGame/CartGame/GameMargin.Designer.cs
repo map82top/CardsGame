@@ -32,7 +32,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GameMargin));
             this.UserHQPanel = new System.Windows.Forms.Panel();
             this.EnemyHQPanel = new System.Windows.Forms.Panel();
-            this.MyCarte = new System.Windows.Forms.Panel();
             this.EnemyCarte = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -47,6 +46,8 @@
             this.EnemyName = new System.Windows.Forms.Label();
             this.toolTipHelp = new System.Windows.Forms.ToolTip(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.ChatButton = new System.Windows.Forms.Button();
+            this.MyCarte = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -65,17 +66,6 @@
             this.EnemyHQPanel.Name = "EnemyHQPanel";
             this.EnemyHQPanel.Size = new System.Drawing.Size(90, 120);
             this.EnemyHQPanel.TabIndex = 3;
-            // 
-            // MyCarte
-            // 
-            this.MyCarte.AutoScroll = true;
-            this.MyCarte.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.MyCarte.Location = new System.Drawing.Point(90, 560);
-            this.MyCarte.Name = "MyCarte";
-            this.MyCarte.Size = new System.Drawing.Size(827, 125);
-            this.MyCarte.TabIndex = 4;
-            this.toolTipHelp.SetToolTip(this.MyCarte, "Это карты, которые находятся у вас в руке\r\nВы можете использовать любое количеств" +
-        "о этих карт, \r\nесли у вас достаточно энергии");
             // 
             // EnemyCarte
             // 
@@ -216,11 +206,35 @@
             this.pictureBox1.TabStop = false;
             this.toolTipHelp.SetToolTip(this.pictureBox1, resources.GetString("pictureBox1.ToolTip"));
             // 
+            // ChatButton
+            // 
+            this.ChatButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.ChatButton.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.ChatButton.Location = new System.Drawing.Point(923, 654);
+            this.ChatButton.Name = "ChatButton";
+            this.ChatButton.Size = new System.Drawing.Size(139, 31);
+            this.ChatButton.TabIndex = 17;
+            this.ChatButton.Text = "Открыть чат";
+            this.ChatButton.UseVisualStyleBackColor = true;
+            this.ChatButton.Click += new System.EventHandler(this.ChatButton_Click);
+            // 
+            // MyCarte
+            // 
+            this.MyCarte.AutoScroll = true;
+            this.MyCarte.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.MyCarte.Location = new System.Drawing.Point(90, 560);
+            this.MyCarte.Name = "MyCarte";
+            this.MyCarte.Size = new System.Drawing.Size(827, 125);
+            this.MyCarte.TabIndex = 4;
+            this.toolTipHelp.SetToolTip(this.MyCarte, "Это карты, которые находятся у вас в руке\r\nВы можете использовать любое количеств" +
+        "о этих карт, \r\nесли у вас достаточно энергии");
+            // 
             // GameMargin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1074, 696);
+            this.Controls.Add(this.ChatButton);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.EnemyName);
             this.Controls.Add(this.MyName);
@@ -253,7 +267,6 @@
         #endregion
         private System.Windows.Forms.Panel UserHQPanel;
         private System.Windows.Forms.Panel EnemyHQPanel;
-        private System.Windows.Forms.Panel MyCarte;
         private System.Windows.Forms.Panel EnemyCarte;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
@@ -268,5 +281,7 @@
         private System.Windows.Forms.Label EnemyName;
         private System.Windows.Forms.ToolTip toolTipHelp;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Button ChatButton;
+        private System.Windows.Forms.Panel MyCarte;
     }
 }

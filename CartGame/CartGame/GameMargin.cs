@@ -22,13 +22,13 @@ namespace CartGame
         private SendAndRecMsg СomWithServer;
         private Controler ClientContr;
         private DataGame DataSession;
-
+        private Panel ChatPanel;//панель чата
 
         private bool MouseState;//если true мышь перетаскивает карту
         private List<Panel> UserCards;//карты в руке игрока
         private List<Panel> UserCardsOfMargin;//изображения карт на поле
         private List<Panel> EnemyCardsOfMargin;//изображения вражеских карт на поле
-     
+        private ChatControler Chat;//объект чата
 
         //сообщает о ходе начале хода игрока
         private Label NotificLabel;
@@ -43,7 +43,6 @@ namespace CartGame
 
             ClientContr.PaintUserCarte += MyCarte_Add;
             ClientContr.PaintEnemyCarte += EnemyCarte_Add;
-
         }
         /// <summary>
         /// Обрабатывает события, когда противниик перетаскивает карты на игровое поле
@@ -321,6 +320,7 @@ namespace CartGame
                     СomWithServer.Send(NumberCarte, MsgType.AddCarteOnField);
                 }
                 NumberCarte = 0;
+                toolTipHelp.Active = true;
             }
             else
             {
@@ -1328,6 +1328,7 @@ namespace CartGame
             ClientContr.UsAllDamage += UsAllDamage;
             ClientContr.EnAllDamage += EnAllDamage;
             ClientContr.ErrorConnectToServer += ErrorConnectServer;
+            ChatPanel = null;
 
             СomWithServer = ClientContr.DialogWithServ;//получаем класс для общения с сервером
             AllowProgress = false;
@@ -1373,6 +1374,11 @@ namespace CartGame
             NotificTimer.Interval = 1200;
             NotificTimer.Tick += NotificTimerFunc;
 
+            //создаем чат
+            Chat = new ChatControler(ClientContr.DialogWithServ, ClientContr.GetDataGame.UsName);
+            //подписываемся на получении уведомлений о новых сообщениях в чате
+            Chat.NewMessage += NewMessageChat;//закрытом
+            ClientContr.ChatMsg += ChatMsg;//добавляет сообщение в ChatBox
 
         }
         /// <summary>
@@ -1871,6 +1877,7 @@ namespace CartGame
                 Environment.NewLine + $"Эта карта может отвечать на атаки {(card as Robot).DefenseCount} раз.";
             }
             toolTipHelp.SetToolTip(panel, HelpMsg);
+            
         }
 
         private void GameMargin_KeyDown(object sender, KeyEventArgs e)
@@ -1882,5 +1889,45 @@ namespace CartGame
                 e.SuppressKeyPress = false;
             }
         }
+
+        private void ChatMsg(string message)
+        {
+            this.Invoke((MethodInvoker)delegate { Chat.AddMessage(message); });
+        }
+        /// <summary>
+        /// Сворачивает и разворачивает чат
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ChatButton_Click(object sender, EventArgs e)
+        {
+            if (ChatPanel==null)
+            {
+                //отображаем чат
+                ChatPanel = Chat.ShowChatBox();
+                ChatPanel.Parent = this;
+                ChatPanel.Location = new Point(722, 428);
+                ChatPanel.BringToFront();           
+                (sender as Button).Text = "Свернуть чат";
+            }
+            else
+            {
+                //сворачиваем чат
+                Chat.MinChatBox();
+                ChatPanel.Parent = null;
+                ChatPanel = null;
+                (sender as Button).Text = "Открыть чат";
+            }
+        }
+        /// <summary>
+        /// Обрабатывает отображение получения новых сообщений при закрытом чате
+        /// </summary>
+        /// <param name="countMissedMsg"></param>
+        private void NewMessageChat(int countMissedMsg)
+        {
+            ChatButton.Text = "Открыть чат +" + countMissedMsg;
+        }
+
+       
     }
 }
