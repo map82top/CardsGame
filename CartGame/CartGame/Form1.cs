@@ -24,33 +24,14 @@ namespace CartGame
         {
             try
             {
-                /*var StreamInfo = new FileStream(text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                var StreamRead = new StreamReader(StreamInfo);
-                string s = StreamRead.ReadLine();
-                StreamInfo.Close();
-                StreamInfo.Dispose();*/
-               
                     Controler controler = new Controler();
                     ChoiceForm NewForm =  new ChoiceForm(controler);
                     NewForm.Show();
-                    this.Hide();
-                
-                
-                
+                    this.Hide(); 
             }
-            
-           /* catch (DirectoryNotFoundException)
-            { 
-                button1.Enabled = false;
-                Settings NewForm = new Settings(this);
-                NewForm.Show();
-                
-
-            }*/
-           
             catch (Exception E)
             {
-                MessageBox.Show(E.Message);
+                WriteLog.Write(E.ToString());
             }
 
         }

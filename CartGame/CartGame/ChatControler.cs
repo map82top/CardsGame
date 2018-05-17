@@ -38,6 +38,7 @@ namespace CartGame
             ChatBox.ReadOnly = true;
             ChatBox.WordWrap = true;
             ChatBox.BackColor = Color.White;
+            ChatBox.ScrollBars = ScrollBars.Vertical;
 
             //создаем кнопку отправки нового сообшения
             SendMsg = new Button();
@@ -80,7 +81,7 @@ namespace CartGame
         public Panel ShowChatBox()
         {
             Panel ChatPanel = new Panel();
-            ChatPanel.Size = new Size(340,228);
+            ChatPanel.Size = new Size(340,226);
 
             //добавляем на Чат-панель элементы чата
             ChatPanel.Controls.Add(ChatBox);
@@ -115,6 +116,7 @@ namespace CartGame
         {
             SendMessage();
         }
+
         private void SendMessage()
         {
             string Msg = BoxWrite.Text;

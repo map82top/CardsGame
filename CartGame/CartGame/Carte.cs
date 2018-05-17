@@ -9,47 +9,48 @@ namespace CartGame
 {
     public enum MsgType
     {
-        StartSession,
-        DeliteSeek,
-        CarteUser,
-        GetName,
-        StartGame,
-        AddUserCarte,
-        AddEnemyCarte,
-        UserMaxEnergy,
-        YourEnergy,
-        EnemyMaxEnergy,
-        EnemyEnergy,
-        ProgressTime,
-        MyProgress,
-        EnemyProgress,
-        AddCarteOnField,
-        EnemyAddCarteOnField,
-        Attack,
-        MyAttackSucc,
-        EnAttackSucc, 
-        EndProgress,
-        YouWin,
-        YouOver,
-        Draw,
-        TechnicalVictory,
-        ClientClosing,
-        EnemyNoActiv,
-        YouNoActiv, 
-        DamageEvent,
-        UserDamageEvent,
-        EnemyDamageEvent,
-        RepairsEvent,
-        UsRepairsEvent,
-        EnRepairsEvent, 
-        AllDamageEvent,
-        UsAllDeliteEvent,
-        EnAllDeliteEvent,
-        ChatMsg
+        StartSession,//начало игры и сессии на сервере
+        DeliteSeek,//запрос на удалении их очереди ожидания противника
+        CarteUser,//запрос сервера на получении карт игрока
+        GetName,//запрос сервера на получении имени игрока
+        StartGame,//сервер сообщает о начале игры
+        AddUserCarte,//сервер добавлет карту игроку в руки
+        AddEnemyCarte,//сервер добавляет карту противнику в руки
+        UserMaxEnergy,//сервер уведомляет игрока о его максимальной энергии на этот ход
+        YourEnergy,//сервер сообщает о доступной энергии игрока в данный момент
+        EnemyMaxEnergy,//максимальной количество энергии у противника
+        EnemyEnergy,//сервер сообщает о доступной энергии противника в данный момент
+        ProgressTime,//сервер сообщает об изменении времени, оставшегося на ход
+        MyProgress,//сервер сообщает, что сейчас ход игрока
+        EnemyProgress,//сервер сообщает, что сейчас ход противника
+        AddCarteOnField,//сервер сообщает о удачном добавлении игроком карты на поле
+        EnemyAddCarteOnField,//сервер сообщает о удачно добавлении противником карты на поле
+        Attack,//клиент сообщает о атаке игрока на карты противника
+        MyAttackSucc,//атака игрока закончилась успешно(была возможна)
+        EnAttackSucc, //атака противника закончилась успешно(была возможна)
+        EndProgress,//клиент сообщает о завершении игроком своего хода
+        YouWin,//игрок победил
+        YouOver,//игрок проиграл
+        Draw,//ничья
+        TechnicalVictory,//техничская победа(один из игроков недоступен)
+        ClientClosing,//клиент собщает серверу о своем закрытии пользователем
+        EnemyNoActiv,//сервер сообщает пользователю, что противник был не активен и поэтом сессия завершилась 
+        YouNoActiv, //сервер сообщает игроку, что игрок был не активен и поэтом сессия завершилась 
+        DamageEvent,//клиент уведомляет сервер о использовании события, наносящего одиночный урон
+        UserDamageEvent,//сервер соощеает клиенту об удачно использовании события, наносящего одиночный урон
+        EnemyDamageEvent,//враг удачно использовал событие, наносящее одиночный урон 
+        RepairsEvent,//пользователь использовал событие востанволения
+        UsRepairsEvent,//сервер сообщает об удачном использовании игроком событием восстановления
+        EnRepairsEvent, //сервер сообщает об удачном использовании противником событием восстановления
+        AllDamageEvent,//клиент сообщает серверу о исплользовании события массвого урона
+        UsAllDeliteEvent,//сервер сообщает о удачном использовании игроком события наносщего массовый урон
+        EnAllDeliteEvent,//сервер сообщает о удачном использовании противником события наносщего массовый урон
+        ChatMsg//собщает о получении сообщения для чата
 
 
 
     }
+    //тип карт-событий
     public enum TypeEventCard
     {
         DamageCard,

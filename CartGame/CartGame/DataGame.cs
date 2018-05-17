@@ -5,13 +5,13 @@ using System.Text;
 
 namespace CartGame
 {
-    public class DataGame
+    public class DataGame: IDisposable
     {
-        private string name;
-        private string enName;
+        private string name;//имя игрока
+        private string enName;//имя противника
 
         //карты которые видит игрок
-        private int[] userColoda;
+        private int[] userColoda;//колода игрока
         private List<Robot> usCarteOnField;//карты на поле у игрока
         private List<Robot> enCarteOnField;//карты на поле у противника
         private List<int> carteFromUser;//ИД карты в руке у игрока
@@ -122,6 +122,7 @@ namespace CartGame
 
 
         }
+        //освобождает все ресурсы
         public void Dispose()
         {
             enName = null;

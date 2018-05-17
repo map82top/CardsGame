@@ -18,7 +18,7 @@ namespace CartGame
         private Point MousePoint;//координата карты в момент ее перетаскивания
         private bool AllowProgress;//если true то мой ход
         private int NumberCarte;//номер карты в списке карт
-        private bool CloseForm = true;
+        private bool CloseForm = true;//если true соединение с сервером еще не закрыто и необходимо уведомить сервер о закрытии формы
         private SendAndRecMsg СomWithServer;
         private Controler ClientContr;
         private DataGame DataSession;
@@ -31,8 +31,8 @@ namespace CartGame
         private ChatControler Chat;//объект чата
 
         //сообщает о ходе начале хода игрока
-        private Label NotificLabel;
-        private System.Windows.Forms.Timer NotificTimer;
+        private Label NotificLabel;//собщает пользователю о начале его хода, результате игры
+        private System.Windows.Forms.Timer NotificTimer;//таймер отображения NotificLabel 
 
         public GameMargin(Controler controler)
         {
@@ -74,7 +74,7 @@ namespace CartGame
                     EffectAddCart(DataSession.EnCarteOnField, i, EnemyCardsOfMargin, EnemyMargin, false);
                 });
             }
-            catch(Exception E) { E.ToString(); }
+            catch(Exception E) { WriteLog.Write(E.ToString()); }
         }
 
         /// <summary>
@@ -84,16 +84,25 @@ namespace CartGame
         /// <param name="e"></param>
         private void EnemyCardsOfMargin_Click(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+            try
             {
-                ShowMaxCard((Panel)sender, EnemyMargin);
+                if (e.Button == MouseButtons.Right)
+                {
+                    ShowMaxCard((Panel)sender, EnemyMargin);
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
             }
         }
+        //выделяет карты на которой находится указатель мыши
         private void Carte_MouseEnter(object sender, EventArgs e)
         {
             Panel temp = (Panel)sender;
             temp.BorderStyle = BorderStyle.FixedSingle;
         }
+        //снимает выделение
         private void Carte_MouseLeave(object sender, EventArgs e)
         {
             Panel temp = (Panel)sender;
@@ -107,6 +116,8 @@ namespace CartGame
         /// <param name="e"></param>
         private void MyCarte_MouseDown(object sender, MouseEventArgs e)
         {
+            try
+            {
                 if (e.Button == MouseButtons.Left)
                 {
                     Panel temp = (Panel)sender;
@@ -133,6 +144,9 @@ namespace CartGame
                     MouseState = true;
 
                 }
+            }
+            catch (Exception ex)
+            { WriteLog.Write(ex.ToString()); }
         }
         /// <summary>
         /// Проверяем, какая из карт противника была атакована
@@ -169,6 +183,11 @@ namespace CartGame
             }
             return int.MinValue;
         }
+        /// <summary>
+        /// Обрабатывает отпускание карт-событий
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void EventCarte_MouseUp(object sender, MouseEventArgs e)
         {
             try
@@ -220,10 +239,14 @@ namespace CartGame
             }
             catch (Exception E)
             {
-                MessageBox.Show(E.ToString() + "   " + MyCarte.Controls.Count);
+                WriteLog.Write(E.ToString());
             }
         }
-
+        /// <summary>
+        /// Определяет номер карты, на которую пользователь собирается использоваеть события восстановления
+        /// </summary>
+        /// <param name="MoveCard"></param>
+        /// <returns></returns>
         public int Which_Сard_Is_Repairs(Panel MoveCard)
         {
             //если мышка находится на поле вражеского штаба
@@ -282,17 +305,23 @@ namespace CartGame
             //ParentPanel.Controls[0].Width
         }
 
+        //осуществляет изменение координат перетаскиваемой карты
         private void Carte_MouseMove(object sender, MouseEventArgs e)
         {
-            if (MouseState)
+            try
             {
-                Panel temp = (Panel)sender;
-                int dx = e.X - MousePoint.X;
-                int dy = e.Y - MousePoint.Y;
+                if (MouseState)
+                {
+                    Panel temp = (Panel)sender;
+                    int dx = e.X - MousePoint.X;
+                    int dy = e.Y - MousePoint.Y;
 
-                temp.Location = new Point(temp.Location.X + dx, temp.Location.Y + dy);
+                    temp.Location = new Point(temp.Location.X + dx, temp.Location.Y + dy);
+                }
+            }catch(Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
             }
-
         }
         /// <summary>
         /// Обрабатывает событие отпускания карты игроком, при перетаскивании карты на игровое поле
@@ -301,31 +330,36 @@ namespace CartGame
         /// <param name="e"></param>
         private void MyCarte_MouseUp(object sender, MouseEventArgs e)
         {
-            Panel temp = (Panel)sender;
-            if (e.Button == MouseButtons.Left)
+            try
             {
-                //здесь должна быть проверка на тип карты
-                bool CardFound = false;
-                if (temp.Location.X + temp.Width / 2 <= UserMargin.Location.X + UserMargin.Width &&
-                    temp.Location.X + temp.Width / 2 >= UserMargin.Location.X && temp.Location.Y + temp.Height / 4 >= UserMargin.Location.Y && temp.Location.Y + temp.Height / 4 <= UserMargin.Location.Y + UserMargin.Height)
+                Panel temp = (Panel)sender;
+                if (e.Button == MouseButtons.Left)
                 {
+                    //здесь должна быть проверка на тип карты
+                    bool CardFound = false;
+                    if (temp.Location.X + temp.Width / 2 <= UserMargin.Location.X + UserMargin.Width &&
+                        temp.Location.X + temp.Width / 2 >= UserMargin.Location.X && temp.Location.Y + temp.Height / 4 >= UserMargin.Location.Y && temp.Location.Y + temp.Height / 4 <= UserMargin.Location.Y + UserMargin.Height)
+                    {
 
-                    CardFound = true;
+                        CardFound = true;
+                    }
+
+                    ReturnDropCard(temp, MyCarte, UserCards);
+
+                    if (AllowProgress && CardFound)
+                    {//отправляем сообщение о том что необходимо отправить добавить карты на поле, если достаточно ресурсов
+                        СomWithServer.Send(NumberCarte, MsgType.AddCarteOnField);
+                    }
+                    NumberCarte = 0;
+                    toolTipHelp.Active = true;
                 }
-
-                ReturnDropCard(temp, MyCarte, UserCards);
-
-                if (AllowProgress && CardFound)
-                {//отправляем сообщение о том что необходимо отправить добавить карты на поле, если достаточно ресурсов
-                    СomWithServer.Send(NumberCarte, MsgType.AddCarteOnField);
+                else
+                {
+                    ShowMaxCard(temp, MyCarte);
                 }
-                NumberCarte = 0;
-                toolTipHelp.Active = true;
             }
-            else
-            {
-                ShowMaxCard(temp, MyCarte);
-            }
+            catch (Exception ex)
+            { WriteLog.Write(ex.ToString()); }
         }
 
         //отображаем увеличеное изображение карты при клике по ней правой кнопкой мыши
@@ -361,23 +395,38 @@ namespace CartGame
         //удаляет увеличенную карту
         private void MaxCarte_Delite(object sender, EventArgs e)
         {
-            this.Controls.Remove((Control)sender);
+            try
+            {
+                this.Controls.Remove((Control)sender);
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
 
+        /// <summary>
+        /// Добавляет карту на игровое поле игрока
+        /// </summary>
+        /// <param name="CarteOnField"></param>
+        /// <param name="index"></param>
+        /// <param name="CardsOnMargin"></param>
+        /// <param name="Margin"></param>
         private void AddCardOnField(List<Robot> CarteOnField, int index, List<Panel> CardsOnMargin, Panel Margin)
-        {
-            //добавляем еще одну карту на игровое поле
-            Panel temp = CarteOnField[index].ImageCartMin();
-            temp.MouseEnter += Carte_MouseEnter;
-            temp.MouseLeave += Carte_MouseLeave;
-            temp.MouseDown += MarginCarte_MouseDown;
-            temp.MouseMove += Carte_MouseMove;
-            temp.MouseUp += MarginCarte_MouseUp;
-            //добавляем подсказку к карте 
-            HelpForCardsMargin(temp, CarteOnField[index]);
+        {   
+                //добавляем еще одну карту на игровое поле
+                Panel temp = CarteOnField[index].ImageCartMin();
+                temp.MouseEnter += Carte_MouseEnter;
+                temp.MouseLeave += Carte_MouseLeave;
+                temp.MouseDown += MarginCarte_MouseDown;
+                temp.MouseMove += Carte_MouseMove;
+                temp.MouseUp += MarginCarte_MouseUp;
+                //добавляем подсказку к карте 
+                HelpForCardsMargin(temp, CarteOnField[index]);
 
-            CardsOnMargin.Add(temp);
-            Margin.Controls.Add(temp);
+                CardsOnMargin.Add(temp);
+                Margin.Controls.Add(temp);
+            
         }
         /// <summary>
         /// Выполняет эффект появляющейся при добавлении определенной карты
@@ -416,16 +465,17 @@ namespace CartGame
             }
         }
         /// <summary>
-        /// Добавляем карту на игровое поле игрока
+        /// Обрабатывает добавление игроком карты на игровое поле
         /// </summary>
         /// <param name="number"></param>
         private void AddCardsOnMyCarte(int number)
         {
-
-            //удаляем карты из MyCarte
-            this.Invoke((MethodInvoker)delegate
+            try
             {
-                
+                //удаляем карты из MyCarte
+                this.Invoke((MethodInvoker)delegate
+                {
+
                     MyCarte.Controls.RemoveAt(number);
                     UserCards.RemoveAt(number);
                     UpdateLocation_Cards(MyCarte, 100, 3);
@@ -433,12 +483,16 @@ namespace CartGame
 
                 //добавляем карту на панель
                 int i = DataSession.UsCarteOnField.Count - 1;
-                AddCardOnField(DataSession.UsCarteOnField, i, UserCardsOfMargin, UserMargin);
-                
+                    AddCardOnField(DataSession.UsCarteOnField, i, UserCardsOfMargin, UserMargin);
+
                 //обновляем карты, если эта карта ветеран, или просто обновляем положение карт
                 EffectAddCart(DataSession.UsCarteOnField, i, UserCardsOfMargin, UserMargin, true);
-            });
-           
+                });
+            }
+            catch (Exception e)
+            {
+                WriteLog.Write(e.ToString());
+            }
 
         }
         /// <summary>
@@ -448,29 +502,37 @@ namespace CartGame
         /// <param name="e"></param>
         private void MarginCarte_MouseDown(object sender, MouseEventArgs e)
         {
-
-            if (e.Button == MouseButtons.Left)
+            try
             {
-                Panel temp = (Panel)sender;
-                NumberCarte = 0;
-                int count = UserMargin.Controls.Count;
-                //ищем карту в списке карт
-                for (; NumberCarte < count; NumberCarte++)
+                if (e.Button == MouseButtons.Left)
                 {
-                    if (UserMargin.Controls[NumberCarte] == temp) break;
+                    Panel temp = (Panel)sender;
+                    NumberCarte = 0;
+                    int count = UserMargin.Controls.Count;
+                    //ищем карту в списке карт
+                    for (; NumberCarte < count; NumberCarte++)
+                    {
+                        if (UserMargin.Controls[NumberCarte] == temp) break;
+                    }
+
+                    //удаляем карту
+                    UserMargin.Controls.RemoveAt(NumberCarte);
+
+                    this.Controls.Add(temp);
+                    temp.BringToFront();
+                    MousePoint = new Point(e.X, e.Y);
+                    MouseState = true;
+
                 }
-
-                //удаляем карту
-                UserMargin.Controls.RemoveAt(NumberCarte);
-
-                this.Controls.Add(temp);
-                temp.BringToFront();
-                MousePoint = new Point(e.X, e.Y);
-                MouseState = true;
-
-            }
+            } catch (Exception ex)  
+          { WriteLog.Write(ex.ToString()); }
 
         }
+        /// <summary>
+        /// Обрабатывает отпускание карты находящейстя на игровом поле
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MarginCarte_MouseUp(object sender, MouseEventArgs e)
         {
             try
@@ -495,7 +557,7 @@ namespace CartGame
             }
             catch (Exception E)
             {
-                MessageBox.Show(E.ToString());
+                WriteLog.Write(E.ToString());
             }
 
 
@@ -509,12 +571,10 @@ namespace CartGame
         /// <param name="DistCards"></param>
         private void UpdateLocation_Cards(Panel Margin, int WidthCart, int DistCards)
         {
-           
-
-                int count = Margin.Controls.Count;
-                Debug.WriteLine($"Count при {Margin.Name} равен:" + count);
+              
                 try
                 {
+                int count = Margin.Controls.Count;
                 if (count > 0)
                 {
                     if (count % 2 == 0)
@@ -567,9 +627,9 @@ namespace CartGame
                 }
 
                 }
-                catch (ArgumentNullException)
+                catch (Exception e)
                 { //записываем в лог
-                    MessageBox.Show("Ошибка синхронизиции");
+                    WriteLog.Write(e.ToString());
                 }
             
 
@@ -598,15 +658,12 @@ namespace CartGame
                     UpdateLocation_Cards(MyCarte, MyCarte.Controls[0].Width, 3);
 
             }
-            catch (Exception e) { MessageBox.Show(e.ToString()); }
+            catch (Exception e) {WriteLog.Write(e.ToString()); }
 
         }
 
         private void NewPaintEnemyCard(int index)
         {
-
-            try
-            {
                 //если карта была удалена
                 if (EnemyCardsOfMargin.Count > DataSession.EnCarteOnField.Count)
                 {
@@ -642,20 +699,11 @@ namespace CartGame
                 //обновляем позиции карт 
                 UpdateLocation_Cards(EnemyMargin, 90, 3);
 
-
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
-            
         }
 
         private void NewPaintUserCard(int index)
         {
-            try
-            {
-                //если карта была удалена
+             //если карта была удалена
                 if (UserCardsOfMargin.Count > DataSession.UsCarteOnField.Count)
                 {
                     //если обновляемая карта ветеран, то обновляем все карты
@@ -692,16 +740,9 @@ namespace CartGame
                 }
                 UpdateLocation_Cards(UserMargin, 90, 3);
 
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
         }
         private void AllPaintCard(List<Panel> CardsOfMargin, Panel Margin, List<Robot> CarteOnField)
         {
-            try
-            {
                 int count = CarteOnField.Count;
                 CardsOfMargin.Clear();
                 for (int index = 0; index < count; index++)
@@ -733,12 +774,7 @@ namespace CartGame
                     Margin.Controls.Add(CardsOfMargin[i]);
                 }
                 UpdateLocation_Cards(Margin, 90, 3);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
-
+       
         }
         private void NewPaintHQUser()
         {
@@ -801,7 +837,7 @@ namespace CartGame
                  
                 }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
         /// <summary>
         /// Отображает иконки с полученным уроном
@@ -917,20 +953,23 @@ namespace CartGame
         /// <param name="e"></param>
        private void Elapsed_TimerPaint(object statinfo)
         {
-           
-            Panel[] temp = (Panel[])statinfo;
-
-            Thread.Sleep(1200);
-            this.Invoke((MethodInvoker)delegate
+            try
             {
+                Panel[] temp = (Panel[])statinfo;
+
+                Thread.Sleep(1200);
+                this.Invoke((MethodInvoker)delegate
+                {
                 //удаляем с основной формы DamageEnemy
                 this.Controls.Remove(temp[0]);
-               temp[0] = null;
+                    temp[0] = null;
                 //удаляем с основной формы DamageUser
                 this.Controls.Remove(temp[1]);
-              temp[1] = null;
-            });
-           
+                    temp[1] = null;
+                });
+
+            }catch(Exception e)
+            { WriteLog.Write(e.ToString()); }
         }
 
         /// <summary>
@@ -1010,7 +1049,7 @@ namespace CartGame
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString());
+                WriteLog.Write(e.ToString());
             }
         }
         private void MyEnergy_Update()
@@ -1051,7 +1090,7 @@ namespace CartGame
 
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
         private void EnemyEnergy_Update()
         {
@@ -1083,7 +1122,7 @@ namespace CartGame
 
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
 
         /// <summary>
@@ -1094,29 +1133,36 @@ namespace CartGame
         /// <param name="UserOrEnemy"></param>
         public void UpdateHelpAllCardsMargin(Panel HQ, List<Panel> CardMargin, bool UserOrEnemy)
         {
-            if (UserOrEnemy)
-            {
-                DataSession.UserHQ.NewProgress();
-                HelpForCardsMargin(HQ, DataSession.UserHQ);
-            }
-            else
-            {
-                DataSession.EnemyHQ.NewProgress();
-                HelpForCardsMargin(HQ, DataSession.EnemyHQ);
-            } 
-            int count = CardMargin.Count;
-            for (int i = 0; i < count; i++)
+            try
             {
                 if (UserOrEnemy)
                 {
-                    DataSession.UsCarteOnField[i].NewProgress();
-                    HelpForCardsMargin(CardMargin[i], DataSession.UsCarteOnField[i]);
+                    DataSession.UserHQ.NewProgress();
+                    HelpForCardsMargin(HQ, DataSession.UserHQ);
                 }
                 else
                 {
-                    DataSession.EnCarteOnField[i].NewProgress();
-                    HelpForCardsMargin(CardMargin[i], DataSession.EnCarteOnField[i]);
+                    DataSession.EnemyHQ.NewProgress();
+                    HelpForCardsMargin(HQ, DataSession.EnemyHQ);
                 }
+                int count = CardMargin.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    if (UserOrEnemy)
+                    {
+                        DataSession.UsCarteOnField[i].NewProgress();
+                        HelpForCardsMargin(CardMargin[i], DataSession.UsCarteOnField[i]);
+                    }
+                    else
+                    {
+                        DataSession.EnCarteOnField[i].NewProgress();
+                        HelpForCardsMargin(CardMargin[i], DataSession.EnCarteOnField[i]);
+                    }
+                }
+            }
+            catch (Exception E)
+            {
+                WriteLog.Write(E.ToString());
             }
         }
         /// <summary>
@@ -1124,20 +1170,27 @@ namespace CartGame
         /// </summary>
         private void MyProgress_Func()
         {
-            this.Invoke((MethodInvoker)delegate
+            try
             {
-                //обновляем подсказки к картам игрока
-                UpdateHelpAllCardsMargin((Panel)UserHQPanel.Controls[0], UserCardsOfMargin, true);
+                this.Invoke((MethodInvoker)delegate
+                {
+                    //обновляем подсказки к картам игрока
+                    UpdateHelpAllCardsMargin((Panel)UserHQPanel.Controls[0], UserCardsOfMargin, true);
 
-                StepEnd.Enabled = true;
-                StepEnd.Text = "Ваш ход";
-                EnemyTime.Visible = false;
-                MyTime.Visible = true;
-                AllowProgress = true;
-                NotificLabel.Visible = true;
-                NotificTimer.Start();
+                    StepEnd.Enabled = true;
+                    StepEnd.Text = "Ваш ход";
+                    EnemyTime.Visible = false;
+                    MyTime.Visible = true;
+                    AllowProgress = true;
+                    NotificLabel.Visible = true;
+                    NotificTimer.Start();
 
-            });
+                });
+            }
+            catch (Exception E)
+            {
+                WriteLog.Write(E.ToString());
+            }
         }
 
         /// <summary>
@@ -1145,19 +1198,25 @@ namespace CartGame
         /// </summary>
         private void EnemyProgress_Func()
         {
-           
-            this.Invoke((MethodInvoker)delegate
+            try
             {
+                this.Invoke((MethodInvoker)delegate
+                {
                 //обновляем подсказки к картам противника
                 UpdateHelpAllCardsMargin((Panel)EnemyHQPanel.Controls[0], EnemyCardsOfMargin, false);
 
-                StepEnd.Enabled = false;
-                StepEnd.Text = "Ход противника";
-                EnemyTime.Visible = true;
-                MyTime.Visible = false;
-                AllowProgress = false;
+                    StepEnd.Enabled = false;
+                    StepEnd.Text = "Ход противника";
+                    EnemyTime.Visible = true;
+                    MyTime.Visible = false;
+                    AllowProgress = false;
 
-            });
+                });
+            }
+            catch (Exception E)
+            {
+                WriteLog.Write(E.ToString());
+            }
         }
  
         /// <summary>
@@ -1166,8 +1225,15 @@ namespace CartGame
         /// <param name="data"></param>
         private void TimeProgress_Update(string data)
         {
-            if (AllowProgress) this.Invoke((MethodInvoker)delegate { MyTime.Text = data; });
-            else this.Invoke((MethodInvoker)delegate { EnemyTime.Text = data; });
+            try
+            {
+                if (AllowProgress) this.Invoke((MethodInvoker)delegate { MyTime.Text = data; });
+                else this.Invoke((MethodInvoker)delegate { EnemyTime.Text = data; });
+            }
+            catch (Exception E)
+            {
+                WriteLog.Write(E.ToString());
+            }
         }
 
         /// <summary>
@@ -1189,7 +1255,7 @@ namespace CartGame
 
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
 
         /// <summary>
@@ -1197,24 +1263,34 @@ namespace CartGame
         /// </summary>
         private void ErrorConnectServer()
         {
-            
-            UserCards.Clear();
-            UserCards = null;
-            UserCardsOfMargin.Clear();
-            UserCardsOfMargin = null;
-            EnemyCardsOfMargin.Clear();
-            EnemyCardsOfMargin = null;
-            CloseForm = false;
-            ChoiceForm NewForm = new ChoiceForm(ClientContr);
-            this.Invoke((MethodInvoker)delegate {
-                NewForm.Show();
-                this.Close();
-            });
+            try
+            {
+                UserCards.Clear();
+                UserCards = null;
+                UserCardsOfMargin.Clear();
+                UserCardsOfMargin = null;
+                EnemyCardsOfMargin.Clear();
+                EnemyCardsOfMargin = null;
+                CloseForm = false;
+                ChoiceForm NewForm = new ChoiceForm(ClientContr);
+                this.Invoke((MethodInvoker)delegate
+                {
+                    NewForm.Show();
+                    this.Close();
+                });
+            }
+            catch (Exception e)
+            { WriteLog.Write(e.ToString()); }
         }
         private void NotificTimerFunc(object sender, EventArgs e)
         {
-            NotificLabel.Visible = false;
-            NotificTimer.Stop();
+            try
+            {
+                NotificLabel.Visible = false;
+                NotificTimer.Stop();
+            }
+            catch(Exception ex)
+            { WriteLog.Write(ex.ToString()); }
         }
 
         private Panel ImageCarteInverted()
@@ -1227,26 +1303,30 @@ namespace CartGame
         }
         private void UsAllDamage(int number, int damage)
         {
-            this.Invoke((MethodInvoker)delegate
+            try
             {
-                int count = EnemyMargin.Controls.Count;
-                for (int i = 0; i < count; i++)
+                this.Invoke((MethodInvoker)delegate
+                {
+                    int count = EnemyMargin.Controls.Count;
+                    for (int i = 0; i < count; i++)
                     //отображаем урон по картам
                     AnimationDamage(-2, i, 0, damage);
-            });
+                });
 
-            //обновляем все карты
-            this.Invoke((MethodInvoker)delegate { AllPaintCard(this.EnemyCardsOfMargin, EnemyMargin, DataSession.EnCarteOnField); });
+                //обновляем все карты
+                this.Invoke((MethodInvoker)delegate { AllPaintCard(this.EnemyCardsOfMargin, EnemyMargin, DataSession.EnCarteOnField); });
 
-            //удаляем карту у нас в руке
-            if (MyCarte.Controls.Count > number && UserCards.Count > number)
-                this.Invoke((MethodInvoker)delegate
-            {
-                MyCarte.Controls.RemoveAt(number);
-                UserCards.RemoveAt(number);
-            });
-            UpdateLocation_Cards(MyCarte, 100, 3);
-
+                //удаляем карту у нас в руке
+                if (MyCarte.Controls.Count > number && UserCards.Count > number)
+                    this.Invoke((MethodInvoker)delegate
+                {
+                    MyCarte.Controls.RemoveAt(number);
+                    UserCards.RemoveAt(number);
+                });
+                UpdateLocation_Cards(MyCarte, 100, 3);
+            }
+            catch (Exception ex)
+            { WriteLog.Write(ex.ToString()); }
         }
         private void EnAllDamage(int number, int id, int damage)
         {
@@ -1262,8 +1342,8 @@ namespace CartGame
                     this.Invoke((MethodInvoker)delegate { EnemyCarte.Controls.RemoveAt(number); });
                 UpdateLocation_Cards(EnemyCarte, 70, 3);
             }
-            catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            catch (Exception ex)
+            { WriteLog.Write(ex.ToString()); }
         }
 
         private void AnimationEnemyAllAttack(int number, int id, int damage)
@@ -1311,75 +1391,79 @@ namespace CartGame
 
         private void GameMargin_Load(object sender, EventArgs e)
         {
-            ClientContr.PaintEnEnergy += EnemyEnergy_Update;
-            ClientContr.PaintMyEnergy += MyEnergy_Update;
-            ClientContr.MyProgress += MyProgress_Func;
-            ClientContr.EnemyProgress += EnemyProgress_Func;
-            ClientContr.UpdateTime += TimeProgress_Update;
-            ClientContr.AddCardsOnField += AddCardsOnMyCarte;
-            ClientContr.EnAddCardOnField += EnemyAddCardsOnMyCarte;
-            ClientContr.MyAttack += MyAttackVisual;
-            ClientContr.EnAttack += EnAttackVisual;
-            ClientContr.EnAttackDamageCard += EnAttackDamageCarte;
-            ClientContr.MyAttackDamageCard += UsAttackDamageCarte;
-            ClientContr.MyRepairsCard += UsRepairsCarte;
-            ClientContr.EnRepairsCard += EnRepairsCarte;
-            ClientContr.EndGame += EndGame;
-            ClientContr.UsAllDamage += UsAllDamage;
-            ClientContr.EnAllDamage += EnAllDamage;
-            ClientContr.ErrorConnectToServer += ErrorConnectServer;
-            ChatPanel = null;
+            try
+            {
+                ClientContr.PaintEnEnergy += EnemyEnergy_Update;
+                ClientContr.PaintMyEnergy += MyEnergy_Update;
+                ClientContr.MyProgress += MyProgress_Func;
+                ClientContr.EnemyProgress += EnemyProgress_Func;
+                ClientContr.UpdateTime += TimeProgress_Update;
+                ClientContr.AddCardsOnField += AddCardsOnMyCarte;
+                ClientContr.EnAddCardOnField += EnemyAddCardsOnMyCarte;
+                ClientContr.MyAttack += MyAttackVisual;
+                ClientContr.EnAttack += EnAttackVisual;
+                ClientContr.EnAttackDamageCard += EnAttackDamageCarte;
+                ClientContr.MyAttackDamageCard += UsAttackDamageCarte;
+                ClientContr.MyRepairsCard += UsRepairsCarte;
+                ClientContr.EnRepairsCard += EnRepairsCarte;
+                ClientContr.EndGame += EndGame;
+                ClientContr.UsAllDamage += UsAllDamage;
+                ClientContr.EnAllDamage += EnAllDamage;
+                ClientContr.ErrorConnectToServer += ErrorConnectServer;
+                ChatPanel = null;
 
-            СomWithServer = ClientContr.DialogWithServ;//получаем класс для общения с сервером
-            AllowProgress = false;
+                СomWithServer = ClientContr.DialogWithServ;//получаем класс для общения с сервером
+                AllowProgress = false;
 
-            UserHQPanel.Controls.Add(DataSession.UserHQ.ImageCartFullMin());
-            UserHQPanel.Controls[0].MouseEnter += Carte_MouseEnter;
-            UserHQPanel.Controls[0].MouseLeave += Carte_MouseLeave;
-            UserHQPanel.Controls[0].MouseDown += HQCards_MouseDown;
-            UserHQPanel.Controls[0].MouseMove += Carte_MouseMove;
-            UserHQPanel.Controls[0].MouseUp += HQCars_MouseUp;
-            UserHQPanel.Controls[0].Location = new Point(0, 0);
-            //привязываем подсказку к карте
-            HelpForCardsMargin((Panel)UserHQPanel.Controls[0], DataSession.UserHQ);
+                UserHQPanel.Controls.Add(DataSession.UserHQ.ImageCartFullMin());
+                UserHQPanel.Controls[0].MouseEnter += Carte_MouseEnter;
+                UserHQPanel.Controls[0].MouseLeave += Carte_MouseLeave;
+                UserHQPanel.Controls[0].MouseDown += HQCards_MouseDown;
+                UserHQPanel.Controls[0].MouseMove += Carte_MouseMove;
+                UserHQPanel.Controls[0].MouseUp += HQCars_MouseUp;
+                UserHQPanel.Controls[0].Location = new Point(0, 0);
+                //привязываем подсказку к карте
+                HelpForCardsMargin((Panel)UserHQPanel.Controls[0], DataSession.UserHQ);
 
-            MyName.Text += DataSession.UsName;
-            EnemyName.Text += DataSession.EnName; 
+                MyName.Text += DataSession.UsName;
+                EnemyName.Text += DataSession.EnName;
 
-            EnemyHQPanel.Controls.Add(DataSession.EnemyHQ.ImageCartFullMin());
-            EnemyHQPanel.Controls[0].Location = new Point(0, 0);
-            EnemyHQPanel.Controls[0].MouseEnter += Carte_MouseEnter;
-            EnemyHQPanel.Controls[0].MouseLeave += Carte_MouseLeave;
-            EnemyHQPanel.Controls[0].MouseClick += EnemyHQPanel_MouseClick;
-            //привязываем подсказку к карте
-            HelpForCardsMargin((Panel)EnemyHQPanel.Controls[0], DataSession.EnemyHQ);
+                EnemyHQPanel.Controls.Add(DataSession.EnemyHQ.ImageCartFullMin());
+                EnemyHQPanel.Controls[0].Location = new Point(0, 0);
+                EnemyHQPanel.Controls[0].MouseEnter += Carte_MouseEnter;
+                EnemyHQPanel.Controls[0].MouseLeave += Carte_MouseLeave;
+                EnemyHQPanel.Controls[0].MouseClick += EnemyHQPanel_MouseClick;
+                //привязываем подсказку к карте
+                HelpForCardsMargin((Panel)EnemyHQPanel.Controls[0], DataSession.EnemyHQ);
 
-            UserCards = new List<Panel>();
-            UserCardsOfMargin = new List<Panel>();
-            EnemyCardsOfMargin = new List<Panel>();
-            //сообщает о том что началя мой ход
-            NotificLabel = new Label();
-            NotificLabel.Location = new Point(405, 290);
-            NotificLabel.Visible = false;
-            NotificLabel.Text = "Твой ход";
-            NotificLabel.Font = new Font("Arial", 32);
-            NotificLabel.Size = new Size(210, 45);
-            NotificLabel.BorderStyle = BorderStyle.FixedSingle;
-            NotificLabel.TextAlign = ContentAlignment.MiddleCenter;
-            this.Controls.Add(NotificLabel);
-            NotificLabel.BringToFront();
+                UserCards = new List<Panel>();
+                UserCardsOfMargin = new List<Panel>();
+                EnemyCardsOfMargin = new List<Panel>();
+                //сообщает о том что началя мой ход
+                NotificLabel = new Label();
+                NotificLabel.Location = new Point(405, 290);
+                NotificLabel.Visible = false;
+                NotificLabel.Text = "Твой ход";
+                NotificLabel.Font = new Font("Arial", 32);
+                NotificLabel.Size = new Size(210, 45);
+                NotificLabel.BorderStyle = BorderStyle.FixedSingle;
+                NotificLabel.TextAlign = ContentAlignment.MiddleCenter;
+                this.Controls.Add(NotificLabel);
+                NotificLabel.BringToFront();
 
-            //и таймер для работы с ним
-            NotificTimer = new System.Windows.Forms.Timer();
-            NotificTimer.Interval = 1200;
-            NotificTimer.Tick += NotificTimerFunc;
+                //и таймер для работы с ним
+                NotificTimer = new System.Windows.Forms.Timer();
+                NotificTimer.Interval = 1200;
+                NotificTimer.Tick += NotificTimerFunc;
 
-            //создаем чат
-            Chat = new ChatControler(ClientContr.DialogWithServ, ClientContr.GetDataGame.UsName);
-            //подписываемся на получении уведомлений о новых сообщениях в чате
-            Chat.NewMessage += NewMessageChat;//закрытом
-            ClientContr.ChatMsg += ChatMsg;//добавляет сообщение в ChatBox
-
+                //создаем чат
+                Chat = new ChatControler(ClientContr.DialogWithServ, ClientContr.GetDataGame.UsName);
+                //подписываемся на получении уведомлений о новых сообщениях в чате
+                Chat.NewMessage += NewMessageChat;//закрытом
+                ClientContr.ChatMsg += ChatMsg;//добавляет сообщение в ChatBox
+            }
+            catch (Exception ex)
+            { WriteLog.Write(ex.ToString()); }
         }
         /// <summary>
         /// Реагирует на нажатие на карточку вражеского штаба
@@ -1388,9 +1472,16 @@ namespace CartGame
         /// <param name="e"></param>
         private void EnemyHQPanel_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+            try
             {
-                ShowMaxCard((Panel)sender, EnemyHQPanel);
+                if (e.Button == MouseButtons.Right)
+                {
+                    ShowMaxCard((Panel)sender, EnemyHQPanel);
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
             }
         }
 
@@ -1401,25 +1492,32 @@ namespace CartGame
         /// <param name="attacked"></param>
         /// <param name="damage"></param>
         private void UsAttackDamageCarte(int attacking, int attacked, int damage)
-        {  
-            //отображаем урон по карте врага
-            AnimationDamage(-2, attacked, 0, damage);
+        {
+            try
+            {
+                //отображаем урон по карте врага
+                AnimationDamage(-2, attacked, 0, damage);
 
-            //обновляем аттакуемую карту
-            if (attacked == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQEnemy(); });
-            else this.Invoke((MethodInvoker)delegate {
-                NewPaintEnemyCard(attacked);
-            });
-
-            //удаляем карту у нас в руке
-            if (MyCarte.Controls.Count > attacking && UserCards.Count > attacking)
-                this.Invoke((MethodInvoker)delegate
+                //обновляем аттакуемую карту
+                if (attacked == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQEnemy(); });
+                else this.Invoke((MethodInvoker)delegate
                 {
-                    MyCarte.Controls.RemoveAt(attacking);
-                    UserCards.RemoveAt(attacking);
+                    NewPaintEnemyCard(attacked);
                 });
-            UpdateLocation_Cards(MyCarte, 100, 3);
-            
+
+                //удаляем карту у нас в руке
+                if (MyCarte.Controls.Count > attacking && UserCards.Count > attacking)
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        MyCarte.Controls.RemoveAt(attacking);
+                        UserCards.RemoveAt(attacking);
+                    });
+                UpdateLocation_Cards(MyCarte, 100, 3);
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
         /// <summary>
         /// Отображает клиенту его ремонт
@@ -1429,26 +1527,32 @@ namespace CartGame
         /// <param name="damage"></param>
         private void UsRepairsCarte(int NumberCardRepairs, int Repairable, int damage)
         {
-            //отображаем ремонт моей карты 
-            AnimationDamage(Repairable, -2 , damage, 0);
+            try
+            {
+                //отображаем ремонт моей карты 
+                AnimationDamage(Repairable, -2, damage, 0);
 
-            //обновляем аттакуемую карту
-            if (Repairable == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQUser(); });
-            else this.Invoke((MethodInvoker)delegate {
-                NewPaintUserCard(Repairable);
-            });
-
-            //удаляем карту у нас в руке
-            if (MyCarte.Controls.Count > NumberCardRepairs && UserCards.Count > NumberCardRepairs)
-                this.Invoke((MethodInvoker)delegate
+                //обновляем аттакуемую карту
+                if (Repairable == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQUser(); });
+                else this.Invoke((MethodInvoker)delegate
                 {
-                    MyCarte.Controls.RemoveAt(NumberCardRepairs);
-                    UserCards.RemoveAt(NumberCardRepairs);
+                    NewPaintUserCard(Repairable);
                 });
-            UpdateLocation_Cards(MyCarte, 100, 3);
+
+                //удаляем карту у нас в руке
+                if (MyCarte.Controls.Count > NumberCardRepairs && UserCards.Count > NumberCardRepairs)
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        MyCarte.Controls.RemoveAt(NumberCardRepairs);
+                        UserCards.RemoveAt(NumberCardRepairs);
+                    });
+                UpdateLocation_Cards(MyCarte, 100, 3);
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
-
-
 
         /// <summary>
         /// Отображае клиенту ремонт противника
@@ -1459,16 +1563,23 @@ namespace CartGame
         /// <param name="damage"></param>
         private void EnRepairsCarte(int NumberCardRepairs, int IDRepairs, int Repairable, int damage)
         {
-            //Отображаем ремонт врага в клиенте у пользователя
-            AnimationAttackDamageEvent(NumberCardRepairs, IDRepairs, Repairable, damage, false);
-            //обновляем аттакуемую карту
-            if (Repairable == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQEnemy(); });
-            else this.Invoke((MethodInvoker)delegate { NewPaintEnemyCard(Repairable); });
+            try
+            {
+                //Отображаем ремонт врага в клиенте у пользователя
+                AnimationAttackDamageEvent(NumberCardRepairs, IDRepairs, Repairable, damage, false);
+                //обновляем аттакуемую карту
+                if (Repairable == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQEnemy(); });
+                else this.Invoke((MethodInvoker)delegate { NewPaintEnemyCard(Repairable); });
 
-            //удаляем карту в руке у противника
-            if (EnemyCarte.Controls.Count > NumberCardRepairs)
-                this.Invoke((MethodInvoker)delegate { EnemyCarte.Controls.RemoveAt(NumberCardRepairs); });
-            UpdateLocation_Cards(EnemyCarte, 70, 3);
+                //удаляем карту в руке у противника
+                if (EnemyCarte.Controls.Count > NumberCardRepairs)
+                    this.Invoke((MethodInvoker)delegate { EnemyCarte.Controls.RemoveAt(NumberCardRepairs); });
+                UpdateLocation_Cards(EnemyCarte, 70, 3);
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
 
         /// <summary>
@@ -1479,24 +1590,28 @@ namespace CartGame
         /// <param name="damage"></param>
         private void EnAttackDamageCarte(int attacking,int IDAttacking, int attacked, int damage)
         {
-            //Отображаем урон картой-событием
-            AnimationAttackDamageEvent(attacking, IDAttacking, attacked, damage, true);
-            //обновляем аттакуемую карту
-            if (attacked == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQUser(); });
-            else this.Invoke((MethodInvoker)delegate { NewPaintUserCard(attacked); });
+            try
+            {
+                //Отображаем урон картой-событием
+                AnimationAttackDamageEvent(attacking, IDAttacking, attacked, damage, true);
+                //обновляем аттакуемую карту
+                if (attacked == -1) this.Invoke((MethodInvoker)delegate { NewPaintHQUser(); });
+                else this.Invoke((MethodInvoker)delegate { NewPaintUserCard(attacked); });
 
-            //удаляем карту в руке у противника
-            if (EnemyCarte.Controls.Count > attacking)
-            this.Invoke((MethodInvoker)delegate { EnemyCarte.Controls.RemoveAt(attacking); });
-            UpdateLocation_Cards(EnemyCarte, 70, 3);
+                //удаляем карту в руке у противника
+                if (EnemyCarte.Controls.Count > attacking)
+                    this.Invoke((MethodInvoker)delegate { EnemyCarte.Controls.RemoveAt(attacking); });
+                UpdateLocation_Cards(EnemyCarte, 70, 3);
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
 
         private void AnimationAttackDamageEvent(int attacking,int IDAttacking,  int attacked, int damage, bool EnemyOrUser)
         {
-            try
-            {
-
-                //изображение карты
+            //изображение карты
                 Panel ImageCarte = Carte.GetCarte(IDAttacking).ImageCartFullMin();
                 //ищем координаты используемой карты
                 Point StartPoint = new Point(EnemyCarte.Location.X + EnemyCarte.Controls[attacking].Location.X, EnemyCarte.Location.Y + EnemyCarte.Controls[attacking].Location.Y);
@@ -1536,92 +1651,93 @@ namespace CartGame
                     ImageCarte = null;
                 });
                 
-
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
         }
 
 
         private void EndGame(MsgType e)
         {
-
-            this.Invoke((MethodInvoker)delegate
+            try
             {
-                if (e == MsgType.YouWin)
-                    NotificLabel.Text = "Вы победили!!!";
-
-                if (e == MsgType.YouOver)
-                    NotificLabel.Text = "Вы проиграли!!!";
-                if (e == MsgType.Draw)
-                    NotificLabel.Text = "Ничья!!!";
-                if (e == MsgType.EnemyNoActiv)
+                this.Invoke((MethodInvoker)delegate
                 {
-                    NotificLabel.Text = "Противник неактивен!";
-                }
+                    if (e == MsgType.YouWin)
+                        NotificLabel.Text = "Вы победили!!!";
+
+                    if (e == MsgType.YouOver)
+                        NotificLabel.Text = "Вы проиграли!!!";
+                    if (e == MsgType.Draw)
+                        NotificLabel.Text = "Ничья!!!";
+                    if (e == MsgType.EnemyNoActiv)
+                    {
+                        NotificLabel.Text = "Противник неактивен!";
+                    }
                     NotificLabel.Size = new Size(376, 55);
-                NotificLabel.Visible = true;
-                NotificLabel.Location = new Point(334, 235);
-                Button Close = new Button();
-                Close.Text = "Выйти";
-                Close.Location = new Point(422, 317);
-                Close.Size = new Size(192, 42);
-                Close.Font = new Font("Arial", 20);
-                Close.Click += Click_ButtonClose;
-                this.Controls.Add(Close);
-                Close.BringToFront();
+                    NotificLabel.Visible = true;
+                    NotificLabel.Location = new Point(334, 235);
+                    Button Close = new Button();
+                    Close.Text = "Выйти";
+                    Close.Location = new Point(422, 317);
+                    Close.Size = new Size(192, 42);
+                    Close.Font = new Font("Arial", 20);
+                    Close.Click += Click_ButtonClose;
+                    this.Controls.Add(Close);
+                    Close.BringToFront();
 
-                if (e == MsgType.TechnicalVictory)
-                {
-                    NotificLabel.Text = "Противник вышел из игры!!!";
-                    NotificLabel.Size = new Size(600, 55);
-                    NotificLabel.Location = new Point(250, 235);
-                    
-                }
-                       
-                if(e == MsgType.YouNoActiv)
-                {
-                    NotificLabel.Text = "Вы долго были неактивны!";
-                    NotificLabel.Size = new Size(600, 55);
-                    NotificLabel.Location = new Point(250, 235);
-                }
-                if (e == MsgType.EnemyNoActiv)
-                {
-                    NotificLabel.Text = "Противник неактивен!";
-                    NotificLabel.Size = new Size(600, 55);
-                    NotificLabel.Location = new Point(250, 235);
-                }
+                    if (e == MsgType.TechnicalVictory)
+                    {
+                        NotificLabel.Text = "Противник вышел из игры!!!";
+                        NotificLabel.Size = new Size(600, 55);
+                        NotificLabel.Location = new Point(250, 235);
 
-            });
-            
+                    }
+
+                    if (e == MsgType.YouNoActiv)
+                    {
+                        NotificLabel.Text = "Вы долго были неактивны!";
+                        NotificLabel.Size = new Size(600, 55);
+                        NotificLabel.Location = new Point(250, 235);
+                    }
+                    if (e == MsgType.EnemyNoActiv)
+                    {
+                        NotificLabel.Text = "Противник неактивен!";
+                        NotificLabel.Size = new Size(600, 55);
+                        NotificLabel.Location = new Point(250, 235);
+                    }
+
+                });
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
 
         private void Click_ButtonClose(object sender, EventArgs e)
         {
-            UserCards.Clear();
-            UserCards = null;
-            UserCardsOfMargin.Clear();
-            UserCardsOfMargin = null;
-            EnemyCardsOfMargin.Clear();
-            EnemyCardsOfMargin = null;
-            CloseForm = false;
-            this.Invoke((MethodInvoker)delegate {
-                ChoiceForm NewForm = new ChoiceForm(ClientContr);
-                NewForm.Show();
-                this.Close();
-            }); 
-            
-            
+            try
+            {
+                UserCards.Clear();
+                UserCards = null;
+                UserCardsOfMargin.Clear();
+                UserCardsOfMargin = null;
+                EnemyCardsOfMargin.Clear();
+                EnemyCardsOfMargin = null;
+                CloseForm = false;
+                this.Invoke((MethodInvoker)delegate
+                {
+                    ChoiceForm NewForm = new ChoiceForm(ClientContr);
+                    NewForm.Show();
+                    this.Close();
+                });
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
 
         }
         private void AnimationEnemyAttack(int attacking, int attacked, int damageUser, int damageEnemy)
         {
-
-            try
-            {
-
                 //стартовое положение карты
                 Point StartPoint = new Point();
                 Panel ImageCarte = null;
@@ -1686,8 +1802,6 @@ namespace CartGame
                     });
 
                 }
-            }
-            catch (Exception e) { MessageBox.Show(e.ToString()); }
         }
 
         /// <summary>
@@ -1761,9 +1875,11 @@ namespace CartGame
         /// <param name="e"></param>
         private void HQCards_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            try
             {
-                
+                if (e.Button == MouseButtons.Left)
+                {
+
                     Panel temp = (Panel)sender;
                     //удаляем его со своей панели
                     UserHQPanel.Controls.RemoveAt(0);
@@ -1772,8 +1888,13 @@ namespace CartGame
                     temp.BringToFront();
                     MousePoint = new Point(e.X, e.Y);
                     MouseState = true;
-               
-       
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
             }
         }
         /// <summary>
@@ -1809,8 +1930,10 @@ namespace CartGame
                     ShowMaxCard(temp, UserHQPanel);
                 }
             }
-            catch (Exception E)
-            { MessageBox.Show(E.ToString()); }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
 
         private void GameMargin_FormClosing(object sender, FormClosingEventArgs e)
@@ -1830,13 +1953,23 @@ namespace CartGame
 
                 }
             }
-            catch (Exception E) { MessageBox.Show(e.ToString()); }
-          
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
+
         }
 
         private void StepEnd_Click(object sender, EventArgs e)
         {
-            СomWithServer.Send(MsgType.EndProgress);
+            try
+            {
+                СomWithServer.Send(MsgType.EndProgress);
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
 
         /// <summary>
@@ -1882,17 +2015,28 @@ namespace CartGame
 
         private void GameMargin_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Control && e.KeyCode == Keys.H)
+            try
             {
-                
+                if (e.Control && e.KeyCode == Keys.H)
+                {
+
                     Help.ShowHelp(this, "HelpCardsGame.chm");
-                e.SuppressKeyPress = false;
+                    e.SuppressKeyPress = false;
+                }
             }
+            catch { MessageBox.Show("Неудалость открыть справку"); }
         }
 
         private void ChatMsg(string message)
         {
-            this.Invoke((MethodInvoker)delegate { Chat.AddMessage(message); });
+            try
+            {
+                this.Invoke((MethodInvoker)delegate { Chat.AddMessage(message); });
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
         /// <summary>
         /// Сворачивает и разворачивает чат
@@ -1900,23 +2044,29 @@ namespace CartGame
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ChatButton_Click(object sender, EventArgs e)
-        {
-            if (ChatPanel==null)
+        {try
             {
-                //отображаем чат
-                ChatPanel = Chat.ShowChatBox();
-                ChatPanel.Parent = this;
-                ChatPanel.Location = new Point(722, 428);
-                ChatPanel.BringToFront();           
-                (sender as Button).Text = "Свернуть чат";
+                if (ChatPanel == null)
+                {
+                    //отображаем чат
+                    ChatPanel = Chat.ShowChatBox();
+                    ChatPanel.Parent = this;
+                    ChatPanel.Location = new Point(722, 424);
+                    ChatPanel.BringToFront();
+                    (sender as Button).Text = "Свернуть чат";
+                }
+                else
+                {
+                    //сворачиваем чат
+                    Chat.MinChatBox();
+                    ChatPanel.Parent = null;
+                    ChatPanel = null;
+                    (sender as Button).Text = "Открыть чат";
+                }
             }
-            else
+            catch (Exception ex)
             {
-                //сворачиваем чат
-                Chat.MinChatBox();
-                ChatPanel.Parent = null;
-                ChatPanel = null;
-                (sender as Button).Text = "Открыть чат";
+                WriteLog.Write(ex.ToString());
             }
         }
         /// <summary>
@@ -1924,10 +2074,15 @@ namespace CartGame
         /// </summary>
         /// <param name="countMissedMsg"></param>
         private void NewMessageChat(int countMissedMsg)
-        {
-            ChatButton.Text = "Открыть чат +" + countMissedMsg;
+        {try
+            {
+                ChatButton.Text = "Открыть чат +" + countMissedMsg;
+            }
+            catch (Exception ex)
+            {
+                WriteLog.Write(ex.ToString());
+            }
         }
 
-       
     }
 }

@@ -15,7 +15,8 @@ namespace CarteServer
          int CountSession;//счетчик количества сессий
         private Object ObjectLockDeliteSession = new Object();
         private Object ObjectLockDeliteOfQueue = new Object();
-        public  List<Session> AllSession = new List<Session>();
+        public  List<Session> AllSession = new List<Session>();//динамический список всех сессий
+
         public  Server()
         {
             
@@ -24,7 +25,6 @@ namespace CarteServer
             Console.WriteLine("Сервер запущен...");
 
         }
-
         public  void AddUser(User NewUser)
         {
             try
@@ -55,34 +55,39 @@ namespace CarteServer
         }
         private void DeliteOfQueue()
         {
-            lock(ObjectLockDeliteOfQueue)
+            try
+            {
+                lock (ObjectLockDeliteOfQueue)
                 {
-                if (ExpectUser != null)
-                {
-                    ExpectUser.DisposeUserToSeek();
-                    ExpectUser = null;
-                    Console.WriteLine("Пользователь находящийся в очереди удален!");
+                    if (ExpectUser != null)
+                    {
+                        ExpectUser.DisposeUserToSeek();
+                        ExpectUser = null;
+                        Console.WriteLine("Пользователь находящийся в очереди удален!");
+                    }
                 }
             }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
+
         }
         private  void DeliteSession(Session sender)
         {
-            lock(ObjectLockDeliteSession)
+            try
+            {
+                lock (ObjectLockDeliteSession)
                 {
-                if (AllSession.Count != 0)
-                {
-                    AllSession.Remove(sender);
-                    Console.WriteLine("Сессия удалена...");
-                    CountSession--;
+                    if (AllSession.Count != 0)
+                    {
+                        AllSession.Remove(sender);
+                        Console.WriteLine("Сессия удалена...");
+                        CountSession--;
+                    }
                 }
             }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
         }
-
-
-
-
-
-
 
     }
 }

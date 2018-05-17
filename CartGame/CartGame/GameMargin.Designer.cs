@@ -46,8 +46,9 @@
             this.EnemyName = new System.Windows.Forms.Label();
             this.toolTipHelp = new System.Windows.Forms.ToolTip(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.ChatButton = new System.Windows.Forms.Button();
             this.MyCarte = new System.Windows.Forms.Panel();
+            this.ChatButton = new System.Windows.Forms.Button();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -206,6 +207,17 @@
             this.pictureBox1.TabStop = false;
             this.toolTipHelp.SetToolTip(this.pictureBox1, resources.GetString("pictureBox1.ToolTip"));
             // 
+            // MyCarte
+            // 
+            this.MyCarte.AutoScroll = true;
+            this.MyCarte.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.MyCarte.Location = new System.Drawing.Point(90, 560);
+            this.MyCarte.Name = "MyCarte";
+            this.MyCarte.Size = new System.Drawing.Size(827, 125);
+            this.MyCarte.TabIndex = 4;
+            this.toolTipHelp.SetToolTip(this.MyCarte, "Это карты, которые находятся у вас в руке\r\nВы можете использовать любое количеств" +
+        "о этих карт, \r\nесли у вас достаточно энергии");
+            // 
             // ChatButton
             // 
             this.ChatButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
@@ -218,16 +230,10 @@
             this.ChatButton.UseVisualStyleBackColor = true;
             this.ChatButton.Click += new System.EventHandler(this.ChatButton_Click);
             // 
-            // MyCarte
+            // contextMenuStrip1
             // 
-            this.MyCarte.AutoScroll = true;
-            this.MyCarte.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.MyCarte.Location = new System.Drawing.Point(90, 560);
-            this.MyCarte.Name = "MyCarte";
-            this.MyCarte.Size = new System.Drawing.Size(827, 125);
-            this.MyCarte.TabIndex = 4;
-            this.toolTipHelp.SetToolTip(this.MyCarte, "Это карты, которые находятся у вас в руке\r\nВы можете использовать любое количеств" +
-        "о этих карт, \r\nесли у вас достаточно энергии");
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             // 
             // GameMargin
             // 
@@ -283,5 +289,6 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Button ChatButton;
         private System.Windows.Forms.Panel MyCarte;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
     }
 }

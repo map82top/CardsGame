@@ -165,7 +165,6 @@
             this.label1.Size = new System.Drawing.Size(327, 16);
             this.label1.TabIndex = 7;
             this.label1.Text = "Создайте свою колоду размером от 3 до 15 карт.\r\n";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // toolTipHelp
             // 
@@ -185,7 +184,6 @@
             this.pictureBox1.TabIndex = 17;
             this.pictureBox1.TabStop = false;
             this.toolTipHelp.SetToolTip(this.pictureBox1, resources.GetString("pictureBox1.ToolTip"));
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
             // ChoiceForm
             // 

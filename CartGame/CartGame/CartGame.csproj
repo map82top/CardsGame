@@ -82,6 +82,7 @@
     <Compile Include="Settings.Designer.cs">
       <DependentUpon>Settings.cs</DependentUpon>
     </Compile>
+    <Compile Include="WriteLog.cs" />
     <EmbeddedResource Include="ChoiceCarte.resx">
       <DependentUpon>ChoiceCarte.cs</DependentUpon>
     </EmbeddedResource>

@@ -14,50 +14,47 @@ namespace CarteServer
 {
     public enum MsgType
     {
-        StartSession,
-        DeliteSeek, 
-        CarteUser,
-        GetName,
-        StartGame,
-        AddUserCarte, 
-        AddEnemyCarte, 
-        UserMaxEnergy,
-        YourEnergy,
-        EnemyMaxEnergy,
-        EnemyEnergy,
-        ProgressTime,
-        MyProgress,
-        EnemyProgress,
-        AddCarteOnField,
-        EnemyAddCarteOnField,
-        Attack,
-        MyAttackSucc,
-        EnAttackSucc,
-        EndProgress, 
-        YouWin, 
-        YouOver, 
-        Draw,
-        TechnicalVictory,
-        ClientClosing,
-        EnemyNoActiv,
-        YouNoActiv,
-        DamageEvent,
-        UserDamageEvent, 
-        EnemyDamageEvent,
-        RepairsEvent,
-        UsRepairsEvent,
-        EnRepairsEvent,
-        AllDamageEvent,
-        UsAllDeliteEvent,
-        EnAllDeliteEvent,
-        ChatMsg
-
-
-
+        StartSession,//начало игры и сессии на сервере
+        DeliteSeek,//запрос на удалении их очереди ожидания противника
+        CarteUser,//запрос сервера на получении карт игрока
+        GetName,//запрос сервера на получении имени игрока
+        StartGame,//сервер сообщает о начале игры
+        AddUserCarte,//сервер добавлет карту игроку в руки
+        AddEnemyCarte,//сервер добавляет карту противнику в руки
+        UserMaxEnergy,//сервер уведомляет игрока о его максимальной энергии на этот ход
+        YourEnergy,//сервер сообщает о доступной энергии игрока в данный момент
+        EnemyMaxEnergy,//максимальной количество энергии у противника
+        EnemyEnergy,//сервер сообщает о доступной энергии противника в данный момент
+        ProgressTime,//сервер сообщает об изменении времени, оставшегося на ход
+        MyProgress,//сервер сообщает, что сейчас ход игрока
+        EnemyProgress,//сервер сообщает, что сейчас ход противника
+        AddCarteOnField,//сервер сообщает о удачном добавлении игроком карты на поле
+        EnemyAddCarteOnField,//сервер сообщает о удачно добавлении противником карты на поле
+        Attack,//клиент сообщает о атаке игрока на карты противника
+        MyAttackSucc,//атака игрока закончилась успешно(была возможна)
+        EnAttackSucc, //атака противника закончилась успешно(была возможна)
+        EndProgress,//клиент сообщает о завершении игроком своего хода
+        YouWin,//игрок победил
+        YouOver,//игрок проиграл
+        Draw,//ничья
+        TechnicalVictory,//техничская победа(один из игроков недоступен)
+        ClientClosing,//клиент собщает серверу о своем закрытии пользователем
+        EnemyNoActiv,//сервер сообщает пользователю, что противник был не активен и поэтом сессия завершилась 
+        YouNoActiv, //сервер сообщает игроку, что игрок был не активен и поэтом сессия завершилась 
+        DamageEvent,//клиент уведомляет сервер о использовании события, наносящего одиночный урон
+        UserDamageEvent,//сервер соощеает клиенту об удачно использовании события, наносящего одиночный урон
+        EnemyDamageEvent,//враг удачно использовал событие, наносящее одиночный урон 
+        RepairsEvent,//пользователь использовал событие востанволения
+        UsRepairsEvent,//сервер сообщает об удачном использовании игроком событием восстановления
+        EnRepairsEvent, //сервер сообщает об удачном использовании противником событием восстановления
+        AllDamageEvent,//клиент сообщает серверу о исплользовании события массвого урона
+        UsAllDeliteEvent,//сервер сообщает о удачном использовании игроком события наносщего массовый урон
+        EnAllDeliteEvent,//сервер сообщает о удачном использовании противником события наносщего массовый урон
+        ChatMsg//собщает о получении сообщения для чата
 
     }
     delegate void EndSession(Session sender);
-    class Session
+    class Session: IDisposable
     {
         public event EndSession SessionEnd;
         private User Us1, Us2;
@@ -86,24 +83,27 @@ namespace CarteServer
         }
         public Session(User User1, User User2)
          {
-            Us1 = User1;
-            Us2 = User2;
-            ColodsRec = 0;
-            GameLoad = 0;
-            //добавляем обработчики событий получения колоды
-            Us1.ColodRec += RecColod;
-            Us2.ColodRec += RecColod;
-            Us1.AddCardField += AddCardOnField;
-            Us2.AddCardField += AddCardOnField;
-           
-
-            SessionThread = new Thread(StartSession);
-            SessionThread.Start();
-            
+            try
+            {
+                Us1 = User1;
+                Us2 = User2;
+                ColodsRec = 0;
+                GameLoad = 0;
+                //добавляем обработчики событий получения колоды
+                Us1.ColodRec += RecColod;
+                Us2.ColodRec += RecColod;
+                Us1.AddCardField += AddCardOnField;
+                Us2.AddCardField += AddCardOnField;
 
 
-         }
+                SessionThread = new Thread(StartSession);
+                SessionThread.Start();
+            }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
 
+        }
+        //считает количестов карт-ветеран на игровом поле
         private int SeekVeteran(User us)
         {
             int ValueVeteran = 0;
@@ -112,6 +112,7 @@ namespace CarteServer
                     ValueVeteran += 1;
             return ValueVeteran;
         }
+        //осуществляет поиск оборонитльных сооружений на игровом поле игрока
         private DefenceConstr SeekDefenceConstr(User us)
         {
             foreach (Robot Card in us.CardsMargin)
@@ -225,56 +226,69 @@ namespace CarteServer
         /// <param name="idCards"></param>
         private void AddCardOnField(User sender, int number, int idCards)
         {
-            if (sender == Us1)
+            try
             {
-                ForAddCardOnField(Us1, Us2, number, idCards);
+                if (sender == Us1)
+                {
+                    ForAddCardOnField(Us1, Us2, number, idCards);
+                }
+                else
+                {
+                    ForAddCardOnField(Us2, Us1, number, idCards);
+                }
             }
-            else
-            {
-                ForAddCardOnField(Us2, Us1, number, idCards);
-            }
-           
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
         }
 
-
+        //по недоступности одного из игроков
         private void DisconnectClient(User user)
         {
-            //отвязваемся от игроков, чтобы этот метод не был запущен вторично
-            Us1.FailedSendMsg -= DisconnectClient;
-            Us2.FailedSendMsg -= DisconnectClient;
+            try
+            {
+                //отвязваемся от игроков, чтобы этот метод не был запущен вторично
+                Us1.FailedSendMsg -= DisconnectClient;
+                Us2.FailedSendMsg -= DisconnectClient;
 
-            //отправляем сообщение о победе противоположному игроку 
-            if (user == Us1)
-                Us2.Send(MsgType.TechnicalVictory);
-            else
-                Us1.Send(MsgType.TechnicalVictory);
-            //завершаем сессию
-            Dispose();
+                //отправляем сообщение о победе противоположному игроку 
+                if (user == Us1)
+                    Us2.Send(MsgType.TechnicalVictory);
+                else
+                    Us1.Send(MsgType.TechnicalVictory);
+                //завершаем сессию
+                Dispose();
+            }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
 
         }
-
+        //по неактивности
         private void DisconnectClient()
         {
-            //отвязваемся от игроков, чтобы этот метод не был запущен вторично
-            Us1.FailedSendMsg -= DisconnectClient;
-            Us2.FailedSendMsg -= DisconnectClient;
+            try
+            { //отвязваемся от игроков, чтобы этот метод не был запущен вторично
+                Us1.FailedSendMsg -= DisconnectClient;
+                Us2.FailedSendMsg -= DisconnectClient;
 
-            //отправляем сообщение о победе противоположному игроку 
-            if (UsProgress == Us1)
-            {
-                Us1.Send(MsgType.YouNoActiv);
-                Us2.Send(MsgType.EnemyNoActiv);
-            }
-            else
-            {
-                Us2.Send(MsgType.YouNoActiv);
-                Us1.Send(MsgType.EnemyNoActiv);
-            }
-              
-            //завершаем сессию
-            Dispose();
+                //отправляем сообщение о победе противоположному игроку 
+                if (UsProgress == Us1)
+                {
+                    Us1.Send(MsgType.YouNoActiv);
+                    Us2.Send(MsgType.EnemyNoActiv);
+                }
+                else
+                {
+                    Us2.Send(MsgType.YouNoActiv);
+                    Us1.Send(MsgType.EnemyNoActiv);
+                }
 
+                //завершаем сессию
+                Dispose();
+            }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
         }
+        //начинаем игру
         public void StartSession(object sender)
         {
             try
@@ -369,6 +383,7 @@ namespace CarteServer
             { Console.WriteLine(e.ToString()); }
         }
 
+        //отправляем сообщение чата противоположному игроку
         private void ForwardMsg(User user, string message)
         {
             if (user == Us1) Us2.Send(message, MsgType.ChatMsg);
@@ -411,16 +426,22 @@ namespace CarteServer
         /// <param name="NumberCard"></param>
         private void AllDamageEvent(User user, int IdCard, AllDamageEvent Card,int NumberCard)
         {
-            if (user == Us1)
+            try
             {
-                ForAllDamageEvent(Us1, Us2, IdCard, Card, NumberCard);
-               
+                if (user == Us1)
+                {
+                    ForAllDamageEvent(Us1, Us2, IdCard, Card, NumberCard);
+
+                }
+                else
+                {
+                    ForAllDamageEvent(Us2, Us1, IdCard, Card, NumberCard);
+                }
             }
-            else
-            {
-                ForAllDamageEvent(Us2, Us1, IdCard, Card, NumberCard);
-            }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
         }
+        //таймер обратного отсчета времени хода
         private void TempProgress_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
@@ -458,86 +479,98 @@ namespace CarteServer
             catch (Exception E)
             { Console.WriteLine(E.ToString()); }
         }
+        //осуществляет обработки события использовании карты нанесния одиночног урона
         private void DamageEventFunc(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked)
         {
-            if (user == Us1)
+            try
             {
-                if (attacked == -1)
+                if (user == Us1)
                 {
-                    Us2.userHQ.Armor -= Card.Damage;
-                   
+                    if (attacked == -1)
+                    {
+                        Us2.userHQ.Armor -= Card.Damage;
+
+                    }
+                    else
+                    {
+                        Us2.CardsMargin[attacked].Armor -= Card.Damage;
+                        //удаляем карту
+                        EffectDeliteCard(user, attacked);
+
+                    }
+                    //отправляем о сообщение об удачной атаке
+                    Us1.Send(Us1.Energy, MsgType.YourEnergy);
+                    Us2.Send(Us1.Energy, MsgType.EnemyEnergy);
+                    Us1.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
+                    Us2.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
+                    //проверяем на уничтожение одного из штабов
+                    TestEndGame();
+
                 }
-                else
+                else if (user == Us2)
                 {
-                    Us2.CardsMargin[attacked].Armor -= Card.Damage;
-                    //удаляем карту
-                    EffectDeliteCard(user, attacked);
-                    
+                    if (attacked == -1)
+                    {
+                        Us1.userHQ.Armor -= Card.Damage;
+
+                    }
+                    else
+                    {
+                        Us1.CardsMargin[attacked].Armor -= Card.Damage;
+                        if (Us1.CardsMargin[attacked].Armor <= 0) Us1.CardsMargin.RemoveAt(attacked);
+                    }
+                    //отправляем о сообщение об удачной атаке
+                    Us2.Send(Us2.Energy, MsgType.YourEnergy);
+                    Us1.Send(Us2.Energy, MsgType.EnemyEnergy);
+                    Us2.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
+                    Us1.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
+                    //проверяем на конец игры
+                    TestEndGame();
+
                 }
-                //отправляем о сообщение об удачной атаке
-                Us1.Send(Us1.Energy, MsgType.YourEnergy);
-                Us2.Send(Us1.Energy, MsgType.EnemyEnergy);
-                Us1.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
-                Us2.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
-                //проверяем на уничтожение одного из штабов
-                TestEndGame();
-               
             }
-            else if (user == Us2)
+            catch (Exception e)
             {
-                if (attacked == -1)
-                {
-                    Us1.userHQ.Armor -= Card.Damage;
-                    
-                }
-                else
-                {
-                    Us1.CardsMargin[attacked].Armor -= Card.Damage;
-                    if (Us1.CardsMargin[attacked].Armor <= 0) Us1.CardsMargin.RemoveAt(attacked);
-                }
-                //отправляем о сообщение об удачной атаке
-                Us2.Send(Us2.Energy, MsgType.YourEnergy);
-                Us1.Send(Us2.Energy, MsgType.EnemyEnergy);
-                Us2.Send(new int[] {attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
-                Us1.Send(new int[] {attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
-                //проверяем на конец игры
-                TestEndGame();
-              
+                Console.WriteLine(e.ToString());
             }
-            Debug.WriteLine($"Прочность штаба игрока {Us1.Name} равна {Us1.userHQ.Armor}");
-            Debug.WriteLine($"Прочность штаба игрока {Us2.Name} равна {Us2.userHQ.Armor}");
         }
+        //обработка события использовании события восстановления
         private void RepairsEventFunc(User user, int IDRepairs, RepairsEvent Card, int NumberCardRepairs, int Repairable)
         {
-            if (user == Us1)
+            try
             {
-                if( Repairable == -1)
-                    user.userHQ.Armor -= Card.Damage;
-                else
-                    user.CardsMargin[Repairable].Armor -= Card.Damage;
-                   
-                //отправляем о сообщение об удачной атаке
-                Us1.Send(Us1.Energy, MsgType.YourEnergy);
-                Us2.Send(Us1.Energy, MsgType.EnemyEnergy);
-                Us1.Send(new int[] { NumberCardRepairs, Repairable, Card.Damage }, MsgType.UsRepairsEvent);
-                Us2.Send(new int[] { NumberCardRepairs, IDRepairs, Repairable, Card.Damage }, MsgType.EnRepairsEvent);
-            }
-            else if (user == Us2)
-            {
-                if (Repairable == -1)
-                    user.userHQ.Armor -= Card.Damage;
+                if (user == Us1)
+                {
+                    if (Repairable == -1)
+                        user.userHQ.Armor -= Card.Damage;
+                    else
+                        user.CardsMargin[Repairable].Armor -= Card.Damage;
 
-                else
-                    user.CardsMargin[Repairable].Armor -= Card.Damage;
-                   
-                //отправляем о сообщение об удачной атаке
-                Us2.Send(Us2.Energy, MsgType.YourEnergy);
-                Us1.Send(Us2.Energy, MsgType.EnemyEnergy);
-                Us2.Send(new int[] { NumberCardRepairs, Repairable, Card.Damage }, MsgType.UsRepairsEvent);
-                Us1.Send(new int[] { NumberCardRepairs, IDRepairs, Repairable, Card.Damage }, MsgType.EnRepairsEvent);
+                    //отправляем о сообщение об удачной атаке
+                    Us1.Send(Us1.Energy, MsgType.YourEnergy);
+                    Us2.Send(Us1.Energy, MsgType.EnemyEnergy);
+                    Us1.Send(new int[] { NumberCardRepairs, Repairable, Card.Damage }, MsgType.UsRepairsEvent);
+                    Us2.Send(new int[] { NumberCardRepairs, IDRepairs, Repairable, Card.Damage }, MsgType.EnRepairsEvent);
+                }
+                else if (user == Us2)
+                {
+                    if (Repairable == -1)
+                        user.userHQ.Armor -= Card.Damage;
+
+                    else
+                        user.CardsMargin[Repairable].Armor -= Card.Damage;
+
+                    //отправляем о сообщение об удачной атаке
+                    Us2.Send(Us2.Energy, MsgType.YourEnergy);
+                    Us1.Send(Us2.Energy, MsgType.EnemyEnergy);
+                    Us2.Send(new int[] { NumberCardRepairs, Repairable, Card.Damage }, MsgType.UsRepairsEvent);
+                    Us1.Send(new int[] { NumberCardRepairs, IDRepairs, Repairable, Card.Damage }, MsgType.EnRepairsEvent);
+                }
             }
-            Debug.WriteLine($"Прочность штаба игрока {Us1.Name} равна {Us1.userHQ.Armor}");
-            Debug.WriteLine($"Прочность штаба игрока {Us2.Name} равна {Us2.userHQ.Armor}");
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
         /// <summary>
         /// Выполняет нектороый действия происходящие при удалении некоторой карты
@@ -748,8 +781,6 @@ namespace CarteServer
                     us2.Send(new int[] { attacking, attacked, damageUser, damageEnemy, attackCount, defenceCount-1 }, MsgType.EnAttackSucc);//поменял уроны местами из-за ввода универсальной функции AttackSucc
                                                                                                                //проверяем на конец игры
                     TestEndGame();
-            Debug.WriteLine($"Прочность штаба игрока {us1.Name} равна {us1.userHQ.Armor}");
-            Debug.WriteLine($"Прочность штаба игрока {us2.Name} равна {us2.userHQ.Armor}");
         }
 
         /// <summary>
@@ -777,6 +808,9 @@ namespace CarteServer
             catch (Exception e)
             { Console.WriteLine(e.ToString()); }
         }
+        /// <summary>
+        /// Проверят на признак завершения игры
+        /// </summary>
         private void TestEndGame()
         {
             //проверяем на конец игры
@@ -803,18 +837,25 @@ namespace CarteServer
         /// <summary>
         /// Освобождает все ресурсы сессии
         /// </summary>
-        private void Dispose()
+        public void Dispose()
         {
-            Us1.Dispose();
-            Us2.Dispose();
+            try
+            {
+                Us1.Dispose();
+                Us2.Dispose();
 
-            //очищаем ресурсы сессии
-            Us1 = null;
-            Us2 = null;
-            TempProgress.Dispose();
-            TempProgress = null;
-            SessionEnd(this);
-            SessionEnd = null;
+                //очищаем ресурсы сессии
+                Us1 = null;
+                Us2 = null;
+                TempProgress.Dispose();
+                TempProgress = null;
+                SessionEnd(this);
+                SessionEnd = null;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
 
         }
 
@@ -908,7 +949,10 @@ namespace CarteServer
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
-        
+        /// <summary>
+        /// Отправляет и получает необходимые данные перед началом игры
+        /// </summary>
+        /// <param name="stateInfo"></param>
         private void LoadGame(object stateInfo)
         {
             try

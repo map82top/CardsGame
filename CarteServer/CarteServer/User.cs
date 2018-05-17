@@ -19,9 +19,9 @@ namespace CarteServer
     delegate void AllDamageCard(User user, int IDAttacking, AllDamageEvent Card, int attacking);
     delegate void StringDel(User user, string data);
 
-    class User
+    class User:IDisposable
     {
-        private string name = null;
+        private string name = null;//имя игрока
         public string Name
         {
             get { return name; }
@@ -34,17 +34,22 @@ namespace CarteServer
         }
         private TcpClient UserTcpClient;
         private Thread UserThread;//поток обрабатывающий сообщиеня от клиента
-        private NetworkStream TcpStream;
-        private bool myProgress;
-        private bool StopThread;
+        private NetworkStream TcpStream;//поток между игроком и сервером
+        private bool myProgress;//если true ход игрока
+        private bool StopThread;//если false остановить поток обработки сообщений
 
-        public event AttackDelegate Attack;
-        public event DamageCard DamageCardEvent;
-        public event ErrorSend FailedSendMsg;
-        public event EmptyDel GetOutOfQueue;
-        public event RepairsCard RepairsCardEvent;
-        public event AllDamageCard AllDamageEvent;
-        public event StringDel NewChatMsg;
+        public event AttackDelegate Attack;//уведомляет обработчик сесси о совершении игроком атаки
+        public event DamageCard DamageCardEvent;//уведомляет об использовании игроком события наносящего еденичный урон
+        public event ErrorSend FailedSendMsg;//Уведомляет об ошибки отправки сообщения клиенту
+        public event EmptyDel GetOutOfQueue;//уведомляе о желании игрока выйти из очереди ожидания противника
+        public event RepairsCard RepairsCardEvent;//уведомляет об использовании игроком события восстановления очков прочности
+        public event AllDamageCard AllDamageEvent;//уведомляет об использовании игроком события массвого урона
+        public event StringDel NewChatMsg;//уведомляет о получении сообщения для чата
+        public event EmptyDel ColodRec;//уведомляет о получении колоды игрока
+        public event EmptyDel NameRec;//уведомляет о получени имени игрока
+        public event EmptyDel EndProgress;//уведомляет о завершении игроком своего хода
+        public event CardOnField AddCardField;//уведомляет о добавлении игроком карты на поле
+
         public bool MyProgress
         {
             set { myProgress = value; }
@@ -92,12 +97,7 @@ namespace CarteServer
         {
             get { return userHq; }
         }
-       
-        public event EmptyDel ColodRec;
-        public event EmptyDel NameRec;
-        public event EmptyDel EndProgress;
-        public event CardOnField AddCardField;
-       
+           
         public User()
         {
             UserTcpClient = null;
@@ -122,24 +122,22 @@ namespace CarteServer
             try
             {
                 while (StopThread && UserTcpClient.Connected)
-                {
-
-                    
+                {           
                     byte[] caption = new byte[3];
                     int CaptionBytes = RecData(caption, caption.Length, TcpStream);
                     MsgType? msgType = null;
                     if (CaptionBytes > 0)
                     {
-                        msgType = (MsgType)caption[0];
+                        msgType = (MsgType)caption[0];//тип сообщения
                         short MsgLength = BitConverter.ToInt16(caption, 1);
-                        MsgLength = IPAddress.NetworkToHostOrder(MsgLength);//не работает
+                        MsgLength = IPAddress.NetworkToHostOrder(MsgLength);//длинна сообщения
                         if (MsgLength > 0)
                         {
                             byte[] Data = new byte[MsgLength];
-                            int ReadData = RecData(Data, MsgLength, TcpStream);
+                            int ReadData = RecData(Data, MsgLength, TcpStream);//получаем данные сообщения
                             if (ReadData > 0)
                             {
-                                //отделить swicth от основной функции
+                                //сообщения с данными
                                 switch (msgType)
                                 {
                                     case MsgType.CarteUser:
@@ -267,7 +265,7 @@ namespace CarteServer
                             }
                             //добавить иначе
                         }
-                        else
+                        else//собщения без данных
                         {
                             switch (msgType)
                             {
@@ -328,6 +326,7 @@ namespace CarteServer
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); return 0; }
             }
+        //методы отправки сообщений клиенту
         public void Send(MsgType TypeMsg)
         {
             try
@@ -349,7 +348,6 @@ namespace CarteServer
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
         }  
-
         public void Send(int number, MsgType TypeMsg)
         {
             try
@@ -375,16 +373,6 @@ namespace CarteServer
             }
             catch (Exception e) { Console.WriteLine(e.ToString()); }
             }
-        private byte[] SummNumber(byte[] Head, byte[] Number)
-        {
-            byte[] temp = new byte[Head.Length + Number.Length];
-            int i = 0;
-            for (; i < Head.Length; i++)
-                temp[i] = Head[i];
-            for (int j = 0; j < Number.Length; j++)
-                temp[i + j] = Number[j];
-            return temp;
-        }
         public void Send(string message, MsgType TypeMsg)
         {
             try
@@ -447,6 +435,19 @@ namespace CarteServer
             { Console.WriteLine(e.ToString());}
             
         }
+
+        //соединяет два массива в один
+        private byte[] SummNumber(byte[] Head, byte[] Number)
+        {
+            byte[] temp = new byte[Head.Length + Number.Length];
+            int i = 0;
+            for (; i < Head.Length; i++)
+                temp[i] = Head[i];
+            for (int j = 0; j < Number.Length; j++)
+                temp[i + j] = Number[j];
+            return temp;
+        }
+        //соединяет тип сообщения и его длинну в один массив
         private byte[] Summ(byte type, byte[] len)
         {
             byte[] ret = new byte[len.Length + 1];
@@ -455,6 +456,7 @@ namespace CarteServer
             ret[2] = len[1];
             return ret;
         }
+        //освобождает ресурсы задействованные при нахождении игрока в очереди
         public void DisposeUserToSeek()
         {
             UserTcpClient.Close();
@@ -465,10 +467,9 @@ namespace CarteServer
             //запускаем поток обработки сообшений
            
         }
+        //особождает все ресурсы
         public void Dispose()
-        {
-          
-           
+        {         
             //закрываем соединение
             UserTcpClient.Close();
             UserTcpClient = null;

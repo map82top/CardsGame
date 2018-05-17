@@ -32,33 +32,33 @@ namespace CartGame
         private SendAndRecMsg dialogWithServ;
 
         //события клиента
-        public event ContrDel SucConnect;
-        public event ContrDel FailConnect;
-        public event EmptyDel StartGame;
-        public event EmptyDel EnAddCardOnField;
-        public event IntDel PaintUserCarte;
-        public event IntDel PaintEnemyCarte;
-        public event IntDel AddCardsOnField;
-        public event EmptyDel PaintMyEnergy;
-        public event EmptyDel PaintEnEnergy;
-        public event StringDel UpdateTime;
-        public event EmptyDel MyProgress;
-        public event EmptyDel EnemyProgress;
-        public event Attack MyAttack;
-        public event Attack EnAttack;
-        public event End EndGame;
-        public event EmptyDel DeliteSeek;
-        public event EmptyDel ErrorConnectToServer;
-        public event DamageCardAttack MyAttackDamageCard;
-        public event EnDamageCardAttack EnAttackDamageCard;
-        public event DamageCardAttack MyRepairsCard;
-        public event EnDamageCardAttack EnRepairsCard;
-        public event AllDamage UsAllDamage;
-        public event EnAllDamage EnAllDamage;
-        public event StringDel ChatMsg;
+        public event ContrDel SucConnect;//уведомляет о удачном соединении с сервером
+        public event ContrDel FailConnect;//уведомляем о неудачном соединении с сервером
+        public event EmptyDel StartGame;//начало игры, на сервер запустилась новая сессия
+        public event EmptyDel EnAddCardOnField;//уведомляем, что враг добавил карту на игровое поле
+        public event IntDel PaintUserCarte;//в руки игрока добавлена новая карта
+        public event IntDel PaintEnemyCarte;//в руки противника добавлена новая карта
+        public event IntDel AddCardsOnField;//собщает о том, что добаление пользователем карты на игровое поле прошло удачно
+        public event EmptyDel PaintMyEnergy;//сообщает, что изменилось количество энергии у игрока
+        public event EmptyDel PaintEnEnergy;//сообщает, что изменилось количество энергии у противника
+        public event StringDel UpdateTime;//уведомляет, что получено новое время обратного отчета времени хода
+        public event EmptyDel MyProgress;//уведомляем о том, что начался ход игрока
+        public event EmptyDel EnemyProgress;//уведомляем о  том, что начался ход противника
+        public event Attack MyAttack;//уведомляем о удачной атаке игрока
+        public event Attack EnAttack;//уведомляем о удачной атаке проивника
+        public event End EndGame;//сообщаем о конце игры(тип завершения игры)
+        public event EmptyDel DeliteSeek;//игрок был удален из из очереди поиска противника
+        public event EmptyDel ErrorConnectToServer;//уведомляем о нарушении соединеия с сервером
+        public event DamageCardAttack MyAttackDamageCard;//уведомляем о удачной атаке игрока событием одиночного нанесения урона
+        public event EnDamageCardAttack EnAttackDamageCard;//уведомляем о удачной атаке противником событием одиночного нанесения урона
+        public event DamageCardAttack MyRepairsCard;//уведомляем о удачном использовании игроком события восстановления очков прочности
+        public event EnDamageCardAttack EnRepairsCard;//уведомляем о удачном использовании противником события восстановления очков прочности
+        public event AllDamage UsAllDamage;//уведомляем о удачном использовании игроком карты с массовым уроном
+        public event EnAllDamage EnAllDamage;//уведомляем о удачном использовании противником карты с массовым уроном
+        public event StringDel ChatMsg;//уведомляем о получении сообщеия от противника в чате
 
 
-        private DataGame DataSession;
+        private DataGame DataSession;//данные этой игры
 
         public DataGame GetDataGame
         {
@@ -72,6 +72,12 @@ namespace CartGame
             dialogWithServ = null;
 
         }
+        /// <summary>
+        /// Начинаем соединение с сервером
+        /// </summary>
+        /// <param name="IpAdress"></param>
+        /// <param name="Port"></param>
+        /// <param name="Name"></param>
         public void Start(IPAddress IpAdress, int Port, string Name)
         {
             //инициализируем класс работы с сервером
@@ -98,6 +104,9 @@ namespace CartGame
 
 
         }
+        /// <summary>
+        /// Обрабатывает собщения о неудачной отправки собщения серверу
+        /// </summary>
         private void ErrorConnection()
         {
             try
@@ -111,66 +120,73 @@ namespace CartGame
                 }
             }
             catch(Exception e) {
-                MessageBox.Show(e.ToString());
+                WriteLog.Write(e.ToString());
             }
         }
+        /// <summary>
+        /// Обрабавтываем сообщения без данных
+        /// </summary>
+        /// <param name="type"></param>
         private void ProcMsgWithoutData(MsgType type)
         {
-           
-            switch (type)
+            try
             {
-                case MsgType.StartSession:
-                    //отправляем только те карты которые не равны 0
-                    List<int> temp = new List<int>();
-                    int count = DataSession.UserColoda.Length;
-                    for (int i = 0; i < count; i++)
-                        if (DataSession.UserColoda[i] > 0) temp.Add(DataSession.UserColoda[i]); 
-                    //отправляем полученный массив
-                    dialogWithServ.Send(temp.ToArray(), MsgType.CarteUser);
-                    break;
-                case MsgType.GetName:
-                    dialogWithServ.Send(DataSession.UsName, MsgType.GetName);
-                    break;
-                case MsgType.AddEnemyCarte:
-                    DataSession.CountCarteEnemy++;
-                    PaintEnemyCarte(DataSession.CountCarteEnemy);
-                    break;
-                case MsgType.MyProgress:
-                    MyProgress();
-                    break;
-                case MsgType.EnemyProgress:
-                    EnemyProgress();
-                    break;
-                case MsgType.YouWin:
-                    EndGame(MsgType.YouWin);
-                    Dispose();
-                    break;
-                case MsgType.YouOver:
-                    EndGame(MsgType.YouOver);
-                    Dispose();
-                    break;
-                case MsgType.Draw:
-                    EndGame(MsgType.Draw);
-                    Dispose();
-                    break;
-                case MsgType.TechnicalVictory:
-                    EndGame(MsgType.TechnicalVictory);
-                    Dispose();
-                    break;
-                case MsgType.DeliteSeek:
-                    DeliteSeek();
-                    break;
-                case MsgType.EnemyNoActiv:
-                    EndGame(MsgType.EnemyNoActiv);
-                    Dispose();
-                    break;
-                case MsgType.YouNoActiv:
-                    EndGame(MsgType.YouNoActiv);
-                    Dispose();
-                    break;
+                switch (type)
+                {
+                    case MsgType.StartSession:
+                        //отправляем только те карты которые не равны 0
+                        List<int> temp = new List<int>();
+                        int count = DataSession.UserColoda.Length;
+                        for (int i = 0; i < count; i++)
+                            if (DataSession.UserColoda[i] > 0) temp.Add(DataSession.UserColoda[i]);
+                        //отправляем полученный массив
+                        dialogWithServ.Send(temp.ToArray(), MsgType.CarteUser);
+                        break;
+                    case MsgType.GetName:
+                        dialogWithServ.Send(DataSession.UsName, MsgType.GetName);
+                        break;
+                    case MsgType.AddEnemyCarte:
+                        DataSession.CountCarteEnemy++;
+                        PaintEnemyCarte(DataSession.CountCarteEnemy);
+                        break;
+                    case MsgType.MyProgress:
+                        MyProgress();
+                        break;
+                    case MsgType.EnemyProgress:
+                        EnemyProgress();
+                        break;
+                    case MsgType.YouWin:
+                        EndGame(MsgType.YouWin);
+                        Dispose();
+                        break;
+                    case MsgType.YouOver:
+                        EndGame(MsgType.YouOver);
+                        Dispose();
+                        break;
+                    case MsgType.Draw:
+                        EndGame(MsgType.Draw);
+                        Dispose();
+                        break;
+                    case MsgType.TechnicalVictory:
+                        EndGame(MsgType.TechnicalVictory);
+                        Dispose();
+                        break;
+                    case MsgType.DeliteSeek:
+                        DeliteSeek();
+                        break;
+                    case MsgType.EnemyNoActiv:
+                        EndGame(MsgType.EnemyNoActiv);
+                        Dispose();
+                        break;
+                    case MsgType.YouNoActiv:
+                        EndGame(MsgType.YouNoActiv);
+                        Dispose();
+                        break;
 
 
+                }
             }
+            catch (Exception e) { WriteLog.Write(e.ToString()); }
         }
 
         /// <summary>
@@ -206,7 +222,11 @@ namespace CartGame
 
 
        }
-
+        /// <summary>
+        /// Осуществлеят поиск в колоде карт - ветеран
+        /// </summary>
+        /// <param name="CardsOnField"></param>
+        /// <returns></returns>
         private int SeekVeteran(List<Robot>CardsOnField)
         {
             int ValueVeteran = 0;
@@ -260,9 +280,15 @@ namespace CartGame
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString());
+                WriteLog.Write(e.ToString());
             }
         }
+
+        /// <summary>
+        /// Выполняет действия при уходе карты с поля
+        /// </summary>
+        /// <param name="CardOnMargin"></param>
+        /// <param name="index"></param>
         private void EffectDeliteCard(List<Robot> CardOnMargin, int index)
         {
             try
@@ -285,10 +311,10 @@ namespace CartGame
                 }
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
         /// <summary>
-        /// Выполняется после того как получены действия об атаке
+        /// Обрабатывает удачные атаки
         /// </summary>
         /// <param name="data"></param>
         /// <param name="UserHq"></param>
@@ -296,64 +322,74 @@ namespace CartGame
         /// <param name=""></param>
         public int[] AttackSucc(byte[] data, HeadQuarters UserHq, HeadQuarters EnemyHq, List<Robot> UsCardOnMargin, List<Robot> EnCardOnMargin)
         {
-            //преобразуем данные из вида передачи по сети в тип данного компьютера
-            short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
-            short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
-            short damageUser = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));//если это враг, то это урон по врагу
-            short damageEnemy = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6));//если это враг, то это урон по игроку
-            short attackCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 8));//количество атак у атакующей карты
-            short defenderCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 10));//количество возможностей ответить на атаку
-            if (attacking == -1)
+            try
             {
-                if (attacked == -1)
+                //преобразуем данные из вида передачи по сети в тип данного компьютера
+                short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
+                short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+                short damageUser = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));//если это враг, то это урон по врагу
+                short damageEnemy = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6));//если это враг, то это урон по игроку
+                short attackCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 8));//количество атак у атакующей карты
+                short defenderCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 10));//количество возможностей ответить на атаку
+                if (attacking == -1)
                 {
-                    EnemyHq.Armor -= damageEnemy;
-                    UserHq.Armor -= damageUser;
-                    //обновляем счетчики атак и оборон
-                    EnemyHq.DefenseCount = defenderCount;
-                    UserHq.AttackCount = attackCount;
+                    if (attacked == -1)
+                    {
+                        EnemyHq.Armor -= damageEnemy;
+                        UserHq.Armor -= damageUser;
+                        //обновляем счетчики атак и оборон
+                        EnemyHq.DefenseCount = defenderCount;
+                        UserHq.AttackCount = attackCount;
+                    }
+                    else
+                    {
+                        EnCardOnMargin[attacked].Armor -= damageEnemy;
+                        UserHq.Armor -= damageUser;
+                        EffectDeliteCard(EnCardOnMargin, attacked);
+                        //обновляем счетчики атак и оборон
+                        UserHq.AttackCount = attackCount;
+                        EnCardOnMargin[attacked].DefenseCount = defenderCount;
+
+                    }
                 }
                 else
                 {
-                    EnCardOnMargin[attacked].Armor -= damageEnemy;
-                    UserHq.Armor -= damageUser;
-                    EffectDeliteCard(EnCardOnMargin, attacked);
-                    //обновляем счетчики атак и оборон
-                    UserHq.AttackCount = attackCount;
-                    EnCardOnMargin[attacked].DefenseCount = defenderCount;
+                    if (attacked == -1)
+                    {
+                        UsCardOnMargin[attacking].Armor -= damageUser;
+                        EnemyHq.Armor -= damageEnemy;
+                        EffectDeliteCard(UsCardOnMargin, attacking);
+                        //обновляем счетчики атак и оборон
+                        EnemyHq.DefenseCount = defenderCount;
+                        UsCardOnMargin[attacking].AttackCount = attackCount;
 
+                    }
+                    else
+                    {
+                        UsCardOnMargin[attacking].Armor -= damageUser;
+                        EnCardOnMargin[attacked].Armor -= damageEnemy;
+                        //обновляем счетчики атак и оборон
+                        UsCardOnMargin[attacking].AttackCount = attackCount;
+                        EnCardOnMargin[attacked].DefenseCount = defenderCount;
+
+                        //удаляем карты у которых очки прочности меньше 0
+                        EffectDeliteCard(UsCardOnMargin, attacking);
+                        EffectDeliteCard(EnCardOnMargin, attacked);
+
+
+                    }
                 }
+
+                return new int[] { attacking, attacked, damageUser, damageEnemy };
             }
-            else
-            {
-                if (attacked == -1)
-                {
-                    UsCardOnMargin[attacking].Armor -= damageUser;
-                    EnemyHq.Armor -= damageEnemy;
-                    EffectDeliteCard(UsCardOnMargin, attacking);
-                    //обновляем счетчики атак и оборон
-                    EnemyHq.DefenseCount = defenderCount;
-                    UsCardOnMargin[attacking].AttackCount = attackCount;
-
-                }
-                else
-                {
-                    UsCardOnMargin[attacking].Armor -= damageUser;
-                    EnCardOnMargin[attacked].Armor -= damageEnemy;
-                    //обновляем счетчики атак и оборон
-                    UsCardOnMargin[attacking].AttackCount = attackCount;
-                    EnCardOnMargin[attacked].DefenseCount = defenderCount;
-
-                    //удаляем карты у которых очки прочности меньше 0
-                    EffectDeliteCard(UsCardOnMargin, attacking);
-                    EffectDeliteCard(EnCardOnMargin, attacked);
-
-
-                }
-            }
-          
-            return new int[] { attacking, attacked, damageUser, damageEnemy };
+            catch (Exception ex) { WriteLog.Write(ex.ToString()); return new int[4]; }
         }
+
+        /// <summary>
+        /// Обрабатывает сообщения с данными
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="data"></param>
         private void ProcMsgWithData(MsgType type, byte[] data)
         {
             try
@@ -596,7 +632,7 @@ namespace CartGame
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString());
+                WriteLog.Write(e.ToString());
             }
             
         }
@@ -610,15 +646,15 @@ namespace CartGame
    public class SendAndRecMsg
     {
         TcpClient Client;
-        IPEndPoint EndPoint;
-        NetworkStream ClientNetwork;
-        private Thread ThProcesMsg;
-        private bool StopThread; 
+        IPEndPoint EndPoint;//конечная точка, указывающая на сервер
+        NetworkStream ClientNetwork;//поток собщения клиента и пользователя
+        private Thread ThProcesMsg;//поток обрабатыающий приходящие от сервера данные
+        private bool StopThread;//если false поток останавливается
         
         //события получения сообщения
-        public event MsgWithoutData RecMsgWithoutData;
-        public event MsgWithData RecMsgWithData;
-        public event EmptyDel ErrorConnectToServer;
+        public event MsgWithoutData RecMsgWithoutData;//уведомляем контролер о том, что пришло сообщение без данных
+        public event MsgWithData RecMsgWithData;//уведомляем контроллер  о том, что пришло сообщение с данными
+        public event EmptyDel ErrorConnectToServer;//сообщает контроллер об ошибки отправки сообщения серверу
         public bool Connected
         {
             get { return Client.Connected;}
@@ -627,10 +663,12 @@ namespace CartGame
         public SendAndRecMsg(IPAddress IpAdress, int Port)
         {
             EndPoint = new IPEndPoint(IpAdress, Port);
-            Client = new TcpClient();
-  
+            Client = new TcpClient(); 
         }
 
+        /// <summary>
+        /// Соединяемся с сервером
+        /// </summary>
         public void Connect()
         {
             try
@@ -644,12 +682,16 @@ namespace CartGame
                     ThProcesMsg.Start();
                 }
             }
-            catch (SocketException e) {
+            catch (SocketException e)
+            {
                 Client.Close();
                 EndPoint = null;
                 throw e;
             }
-            
+            catch (Exception e)
+            {
+                WriteLog.Write(e.ToString());
+            }
         }
 
             private void ProcessMsg()
@@ -686,7 +728,7 @@ namespace CartGame
             }
             
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
         private int RecData(byte[] data, int length, NetworkStream stream)
         {
@@ -708,15 +750,18 @@ namespace CartGame
             {
                 if (Client != null)
                 {
-                    ErrorConnectToServer();
+                    ErrorConnectToServer();//уведомляем контроллер о потери связи с сервером
                     MessageBox.Show("Связь с сервером потеряна!");
                 }
                 return 0;
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); return 0; }
+            { WriteLog.Write(e.ToString()); return 0; }
         }
 
+        /// <summary>
+        /// Обрываем связь с сервером и осовбожаем все ресурсы
+        /// </summary>
         public void Disconnect()
         { 
 
@@ -730,8 +775,8 @@ namespace CartGame
                 Client = null;
             }
               ClientNetwork = null;
-
-    }
+        }
+        //методы отправки данных
         public void Send(MsgType TypeMsg)
         {
             try
@@ -750,7 +795,7 @@ namespace CartGame
                 MessageBox.Show("Связь с сервером потеряна!");
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
 
         public void Send(int[] IDCarte, MsgType TypeMsg)
@@ -787,7 +832,7 @@ namespace CartGame
                 MessageBox.Show("Связь с сервером потеряна!");
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
         public void Send(string message, MsgType TypeMsg)
         {
@@ -809,7 +854,7 @@ namespace CartGame
                 MessageBox.Show("Связь с сервером потеряна!");
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
         public void Send(int number, MsgType TypeMsg)
         {
@@ -831,8 +876,14 @@ namespace CartGame
                 MessageBox.Show("Связь с сервером потеряна!");
             }
             catch (Exception e)
-            { MessageBox.Show(e.ToString()); }
+            { WriteLog.Write(e.ToString()); }
         }
+        /// <summary>
+        /// Объединяем два массива байтов в один
+        /// </summary>
+        /// <param name="Head"></param>
+        /// <param name="Number"></param>
+        /// <returns></returns>
         private byte[] SummNumber(byte[] Head, byte[] Number)
         {
             byte[] temp = new byte[Head.Length + Number.Length];
@@ -843,6 +894,7 @@ namespace CartGame
                 temp[i + j] = Number[j];
             return temp;
         }
+        //соединям тип сообщения и длинну сообщения в один массив
         private byte[] Summ(byte type, byte[] len)
         {
             byte[] ret = new byte[len.Length + 1];

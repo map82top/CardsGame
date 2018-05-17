@@ -14,7 +14,7 @@ namespace CartGame
 {
     public partial class Settings : Form
     {
-        const string wayInfo = "system_info/info_server.txt";
+        const string wayInfo = "system_info/info_server.txt";//путь до файла с настройками
         Form Temp = null;
         public Settings(Form StartForm)
         {
@@ -117,7 +117,8 @@ namespace CartGame
             }
             catch (Exception E)
             {
-                MessageBox.Show("Неудалось сохранить данные./nОшибка " + E.ToString());
+                MessageBox.Show("Неудалось сохранить данные");
+                WriteLog.Write(E.ToString());
             }
         }
 
