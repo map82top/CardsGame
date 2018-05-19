@@ -19,7 +19,7 @@ namespace CartGame
         {
             get { return countMissedMsg; }
         }
-        private bool MaxOrMin; //если true чат развернут
+
         private TextBox ChatBox;
         private SendAndRecMsg DialogWithServer;
         Button SendMsg; //кнопка отправки сообещения
@@ -57,7 +57,6 @@ namespace CartGame
             
 
             //инициализуруем другие поля
-            MaxOrMin = false;
             countMissedMsg = 0;
             this.DialogWithServer = DialogWithServer;
             Name = NameUser;
@@ -93,7 +92,6 @@ namespace CartGame
             SendMsg.Location = new Point(257, 190);
             BoxWrite.Location = new Point(0, 190);
 
-            MaxOrMin = true; //окно находится в развернутом состояниии
             countMissedMsg = 0;//обнуляем счетчик пропущенных сообщений
 
             return ChatPanel;
@@ -102,15 +100,6 @@ namespace CartGame
         /// <summary>
         /// 
         /// </summary>
-        public void MinChatBox()
-        {
-            //убираем родителя 
-            ChatBox.Parent = null;
-            SendMsg.Parent = null;
-            BoxWrite.Parent = null;
-
-            MaxOrMin = false; //окно находится в развернутом состояниии
-        }
 
         private void SendMsg_Click(object sendr, EventArgs e)
         {
@@ -128,17 +117,18 @@ namespace CartGame
                 //добавляем сообщение в чат пользователя
                 if (ChatBox.Text != "") ChatBox.Text += Environment.NewLine + Msg;
                 else ChatBox.Text = Msg;
-
+                countMissedMsg = 0;//обнуляем счетчик пропущенных сообщений
             }
         }
         public void AddMessage(string message)
         {
             //если чат развернут
-            if (MaxOrMin)
+            if (ChatBox.Visible)
             { 
                     if (ChatBox.Text != "") ChatBox.Text += Environment.NewLine + message;
                     else ChatBox.Text = message;
-                }
+                countMissedMsg = 0;//обнуляем счетчик пропущенных сообщений
+            }
             else
             {
                 countMissedMsg++; //увеличиваем счетчик непрочитанных сообщений

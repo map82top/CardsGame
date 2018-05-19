@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.IO;
 
 
 namespace CarteServer
@@ -18,6 +19,9 @@ namespace CarteServer
             try
             {
                 TcpListener List;
+                //удаляем старые логи
+                File.Delete("logServer.log");
+                File.Delete("GameLogServer.log");
 
                 Console.Write("Введиет IP-адрес хоста: ");
                 IPAddress ipServer = IPAddress.Parse(Console.ReadLine());
@@ -35,6 +39,7 @@ namespace CarteServer
                         NewServer.AddUser(new User(List.AcceptTcpClient()));
                     }
                 }
+                
             }
             catch (FormatException)
             {
@@ -50,7 +55,7 @@ namespace CarteServer
             }
             catch (Exception e)
             {
-                Console.WriteLine("Ошибка инициализации сервера " + e.ToString());
+                WriteLog.Write("Ошибка инициализации сервера " + e.ToString());
             }
         }
     }

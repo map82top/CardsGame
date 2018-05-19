@@ -77,6 +77,7 @@
             this.Name = "SeekForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Поиск...";
+            this.Load += new System.EventHandler(this.SeekForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

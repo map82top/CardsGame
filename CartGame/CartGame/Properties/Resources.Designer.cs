@@ -103,6 +103,26 @@ namespace CartGame.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Beagle {
+            get {
+                object obj = ResourceManager.GetObject("Beagle", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BeagleFillMinCard {
+            get {
+                object obj = ResourceManager.GetObject("BeagleFillMinCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap BigAttackFullMinCard {
             get {
                 object obj = ResourceManager.GetObject("BigAttackFullMinCard", resourceCulture);
@@ -272,6 +292,26 @@ namespace CartGame.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ForceField {
+            get {
+                object obj = ResourceManager.GetObject("ForceField", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ForceFieldFullMinCard {
+            get {
+                object obj = ResourceManager.GetObject("ForceFieldFullMinCard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap FullMinCarte {
             get {
                 object obj = ResourceManager.GetObject("FullMinCarte", resourceCulture);
@@ -305,6 +345,15 @@ namespace CartGame.Properties {
         internal static string HelpAddMargin {
             get {
                 return ResourceManager.GetString("HelpAddMargin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Наносит урон все картам, находящимся на поле врага. Для этого перетащиет карту на поле высадки карт противника..
+        /// </summary>
+        internal static string HelpAllDamageEvent {
+            get {
+                return ResourceManager.GetString("HelpAllDamageEvent", resourceCulture);
             }
         }
         
@@ -392,7 +441,16 @@ namespace CartGame.Properties {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Вы можете вылечить штаб или робота на игровом поле. 
+        ///   Ищет локализованную строку, похожую на Вы можете добавить очки прочности штабу. Для  этого перетащите карту на свой штаб..
+        /// </summary>
+        internal static string HelpHQRepairs {
+            get {
+                return ResourceManager.GetString("HelpHQRepairs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Вы можете добавить очки прочности штабу или роботу на игровом поле. 
         ///Для этого перетащите событие к нужной карте..
         /// </summary>
         internal static string HelpRepairsEvent {
@@ -438,6 +496,26 @@ namespace CartGame.Properties {
         internal static System.Drawing.Bitmap HQMinCarte {
             get {
                 object obj = ResourceManager.GetObject("HQMinCarte", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Huntsman {
+            get {
+                object obj = ResourceManager.GetObject("Huntsman", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap HuntsmanFullMinCard {
+            get {
+                object obj = ResourceManager.GetObject("HuntsmanFullMinCard", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

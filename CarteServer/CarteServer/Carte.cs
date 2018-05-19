@@ -9,7 +9,8 @@ public enum TypeEventCard
 {
     DamageCard,
     HealingCard,
-    AllDamageCard
+    AllDamageCard,
+    HQRepairs
 }
 namespace CarteServer
 {
@@ -80,6 +81,15 @@ namespace CarteServer
                         break;
                 case 16:
                     RetCarte = new Medic();
+                    break;
+                case 17:
+                    RetCarte = new ForceField();
+                    break;
+                case 18:
+                    RetCarte = new Huntsman();
+                    break;
+                case 19:
+                    RetCarte = new Beagle();
                     break;
                 default:
                         RetCarte = null;
@@ -195,8 +205,6 @@ namespace CarteServer
        /// </summary>
         class BombAttack : AllDamageEvent
         {
-            
-
             public BombAttack()
             {
                 typeEvent = TypeEventCard.AllDamageCard;
@@ -233,13 +241,12 @@ namespace CarteServer
                 id = 6;
            }
         }
+
     /// <summary>
     /// Класс карты Аптечка
     /// </summary>
         class RepairsBox : RepairsEvent
-    {
-            
-
+        {
             public RepairsBox()
             {
                 typeEvent = TypeEventCard.HealingCard;
@@ -248,10 +255,25 @@ namespace CarteServer
                 id = 7;
             }
         }
-     /// <summary>
-     /// Класс карты Полевой ремонтной бригады
-     /// </summary>
-        class FieldRepairs : RepairsEvent
+
+    /// <summary>
+    /// Карта силового поля
+    /// </summary>
+    class ForceField: RepairsEvent
+    {
+        public ForceField()
+        {
+            typeEvent = TypeEventCard.HQRepairs;
+            valueEnergy = 3;
+            damage = -6;
+            id = 17;
+        }
+    }
+
+    /// <summary>
+    /// Класс карты Полевой ремонтной бригады
+    /// </summary>
+    class FieldRepairs : RepairsEvent
     {
             
 
@@ -374,13 +396,27 @@ namespace CarteServer
             }
        }
 
-        class Medic : Robot
+    /// <summary>
+    /// Класс карты Егерь
+    /// </summary>
+    class Huntsman : Robot
+    {      
+        public Huntsman()
         {
-            //уникальный идентификатор карты
+            attack = 3;
+            armor = 5;
+            valueEnergy = 6;
+            attackCount = 1;
+            nameRobot = "Егерь";
+            bonusAttack = 0;
+            defenseCount = 1;
+            defender = null;
+            id = 18;
+        }
+    }
 
-
-            //описание
-
+    class Medic : Robot
+        {
             public Medic()
             {
                 attack = 1;
@@ -395,13 +431,28 @@ namespace CarteServer
             }
         }
     /// <summary>
+    ///Класс карты Гончая
+    /// </summary>
+    class Beagle : Robot
+    {
+        public Beagle()
+        {
+            attack = 2;
+            armor = 3;
+            valueEnergy = 2;
+            attackCount = 1;
+            nameRobot = "Гончая";
+            bonusAttack = 0;
+            defenseCount = 1;
+            defender = null;
+            id = 19;
+        }
+    }
+    /// <summary>
     ///Класс карты Дуэлянт
     /// </summary>
     class Duelist : Robot
-        {
-           
-            
-           
+        {        
             public Duelist()
             {
                 attack = 4;
@@ -423,9 +474,7 @@ namespace CarteServer
       class Veteran : Robot
       {
             
-            
-         
-        public Veteran()
+         public Veteran()
         {
             attack = 2;
             armor = 5;
@@ -439,8 +488,7 @@ namespace CarteServer
         }
     }
     class Destroyer : Robot
-    {
-      
+    {  
         public Destroyer()
         {
             attack = 5;
@@ -459,9 +507,7 @@ namespace CarteServer
     /// </summary>
     class B1 : Robot
     {
-        
-
-        public B1()
+     public B1()
         {
             attack = 1;
             armor = 1;
@@ -548,11 +594,7 @@ namespace CarteServer
             bonusAttack = 0;
             defenseCount = 0;
             defender = null;
-            
-
         }
-
-
     }
 
     //Класс Турели
@@ -579,7 +621,7 @@ namespace CarteServer
     /// <summary>
     /// Класс карты Штаба
     /// </summary>
-    class HeadQuarters
+    class HeadQuarters:Carte
     {
         private int attack;
         private int attackCount;
@@ -601,6 +643,15 @@ namespace CarteServer
             }
 
         }
+
+        //защитник штаба
+        protected DefenceConstr defender;
+        public DefenceConstr Defender
+        {
+            get { return defender; }
+            set { defender = value; }
+        }
+
         public void NewProgress()
         {
             attackCount = 1;

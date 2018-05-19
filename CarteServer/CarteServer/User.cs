@@ -90,7 +90,6 @@ namespace CarteServer
         public List<Robot> CardsMargin
         {
             get { return CardsOnMargin; }
-           // set { CardsOnMargin = value; }
         }
         private HeadQuarters userHq;//штаб игрока
         public HeadQuarters userHQ
@@ -141,24 +140,26 @@ namespace CarteServer
                                 switch (msgType)
                                 {
                                     case MsgType.CarteUser:
+                                      
                                         if (MsgLength % 2 == 0)
                                         {
-                                          
+                                            string TempColod = null;//для лога
                                             int index = 0;
                                             for (int i = 0; i < MsgLength/2; i++)
                                             {
-                                                carteUser.Add(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, index)));
-
-                                                index += 2;
+                                               int idCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, index));
+                                                TempColod += idCard + " "; 
+                                               carteUser.Add(idCard);
+                                               index += 2;
                                             }
-
+                                            WriteLog.WriteGameLog($"Игрок {name} имеет в колоде карты: {TempColod}");
                                             ColodRec();
                                         }
                                         break;
 
                                     case MsgType.GetName:
                                         name = Encoding.UTF8.GetString(Data);
-                                        Debug.Write(name);
+                                        WriteLog.WriteGameLog("Получено имя пользователя " + name);
                                         //случайным образом определяем id пользователя
                                         Random id = new Random();
                                         idUser = id.Next(0, int.MaxValue);
@@ -169,11 +170,12 @@ namespace CarteServer
                                         if (myProgress)
                                         {
                                             int NumberCarte = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));
-
+                                            
                                             //получаем ID карты
                                             int IDCarte = CardsOnHands[NumberCarte];
                                             //получаем экземпляр этой карты
                                             Carte NewCarte = Carte.GetCarte(IDCarte);
+                                            WriteLog.WriteGameLog($"Игрок {name} собирается добавить карту {(NewCarte as Robot).NameRobot} с номером в руках у игрока {NumberCarte+1} на игровое поле");
                                             if (NewCarte is Robot)
                                             {
                                                 Robot NewCarteRobot = (Robot)NewCarte;
@@ -183,6 +185,7 @@ namespace CarteServer
                                                     energy -= NewCarteRobot.ValueEnergy;
                                                     CardsOnHands.RemoveAt(NumberCarte);
                                                     CardsOnMargin.Add(NewCarteRobot);
+                                                    WriteLog.WriteGameLog($"Карта добавлена на игровое поле игрока {name}");
                                                     //уведомляем об добавление карты класс сессии
                                                     AddCardField(this, NumberCarte, IDCarte);
                                                 }
@@ -196,17 +199,23 @@ namespace CarteServer
                                             short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
                                             if (attacking == -1)
                                             {
+                                                
                                                 int attackCount = userHq.AttackCount;
                                                 if (attackCount > 0)
-                                                    Attack(this, -1, attacked, attackCount-1);
-
-
+                                                {
+                                                    WriteLog.WriteGameLog($"Игрок {name} собирается атаковать штабом ");
+                                                    Attack(this, -1, attacked, attackCount - 1);
+                                                }
+                                                   
                                             }
                                             else
                                             {
-                                                int attackCount = CardsOnMargin[attacking].AttackCount;
+                                                int attackCount = CardsOnMargin[attacking].AttackCount;                    
                                                 if (attackCount > 0)
-                                                    Attack(this, attacking, attacked, attackCount-1);
+                                                {
+                                                    WriteLog.WriteGameLog($"Игрок {name} собирается атаковать картой {CardsOnMargin[attacking].NameRobot} с номером на поле {attacking+1} ");
+                                                    Attack(this, attacking, attacked, attackCount - 1);
+                                                }
                                             }
                                         }
                                         break;
@@ -217,9 +226,11 @@ namespace CarteServer
                                             short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
                                             int IdAttackingCard = CardsOnHands[attacking];
                                             DamageEvent Card = Carte.GetCarte(IdAttackingCard) as DamageEvent;
+                                            
                                             if (Card.ValueEnergy <= energy)
                                             {
                                                 energy -= Card.ValueEnergy;
+                                                WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие нанесния точечного урона c номером в руке {attacking+1} атакуя карту c номером {attacked+1}");
                                                 CardsOnHands.RemoveAt(attacking);
                                                 DamageCardEvent(this, IdAttackingCard, Card,attacking, attacked);
                                             }
@@ -237,8 +248,11 @@ namespace CarteServer
                                             if (Card.ValueEnergy <= energy)
                                             {
                                                 energy -= Card.ValueEnergy;
+                                                WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие восстановления c номером в руке { NumberCardRepairs} восстанавливая карту c номером {Repairable+1}");
                                                 CardsOnHands.RemoveAt(NumberCardRepairs);
+                                                WriteLog.WriteGameLog("");
                                                 RepairsCardEvent(this, IdRepairsCard, Card, NumberCardRepairs, Repairable);
+                                               
                                             }
                                         }
                                         break;
@@ -251,6 +265,7 @@ namespace CarteServer
                                             if (Card.ValueEnergy <= energy)
                                             {
                                                 energy -= Card.ValueEnergy;
+                                                WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие массового урона c номером в руке { NumberCard +1}");
                                                 CardsOnHands.RemoveAt(NumberCard);
                                                 AllDamageEvent(this, IdRepairsCard, Card, NumberCard);
                                             }
@@ -270,12 +285,15 @@ namespace CarteServer
                             switch (msgType)
                             {
                                 case MsgType.EndProgress:
+                                    WriteLog.WriteGameLog($"Игрок {name} завершил свой ход");
                                      EndProgress(); 
                                     break;
                                 case MsgType.DeliteSeek:
+                                    WriteLog.WriteGameLog("Игрок удаляет себя из очереди ожидания противника");
                                     GetOutOfQueue();
                                     break;
                                 case MsgType.ClientClosing:
+                                    WriteLog.WriteGameLog($"Игрок {name} закрыл свой клиент игры");
                                     FailedSendMsg(this);
                                     break;
                             }
@@ -283,7 +301,7 @@ namespace CarteServer
                     }
                 }
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            catch (Exception e) { WriteLog.Write(e.ToString()); }
         }
         public void Initialize()
         {
@@ -317,14 +335,12 @@ namespace CarteServer
                     GetOutOfQueue();
                     return 0;
                 }
-                if (FailedSendMsg != null)
-                {
                     FailedSendMsg(this);
-                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
-                }
+                Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
+                WriteLog.Write(e.ToString());
                 return 0;
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); return 0; }
+            catch (Exception e) { WriteLog.Write(e.ToString()); return 0; }
             }
         //методы отправки сообщений клиенту
         public void Send(MsgType TypeMsg)
@@ -343,10 +359,11 @@ namespace CarteServer
                 if (FailedSendMsg != null)
                 {
                     FailedSendMsg(this);
-                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                    Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
+                    WriteLog.Write(e.ToString());
                 }
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            catch (Exception e) { WriteLog.Write(e.ToString()); }
         }  
         public void Send(int number, MsgType TypeMsg)
         {
@@ -368,10 +385,11 @@ namespace CarteServer
                 if (FailedSendMsg != null)
                 {
                     FailedSendMsg(this);
-                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                    Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
+                    WriteLog.Write(e.ToString());
                 }
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            catch (Exception e) { WriteLog.Write(e.ToString()); }
             }
         public void Send(string message, MsgType TypeMsg)
         {
@@ -391,10 +409,11 @@ namespace CarteServer
                 if (FailedSendMsg != null)
                 {
                     FailedSendMsg(this);
-                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                    Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
+                    WriteLog.Write(e.ToString());
                 }
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            catch (Exception e) { WriteLog.Write(e.ToString()); }
         }
         public void Send(int[] IDCarte, MsgType TypeMsg)
         {
@@ -428,11 +447,12 @@ namespace CarteServer
                 if (FailedSendMsg != null)
                 {
                     FailedSendMsg(this);
-                    Console.WriteLine("Вызван метод окончания игровой сессии из-за недоступности одного из игроков");
+                    Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
+                    WriteLog.Write(e.ToString());
                 }
             }
             catch (Exception e)
-            { Console.WriteLine(e.ToString());}
+            { WriteLog.Write(e.ToString()); }
             
         }
 
@@ -465,13 +485,13 @@ namespace CarteServer
 
             StopThread = false;
             //запускаем поток обработки сообшений
-           
         }
         //особождает все ресурсы
         public void Dispose()
-        {         
+        {
+            WriteLog.WriteGameLog($"Класс игрока {name} освободил все ресурсы");
             //закрываем соединение
-            UserTcpClient.Close();
+            if(UserTcpClient != null)UserTcpClient.Close();
             UserTcpClient = null;
             TcpStream = null;
 
@@ -497,6 +517,5 @@ namespace CarteServer
             AddCardField = null;
 
         }
-
     }
 }

@@ -17,7 +17,10 @@ namespace CartGame
         public FormStart()
         {
             InitializeComponent();
-           
+            //удаляем старые логи
+            File.Delete("log.log");
+            File.Delete("GameLog.log");
+
         }
 
         private void button1_Click(object sender, EventArgs e)

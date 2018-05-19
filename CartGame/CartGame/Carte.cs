@@ -55,7 +55,8 @@ namespace CartGame
     {
         DamageCard,
         HealingCard,
-        AllDamageCard
+        AllDamageCard,
+        HQRepairs
     }
     public abstract class Carte
     {
@@ -123,7 +124,15 @@ namespace CartGame
                 case 16:
                     RetCarte = new Medic();
                     break;
-
+                case 17:
+                    RetCarte = new ForceField();
+                    break;
+                case 18:
+                    RetCarte = new Huntsman();
+                    break;
+                case 19:
+                    RetCarte = new Beagle();
+                    break;
                 default:
                     RetCarte = null;
                     break;
@@ -674,6 +683,51 @@ namespace CartGame
     /// <summary>
     /// Класс карты Засада
     /// </summary>
+    class ForceField: RepairsEvent
+    {
+        public ForceField()
+        {
+            typeEvent = TypeEventCard.HQRepairs;
+            valueEnergy = 3;
+            damage = -6;
+            id = 17;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.ForceField;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.ForceField;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.ForceFieldFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+    }
+
+    /// <summary>
+    /// Класс карты Засада
+    /// </summary>
     class Ambush : DamageEvent
     {
         
@@ -957,7 +1011,107 @@ namespace CartGame
             return CarteImage;
         }
      }
+    /// <summary>
+    /// Класс карты Егерь
+    /// </summary>
+    public class Huntsman : Robot
+    {
+        //уникальный идентификатор карты
+        //описание
 
+        public Huntsman()
+        {
+            attack = 3;
+            armor = 5;
+            valueEnergy = 6;
+            id = 18;
+            nameRobot = "Егерь";
+            bonusAttack = 0;
+            attackCount = 1;
+            defenseCount = 1;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.Huntsman;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.HuntsmanFullMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.Huntsman;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+    }
+
+    /// <summary>
+    /// Класс карты Гончая
+    /// </summary>
+    public class Beagle : Robot
+    {
+        //уникальный идентификатор карты
+        //описание
+
+        public Beagle()
+        {
+            attack = 2;
+            armor = 3;
+            valueEnergy = 2;
+            id = 19;
+            nameRobot = "Гончая";
+            bonusAttack = 0;
+            attackCount = 1;
+            defenseCount = 1;
+        }
+        public override Panel ImageCartNormal()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(145, 187);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.Beagle;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+        public override Panel ImageCartFullMin()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(100, 120);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.BeagleFillMinCard;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+        public override Panel ImageCartMax()
+        {
+            Panel CarteImage = new Panel();
+            CarteImage.Size = new Size(218, 280);
+            //изображение карты
+            CarteImage.BackgroundImage = Properties.Resources.Beagle;
+            CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
+            return CarteImage;
+        }
+    }
 
     public class Medic : Robot
     {
@@ -1279,6 +1433,7 @@ namespace CartGame
             valueEnergy = 0;
             bonusAttack = 0;
             nameRobot = "";
+            id = 0;
            
         }
 
@@ -1318,12 +1473,11 @@ namespace CartGame
             //изображение карты
             CarteImage.BackgroundImage = Properties.Resources.CarteMin;
             CarteImage.BackgroundImageLayout = ImageLayout.Zoom;
+            CarteImage.Tag = id;//id карты
 
             return CarteImage;
         }
        
-
-
     }
     
     /// <summary>

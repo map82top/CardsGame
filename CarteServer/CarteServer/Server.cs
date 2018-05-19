@@ -33,6 +33,7 @@ namespace CarteServer
                 {
                     ExpectUser.GetOutOfQueue-= DeliteOfQueue;
                     AllSession.Add(new Session(ExpectUser, NewUser));
+                    Console.Write(DateTime.Now + " Создана новая игровая сессия");
                     ExpectUser = null;
                     AllSession[CountSession].SessionEnd += DeliteSession;
                     //запускаем партию в отдельном потоке
@@ -43,6 +44,7 @@ namespace CarteServer
 
                 else
                 {
+                    Console.WriteLine(DateTime.Now +  " В очередь добавлен новый пользователь");
                     ExpectUser = NewUser;
                     ExpectUser.GetOutOfQueue += DeliteOfQueue;
                 }
@@ -63,7 +65,7 @@ namespace CarteServer
                     {
                         ExpectUser.DisposeUserToSeek();
                         ExpectUser = null;
-                        Console.WriteLine("Пользователь находящийся в очереди удален!");
+                        Console.WriteLine(DateTime.Now + " Пользователь находящийся в очереди удален!");
                     }
                 }
             }
@@ -80,7 +82,7 @@ namespace CarteServer
                     if (AllSession.Count != 0)
                     {
                         AllSession.Remove(sender);
-                        Console.WriteLine("Сессия удалена...");
+                        Console.WriteLine(DateTime.Now + " Игровая сессия удалена...");
                         CountSession--;
                     }
                 }

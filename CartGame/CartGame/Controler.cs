@@ -35,10 +35,10 @@ namespace CartGame
         public event ContrDel SucConnect;//уведомляет о удачном соединении с сервером
         public event ContrDel FailConnect;//уведомляем о неудачном соединении с сервером
         public event EmptyDel StartGame;//начало игры, на сервер запустилась новая сессия
-        public event EmptyDel EnAddCardOnField;//уведомляем, что враг добавил карту на игровое поле
+        public event IntDel EnAddCardOnField;//уведомляем, что враг добавил карту на игровое поле
         public event IntDel PaintUserCarte;//в руки игрока добавлена новая карта
         public event IntDel PaintEnemyCarte;//в руки противника добавлена новая карта
-        public event IntDel AddCardsOnField;//собщает о том, что добаление пользователем карты на игровое поле прошло удачно
+        public event AllDamage AddCardsOnField;//собщает о том, что добаление пользователем карты на игровое поле прошло удачно
         public event EmptyDel PaintMyEnergy;//сообщает, что изменилось количество энергии у игрока
         public event EmptyDel PaintEnEnergy;//сообщает, что изменилось количество энергии у противника
         public event StringDel UpdateTime;//уведомляет, что получено новое время обратного отчета времени хода
@@ -111,6 +111,7 @@ namespace CartGame
         {
             try
             {
+                WriteLog.WriteGameLog("Произошла ошибка с со связью с сервером");
                 dialogWithServ.ErrorConnectToServer -= ErrorConnection;
                 if (MyProgress != null)
                 {//если окно не закрыл пользователь
@@ -134,6 +135,7 @@ namespace CartGame
                 switch (type)
                 {
                     case MsgType.StartSession:
+                        WriteLog.WriteGameLog("Начало игры. Мой ник " + DataSession.UsName);
                         //отправляем только те карты которые не равны 0
                         List<int> temp = new List<int>();
                         int count = DataSession.UserColoda.Length;
@@ -141,44 +143,56 @@ namespace CartGame
                             if (DataSession.UserColoda[i] > 0) temp.Add(DataSession.UserColoda[i]);
                         //отправляем полученный массив
                         dialogWithServ.Send(temp.ToArray(), MsgType.CarteUser);
+                        WriteLog.WriteGameLog("Карты игрока отправлены серверу");
                         break;
                     case MsgType.GetName:
                         dialogWithServ.Send(DataSession.UsName, MsgType.GetName);
+                        WriteLog.WriteGameLog("Серверу отправлено ник игрока");
                         break;
                     case MsgType.AddEnemyCarte:
                         DataSession.CountCarteEnemy++;
+                        WriteLog.WriteGameLog("Противнику добавлена новая карта в руки");
                         PaintEnemyCarte(DataSession.CountCarteEnemy);
                         break;
                     case MsgType.MyProgress:
+                        WriteLog.WriteGameLog("Начался ход игрока");
                         MyProgress();
                         break;
                     case MsgType.EnemyProgress:
+                        WriteLog.WriteGameLog("Начался ход противника");
                         EnemyProgress();
                         break;
                     case MsgType.YouWin:
+                        WriteLog.WriteGameLog("Игра окончилась моей победой");
                         EndGame(MsgType.YouWin);
                         Dispose();
                         break;
                     case MsgType.YouOver:
+                        WriteLog.WriteGameLog("Игра окончилась поражение игрока");
                         EndGame(MsgType.YouOver);
                         Dispose();
                         break;
                     case MsgType.Draw:
+                        WriteLog.WriteGameLog("Игра закончилась ничьёй");
                         EndGame(MsgType.Draw);
                         Dispose();
                         break;
                     case MsgType.TechnicalVictory:
+                        WriteLog.WriteGameLog("Игрок вышел из игры");
                         EndGame(MsgType.TechnicalVictory);
                         Dispose();
                         break;
                     case MsgType.DeliteSeek:
+                        WriteLog.WriteGameLog("Игрок удален из очереди ожидания противника");
                         DeliteSeek();
                         break;
                     case MsgType.EnemyNoActiv:
+                        WriteLog.WriteGameLog("Противник был долго не активен");
                         EndGame(MsgType.EnemyNoActiv);
                         Dispose();
                         break;
                     case MsgType.YouNoActiv:
+                        WriteLog.WriteGameLog("Игрок был долго не активен");
                         EndGame(MsgType.YouNoActiv);
                         Dispose();
                         break;
@@ -220,8 +234,8 @@ namespace CartGame
             UsAllDamage = null;
             EnAllDamage = null;
 
-
-       }
+            WriteLog.WriteGameLog("Освобождены все ресурсы Controler");
+        }
         /// <summary>
         /// Осуществлеят поиск в колоде карт - ветеран
         /// </summary>
@@ -250,7 +264,6 @@ namespace CartGame
                         foreach (Robot Card in CarteOnField)
                             if (!(Card is Veteran))
                                 Card.BonusAttack += 1;
-
                         break;
                     case 9:
                         //добавляем карту в массив карт на поле                       
@@ -268,6 +281,15 @@ namespace CartGame
                             CarteOnField[i].Armor += 2;
                         //добавляем бонус к карте
                         CarteOnField[CountCards].BonusAttack += SeekVeteran(CarteOnField);
+                        break;
+                    case 18:
+                        //добавляем карту в массив карт на поле                       
+                        CarteOnField.Add((Robot)Carte.GetCarte(19));
+                        //добавляем бонус к карте
+                        int countCards = CarteOnField.Count;
+                        int bonusCard = SeekVeteran(CarteOnField);
+                        CarteOnField[countCards - 1].BonusAttack += bonusCard;
+                        CarteOnField[countCards - 2].BonusAttack += bonusCard;
                         break;
                     default:
 
@@ -302,10 +324,12 @@ namespace CartGame
                             foreach (Robot Card in CardOnMargin)
                                 if (!(Card is Veteran))
                                    Card.BonusAttack -= 1;
+                            WriteLog.WriteGameLog("Уменьшен бонус для всех карт после удаленя карты Ветеран");
                             break;
                        
                     }
                     //удаляем карту
+                    WriteLog.WriteGameLog($"Карта {CardOnMargin[index].NameRobot} удалена");
                     CardOnMargin.RemoveAt(index);
                     
                 }
@@ -331,43 +355,57 @@ namespace CartGame
                 short damageEnemy = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6));//если это враг, то это урон по игроку
                 short attackCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 8));//количество атак у атакующей карты
                 short defenderCount = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 10));//количество возможностей ответить на атаку
+
+
                 if (attacking == -1)
                 {
                     if (attacked == -1)
                     {
+                        WriteLog.WriteGameLog($"Штаб атаковал штаб. Урон по врагу {damageEnemy} Урон от врага {damageUser}");
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UserHq.Armor} и обороняющегося {EnemyHq.Armor} до атаки");
                         EnemyHq.Armor -= damageEnemy;
                         UserHq.Armor -= damageUser;
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UserHq.Armor} и обороняющегося {EnemyHq.Armor} после атаки");
                         //обновляем счетчики атак и оборон
                         EnemyHq.DefenseCount = defenderCount;
                         UserHq.AttackCount = attackCount;
                     }
                     else
                     {
+                        WriteLog.WriteGameLog($"Штаб атаковал карту противника. Урон по карте врага {EnCardOnMargin[attacked].NameRobot} с номером {attacked} {damageEnemy} Урон от врага {damageUser}");
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UserHq.Armor} и обороняющегося { EnCardOnMargin[attacked].Armor} до атаки");
                         EnCardOnMargin[attacked].Armor -= damageEnemy;
                         UserHq.Armor -= damageUser;
-                        EffectDeliteCard(EnCardOnMargin, attacked);
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UserHq.Armor} и обороняющегося { EnCardOnMargin[attacked].Armor} после атаки");
                         //обновляем счетчики атак и оборон
                         UserHq.AttackCount = attackCount;
                         EnCardOnMargin[attacked].DefenseCount = defenderCount;
-
+                        EffectDeliteCard(EnCardOnMargin, attacked);
                     }
                 }
                 else
                 {
                     if (attacked == -1)
                     {
+                        WriteLog.WriteGameLog($"Карта игрока атакует штаб. Урон по карте врага {damageEnemy} Урон от врага по карте игрока {UsCardOnMargin[attacking].NameRobot} с номером {attacking}  {damageUser}");
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UsCardOnMargin[attacking].Armor} и обороняющегося { EnemyHq.Armor} до атаки");
                         UsCardOnMargin[attacking].Armor -= damageUser;
                         EnemyHq.Armor -= damageEnemy;
-                        EffectDeliteCard(UsCardOnMargin, attacking);
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UsCardOnMargin[attacking].Armor} и обороняющегося { EnemyHq.Armor} после атаки");
                         //обновляем счетчики атак и оборон
                         EnemyHq.DefenseCount = defenderCount;
                         UsCardOnMargin[attacking].AttackCount = attackCount;
 
+                        EffectDeliteCard(UsCardOnMargin, attacking);
+                        
                     }
                     else
                     {
+                        WriteLog.WriteGameLog($"Карта игрока атакует карту противника. Урон по карте врага {EnCardOnMargin[attacked].NameRobot} с номером {attacked} {damageEnemy} Урон от врага по карте игрока {UsCardOnMargin[attacking].NameRobot} с номером {attacking}  {damageUser}");
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UsCardOnMargin[attacking].Armor} и обороняющегося { EnCardOnMargin[attacked].Armor } до атаки");
                         UsCardOnMargin[attacking].Armor -= damageUser;
                         EnCardOnMargin[attacked].Armor -= damageEnemy;
+                        WriteLog.WriteGameLog($"Прочность атакуещего { UsCardOnMargin[attacking].Armor} и обороняющегося { EnCardOnMargin[attacked].Armor } после атаки");
                         //обновляем счетчики атак и оборон
                         UsCardOnMargin[attacking].AttackCount = attackCount;
                         EnCardOnMargin[attacked].DefenseCount = defenderCount;
@@ -379,7 +417,7 @@ namespace CartGame
 
                     }
                 }
-
+                WriteLog.WriteGameLog($"Карт на игровом атакующего {UsCardOnMargin.Count} обороняющегося {EnCardOnMargin.Count}");
                 return new int[] { attacking, attacked, damageUser, damageEnemy };
             }
             catch (Exception ex) { WriteLog.Write(ex.ToString()); return new int[4]; }
@@ -397,8 +435,9 @@ namespace CartGame
                 switch (type)
                 {
                     case MsgType.StartGame:
-
+                       
                         DataSession.EnName = Encoding.UTF8.GetString(data);
+                        WriteLog.WriteGameLog("Началась подготовка к началу игры. Ник противника " + DataSession.EnName);
                         StartGame();
                         break;
 
@@ -406,6 +445,7 @@ namespace CartGame
 
                         short IdCarte = BitConverter.ToInt16(data, 0);
                         IdCarte = IPAddress.NetworkToHostOrder(IdCarte);
+                        WriteLog.WriteGameLog("Игроку в руки добавлена карта с id: " + IdCarte);
                         //добавляем карты в массив карт пользователя
                         DataSession.CarteFromUser.Add(IdCarte);
                         //перерисовываем все карты у пользователя
@@ -416,6 +456,7 @@ namespace CartGame
 
                         short MyMaxEnergy = BitConverter.ToInt16(data, 0);
                         MyMaxEnergy = IPAddress.NetworkToHostOrder(MyMaxEnergy);
+                        WriteLog.WriteGameLog("У игрока максимальное количество энегрии на этом ходу равно " + MyMaxEnergy);
                         DataSession.MyMaxEnergy = MyMaxEnergy;
                         //оповещяем о измении энергии
                         PaintMyEnergy();
@@ -424,6 +465,7 @@ namespace CartGame
                     case MsgType.YourEnergy:
                         short MyEnergy = BitConverter.ToInt16(data, 0);
                         MyEnergy = IPAddress.NetworkToHostOrder(MyEnergy);
+                        WriteLog.WriteGameLog("Текущее количство энергии у игрока равно" + MyEnergy);
                         DataSession.MyEnergy = MyEnergy;
                         //оповещяем о измении энергии
                         PaintMyEnergy();
@@ -432,6 +474,7 @@ namespace CartGame
                     case MsgType.EnemyMaxEnergy:
                         short EnMaxEnergy = BitConverter.ToInt16(data, 0);
                         EnMaxEnergy = IPAddress.NetworkToHostOrder(EnMaxEnergy);
+                        WriteLog.WriteGameLog("У противника максимальное количество энергии установлено до: " + EnMaxEnergy);
                         DataSession.EnMaxEnergy = EnMaxEnergy;
                         //оповещяем о измении энергии
                         PaintEnEnergy();
@@ -440,6 +483,7 @@ namespace CartGame
                     case MsgType.EnemyEnergy:
                         short EnEnergy = BitConverter.ToInt16(data, 0);
                         EnEnergy = IPAddress.NetworkToHostOrder(EnEnergy);
+                        WriteLog.WriteGameLog("У противника текущее количество энергии равно: " + EnEnergy);
                         DataSession.EnEnergy = EnEnergy;
                         //оповещяем о измении энергии
                         PaintEnEnergy();
@@ -456,15 +500,17 @@ namespace CartGame
                         int IdCards = DataSession.CarteFromUser[NumberCarte];
 
                         DataSession.CarteFromUser.RemoveAt(NumberCarte);
-
+                        
                         //добавляем карту в массив карт на поле
                         Robot AddCarte = (Robot)Carte.GetCarte(IdCards);
+                        WriteLog.WriteGameLog($"Игроку добавлена карта { AddCarte.NameRobot} находящаяся у него в руке с номером {NumberCarte} и id {IdCards} ");
+                        int indexCardsMargin = DataSession.UsCarteOnField.Count;//позиция добавляемой карты в списке карт на поле
                         DataSession.UsCarteOnField.Add(AddCarte);
 
                         //выполняем эффект появляющийся при добавлении карты
                         EffectAddCardOnField(AddCarte, DataSession.UsCarteOnField);
-
-                        AddCardsOnField(NumberCarte);
+                        WriteLog.WriteGameLog("Карт на игровом поле игрока после добавления карты " + DataSession.UsCarteOnField.Count);
+                        AddCardsOnField(NumberCarte, indexCardsMargin);
                         break;
 
                     case MsgType.EnemyAddCarteOnField:
@@ -473,19 +519,24 @@ namespace CartGame
 
                         //добавляем карту в массив карт на поле
                         Robot EnAddCarte = (Robot)Carte.GetCarte(EnIdCarte);
+                        WriteLog.WriteGameLog($"Противнику добавлена карта { EnAddCarte.NameRobot} находящаяся у него в руке с id {EnIdCarte} ");
+                        int enIndexCardsMargin = DataSession.EnCarteOnField.Count;
                         DataSession.EnCarteOnField.Add(EnAddCarte);
                         //выполняем эффект появлющийся при добавление новой карты на поле
                         EffectAddCardOnField(EnAddCarte, DataSession.EnCarteOnField);
-                        EnAddCardOnField();
+                        WriteLog.WriteGameLog("Карт на игровом поле противника после добавления карты " + DataSession.EnCarteOnField.Count);
+                        EnAddCardOnField(enIndexCardsMargin);
                         break;
 
                     case MsgType.MyAttackSucc:
+                        WriteLog.WriteGameLog("Сервер ответил, что пользователь атаковал");
                         int[] returnData = AttackSucc(data, DataSession.UserHQ, DataSession.EnemyHQ, DataSession.UsCarteOnField, DataSession.EnCarteOnField);
 
                         //оповещаем об атаке
                         MyAttack(returnData[0], returnData[1], returnData[2], returnData[3]);
                         break;
                     case MsgType.EnAttackSucc:
+                        WriteLog.WriteGameLog("Сервер ответил, что противник атаковал");
                         int[] ReturnData = AttackSucc(data, DataSession.EnemyHQ, DataSession.UserHQ, DataSession.EnCarteOnField, DataSession.UsCarteOnField);
 
                         //оповещаем об атаке
@@ -493,6 +544,7 @@ namespace CartGame
                         break;
 
                     case MsgType.EnemyDamageEvent:
+                        WriteLog.WriteGameLog("Сервер ответил, что противник использовал карту одиночного нанесения урона");
                         //конвертируем данные в тип предсавления данных на данном компьютере
                         short EnAttackingCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
                         short IDAttacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
@@ -501,14 +553,21 @@ namespace CartGame
                         //уменьшаем очки прочности у атакуемой карты
                         if (EnAttackedDamageEvent == -1)
                         {
+                            WriteLog.WriteGameLog($"Противник атаковал штаб Урон картой {EnDamageEvent}");
+                            WriteLog.WriteGameLog($"Прочность до атаки {DataSession.UserHQ.Armor}");
                             DataSession.UserHQ.Armor -= EnDamageEvent;
+                            WriteLog.WriteGameLog($"Прочность после атаки {DataSession.UserHQ.Armor}");
                         }
                         else
                         {
+                            WriteLog.WriteGameLog($"Противник атаковал карту игрока на игровом поле Урон картой {EnDamageEvent} событием Номер карты {DataSession.UsCarteOnField[EnAttackedDamageEvent].NameRobot} {EnAttackedDamageEvent}");
+                            WriteLog.WriteGameLog($"Прочность до атаки {DataSession.UsCarteOnField[EnAttackedDamageEvent].Armor}");
                             DataSession.UsCarteOnField[EnAttackedDamageEvent].Armor -= EnDamageEvent;
+                            WriteLog.WriteGameLog($"Прочность после атаки {DataSession.UsCarteOnField[EnAttackedDamageEvent].Armor}");
                             EffectDeliteCard(DataSession.UsCarteOnField, EnAttackedDamageEvent);
-                        }
 
+                        }
+                        WriteLog.WriteGameLog("Карт на игровом поле игрока "+ DataSession.UsCarteOnField.Count);
 
                         //оповещаем об атаке противника
                         EnAttackDamageCard(EnAttackingCard, IDAttacking, EnAttackedDamageEvent, EnDamageEvent);
@@ -516,40 +575,58 @@ namespace CartGame
                         break;
 
                     case MsgType.UserDamageEvent:
+                        
                         //конвертируем данные
                         short AttackingCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
                         short AttackedDamageEvent = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
                         short DamageEvent = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
-
+                        WriteLog.WriteGameLog($"Сервер ответил, что пользователь использовал карту одиночного нанесения урона c номером в руке {AttackingCard}");
                         //уменьшаем очки прочности у атакуемой карты
                         if (AttackedDamageEvent == -1)
                         {
+                            WriteLog.WriteGameLog($"Игрок атаковал штаб Урон картой {DamageEvent}");
+                            WriteLog.WriteGameLog($"Прочность до атаки { DataSession.EnemyHQ.Armor}");
                             DataSession.EnemyHQ.Armor -= DamageEvent;
+                            WriteLog.WriteGameLog($"Прочность после атаки {DataSession.EnemyHQ.Armor}");
                         }
                         else
                         {
+                            WriteLog.WriteGameLog($"Игрок атаковал карту противника на игровом поле Урон картой {DamageEvent} событием Номер карты {DataSession.EnCarteOnField[AttackedDamageEvent].NameRobot}  {AttackedDamageEvent}");
+                            WriteLog.WriteGameLog($"Прочность до атаки { DataSession.EnCarteOnField[AttackedDamageEvent].Armor}");
                             DataSession.EnCarteOnField[AttackedDamageEvent].Armor -= DamageEvent;
+                            WriteLog.WriteGameLog($"Прочность после атаки { DataSession.EnCarteOnField[AttackedDamageEvent].Armor}");
                             EffectDeliteCard(DataSession.EnCarteOnField, AttackedDamageEvent);
                         }
 
                         //удаляем карту-событие
                         DataSession.CarteFromUser.RemoveAt(AttackingCard);
-
+                        WriteLog.WriteGameLog("Карт на игровом поле противника " + DataSession.EnCarteOnField.Count);
                         //опопвещаем об событии атаки
                         MyAttackDamageCard(AttackingCard, AttackedDamageEvent, DamageEvent);
 
                         break;
                     case MsgType.UsRepairsEvent:
                         //конвертируем данные
+                        
                         short NumberCardRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
                         short Repairable = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
                         short Damage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
-
+                        WriteLog.WriteGameLog($"Игрок использовал восстанавливающие событие с номером в руке { NumberCardRepairs}");
                         //увеличиваем очки прочности у атакуемой карты
                         if (Repairable == -1)
+                        {
+                            WriteLog.WriteGameLog($"Игрок добавил прочности штабу Урон картой {Damage}");
+                            WriteLog.WriteGameLog($"Прочность до восстановления { DataSession.UserHQ.Armor}");
                             DataSession.UserHQ.Armor -= Damage;
+                            WriteLog.WriteGameLog($"Прочность после восстановления { DataSession.UserHQ.Armor}");
+                        }
                         else
+                        {
+                            WriteLog.WriteGameLog($"Игрок добавил прочности своей карте на игровом поле Урон картой {Damage} событием Номер карты {DataSession.UsCarteOnField[Repairable].NameRobot}  {Repairable}");
+                            WriteLog.WriteGameLog($"Прочность до восстановления { DataSession.UsCarteOnField[Repairable].Armor}");
                             DataSession.UsCarteOnField[Repairable].Armor -= Damage;
+                            WriteLog.WriteGameLog($"Прочность после восстановления { DataSession.UsCarteOnField[Repairable].Armor}");
+                        }
                         //удаляем карту-событие
                         DataSession.CarteFromUser.RemoveAt(NumberCardRepairs);
 
@@ -558,29 +635,46 @@ namespace CartGame
                         break;
                     case MsgType.EnRepairsEvent:
                         //конвертируем данные
+                        WriteLog.WriteGameLog("Противник использовал восстанавливающие событие");
                         short EnNumberCardRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
                         short IDRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
                         short EnRepairable = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
                         short EnDamage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6));
                         //увеличиваем очки прочности у атакуемой карты
                         if (EnRepairable == -1)
+                        {
+                            WriteLog.WriteGameLog($"Противник добавил прочности штабу Урон картой {EnDamage}");
+                            WriteLog.WriteGameLog($"Прочность до восстановления { DataSession.EnemyHQ.Armor}");
                             DataSession.EnemyHQ.Armor -= EnDamage;
+                            WriteLog.WriteGameLog($"Прочность после восстановления {DataSession.EnemyHQ.Armor}");
+                        }
                         else
+                        {
+                            WriteLog.WriteGameLog($"Игрок добавил прочности своей карте на игровом поле Урон картой {EnDamage} событием Номер карты {DataSession.EnCarteOnField[EnRepairable].NameRobot}  {EnRepairable}");
+                            WriteLog.WriteGameLog($"Прочность до восстановления { DataSession.EnCarteOnField[EnRepairable].Armor}");
                             DataSession.EnCarteOnField[EnRepairable].Armor -= EnDamage;
+                            WriteLog.WriteGameLog($"Прочность после восстановления { DataSession.EnCarteOnField[EnRepairable].Armor}");
+                        }
 
-
+                      
                         //оповещаем об атаке противника
                         EnRepairsCard(EnNumberCardRepairs, IDRepairs, EnRepairable, EnDamage);
 
                         break;
           
                     case MsgType.UsAllDeliteEvent:
+                        
                         short NumberCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
                         short damage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
+                        WriteLog.WriteGameLog($"Сервер ответил, что игрок использовал событие массвого урона c номером в руке {NumberCard} и уроном {damage}");
                         //уменьшаем очки прочности у удаляемых карт
                         int count = DataSession.EnCarteOnField.Count;
                         for (int i = 0; i < count; i++)
+                        {
+                            WriteLog.WriteGameLog($"Очки прочности у атакуемой карты {i} { DataSession.EnCarteOnField[i].NameRobot} до атаки {DataSession.EnCarteOnField[i].Armor}");
                             DataSession.EnCarteOnField[i].Armor -= damage;
+                            WriteLog.WriteGameLog($"Очки прочности у атакуемой карты {i} после атаки {DataSession.EnCarteOnField[i].Armor}");
+                        }
 
                         //удаляем карты с HP меньше 0
                         for (int i = 0; i < count; i++)
@@ -595,7 +689,7 @@ namespace CartGame
 
                         //удаляем карту-событие
                         DataSession.CarteFromUser.RemoveAt(NumberCard);
-
+                        WriteLog.WriteGameLog("Карт на игровом поле противника " + DataSession.EnCarteOnField.Count);
                         //опопвещаем об атаке
                         UsAllDamage(NumberCard, damage);
                         break;
@@ -603,12 +697,15 @@ namespace CartGame
                         short IDCards = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 0));
                         short NumberEnCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 2));
                         short TotalDamage = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4));
-
+                        WriteLog.WriteGameLog($"Сервер ответил, что противник использовал событие массвого урона c уроном {TotalDamage}");
                         //уменьшаем очки прочности у удаляемых карт
                         int Count = DataSession.UsCarteOnField.Count;
                         for (int i = 0; i < Count; i++)
+                        {
+                            WriteLog.WriteGameLog($"Очки прочности у атакуемой карты {i} { DataSession.UsCarteOnField[i].NameRobot} до атаки {DataSession.UsCarteOnField[i].Armor}");
                             DataSession.UsCarteOnField[i].Armor -= TotalDamage;
-                            
+                            WriteLog.WriteGameLog($"Очки прочности у атакуемой карты {i} после атаки {DataSession.UsCarteOnField[i].Armor}");
+                        }
 
                         //удаляем карты с HP меньше 0
                         for (int i = 0; i < Count; i++)
@@ -620,7 +717,7 @@ namespace CartGame
                                 i--;
                             }
                         }
-
+                        WriteLog.WriteGameLog("Карт на игровом поле игрока " + DataSession.UsCarteOnField.Count);
                         //опопвещаем об атаке
                         EnAllDamage(NumberEnCard, IDCards, TotalDamage);
                         break;
@@ -775,6 +872,7 @@ namespace CartGame
                 Client = null;
             }
               ClientNetwork = null;
+            WriteLog.WriteGameLog("Освобожены все ресурсы SendAndRecMsg");
         }
         //методы отправки данных
         public void Send(MsgType TypeMsg)
@@ -825,7 +923,7 @@ namespace CartGame
                 }
 
              }
-            //временно
+           
             catch (IOException e)
             {
                 ErrorConnectToServer();
@@ -863,7 +961,6 @@ namespace CartGame
                 int Length = 2;
                 short leng = IPAddress.HostToNetworkOrder((short)Length);
                 short Value = IPAddress.HostToNetworkOrder((short)number);
-               // Debug.Write("Отправлено число " + Value);
                 byte[] head = Summ((byte)TypeMsg, BitConverter.GetBytes(leng));
 
                 ClientNetwork.Write(SummNumber(head, BitConverter.GetBytes(Value)), 0, 5);

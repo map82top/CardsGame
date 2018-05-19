@@ -211,22 +211,25 @@ namespace CartGame
 
                 for (int i = 1; true; i++)
                 {
-                    if ((TempCarte = Carte.GetCarte(i)) == null) break;
-                    else
-                    {
-                        Panel NewPanel = TempCarte.ImageCartNormal();
-                        NewPanel.Location = new Point(X, Y);
-                        NewPanel.MouseClick += new MouseEventHandler(Carte_Click);
-                        NewPanel.MouseEnter += new EventHandler(Panel_MouseEnter);
-                        NewPanel.MouseLeave += new EventHandler(Panel_MouseLeave);
+                    if (i != 19)
+                    { 
+                        if ((TempCarte = Carte.GetCarte(i)) == null) break;
+                        else
+                        {
+                            Panel NewPanel = TempCarte.ImageCartNormal();
+                            NewPanel.Location = new Point(X, Y);
+                            NewPanel.MouseClick += new MouseEventHandler(Carte_Click);
+                            NewPanel.MouseEnter += new EventHandler(Panel_MouseEnter);
+                            NewPanel.MouseLeave += new EventHandler(Panel_MouseLeave);
 
-                        AllCarte.Add(NewPanel);
-                        if (i % 2 != 0) Y += 190;
-                        else { X += 148; Y = 3; }
-                        panelAllCarte.Controls.Add(NewPanel);
-                        //добавляем подсказку
-                        AddCardHelp(NewPanel, TempCarte, true);
-                    }
+                            AllCarte.Add(NewPanel);
+                            if (i % 2 != 0) Y += 190;
+                            else { X += 148; Y = 3; }
+                            panelAllCarte.Controls.Add(NewPanel);
+                            //добавляем подсказку
+                            AddCardHelp(NewPanel, TempCarte, true);
+                        }
+                     }
                 }
 
                 //выводим на экран пустые карты для наглядности
@@ -305,16 +308,24 @@ namespace CartGame
 
             try
             {
+                string TempColoda = null;//для записи карт в лог
 
                 int CountCardNONull = 0;//считчик количества карт в колоде игрока
                 for (int i = 0; i < ValueCardsUser; i++)
-                    if (ChoiceCards.UserColoda[i] != 0) CountCardNONull++;
+                    if (ChoiceCards.UserColoda[i] != 0)
+                    {
+                        CountCardNONull++;
+                        TempColoda += ChoiceCards.UserColoda[i] + " ";
+                    }
                 if (CountCardNONull < 3)//если карт меньше 3 в бой выйти нельзя
                 {
                     FewCarte.SetError(buttonStartSeek, ".Вы выбрали недостаточно карт для начал игры \n!");
                     return;
                 }
 
+                //запись в лог
+                WriteLog.WriteGameLog("Выбран карты с такими ID: " + TempColoda);
+                
                 //добавить в ручную выбирать адрес и порт
 
 
@@ -331,6 +342,7 @@ namespace CartGame
                             buttonStartSeek.Enabled = false;
                             //привязваем обработчик  для обработчки сообщения о неудачном сообщении
                             controler.SucConnect += SuccessConnect;
+                            WriteLog.WriteGameLog("Пользователь подключается к серверу");
                             controler.Start(IPAddress.Parse(Data[0]), int.Parse(Data[1]), Data[2]);
                         }
                         else throw new DirectoryNotFoundException();
@@ -376,6 +388,7 @@ namespace CartGame
                 OpenSeekForm = false;
                 this.Close();
                 NewForm.Show();
+                WriteLog.WriteGameLog("К серверу удалось подключиться. Создана форма ожидания противника");
             }
             catch (Exception e) { WriteLog.Write(e.ToString()); }
 
@@ -383,7 +396,7 @@ namespace CartGame
 
         private void ChoiceForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-           if(OpenSeekForm) Application.Exit();
+            if (OpenSeekForm)Application.Exit();  
         }
 
         private void настройкиToolStripMenuItem_Click(object sender, EventArgs e)

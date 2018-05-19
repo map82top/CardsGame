@@ -28,6 +28,7 @@ namespace CartGame
         private void ErrorConnectionServer()
         {
             ChoiceForm NewForm = new ChoiceForm(ClientContr);
+            WriteLog.WriteGameLog("Ошибка соединения с сервером!");
             this.Invoke((MethodInvoker)delegate
             {
                 NewForm.Show();
@@ -47,13 +48,14 @@ namespace CartGame
                     ClientContr.ErrorConnectToServer -= ErrorConnectionServer;
                     //отвязываем этот обработчик
                     ClientContr.StartGame -= LoadGameInterface;
-                 GameMargin NewForm = new GameMargin(ClientContr);
-                this.Invoke((MethodInvoker)delegate
-                    {
-                        
+                    GameMargin NewForm = new GameMargin(ClientContr);
+
+                   WriteLog.WriteGameLog("Создается форма игрового поля");
+
+                   this.Invoke((MethodInvoker)delegate
+                    {                      
                         NewForm.Show();
                         this.Close();
-
                     });
                 }
             LoadGameMutex.ReleaseMutex();
@@ -65,6 +67,7 @@ namespace CartGame
             //посылаем сообщение отмены
             ClientContr.DialogWithServ.Send(MsgType.DeliteSeek);
             ClientContr.Dispose();
+            WriteLog.WriteGameLog("Пользователь вышел из режима ожидания противника");
             ChoiceForm NewForm = new ChoiceForm(ClientContr);
             this.Invoke((MethodInvoker)delegate
            {          
@@ -74,5 +77,9 @@ namespace CartGame
             });
         }
 
+        private void SeekForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

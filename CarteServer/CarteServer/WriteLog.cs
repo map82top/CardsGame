@@ -5,18 +5,19 @@ using System.Text;
 using System.IO;
 using System.Threading;
 
-namespace CartGame
+namespace CarteServer
 {
-   static class WriteLog
-   {
-        static string wayLog = "log.log";
-        static string wayGameLog = "GameLog.log";
+    class WriteLog
+    {
+
+        static string wayLog = "logServer.log";
+        static string wayGameLog = "GameLogServer.log";
         static Mutex SinchWriteGameLog = new Mutex();
         static Mutex SinchWriteLog = new Mutex();
         static public void Write(string TextError)
         {
             SinchWriteLog.WaitOne();
-            File.AppendAllText(wayLog, Environment.NewLine + DateTime.Now + "  " +  TextError, Encoding.UTF8);//записываем данные в лог
+            File.AppendAllText(wayLog, Environment.NewLine + DateTime.Now + "  " + TextError, Encoding.UTF8);//записываем данные в лог
             SinchWriteLog.ReleaseMutex();
         }
         static public void WriteGameLog(string data)
@@ -26,5 +27,4 @@ namespace CartGame
             SinchWriteGameLog.ReleaseMutex();
         }
     }
-        
 }
