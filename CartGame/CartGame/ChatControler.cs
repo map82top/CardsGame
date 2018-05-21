@@ -81,7 +81,7 @@ namespace CartGame
         {
             Panel ChatPanel = new Panel();
             ChatPanel.Size = new Size(340,226);
-
+            ChatPanel.VisibleChanged += ChatPanel_VisibleChange;
             //добавляем на Чат-панель элементы чата
             ChatPanel.Controls.Add(ChatBox);
             ChatPanel.Controls.Add(SendMsg);
@@ -91,8 +91,6 @@ namespace CartGame
             ChatBox.Location = new Point(0, 0);
             SendMsg.Location = new Point(257, 190);
             BoxWrite.Location = new Point(0, 190);
-
-            countMissedMsg = 0;//обнуляем счетчик пропущенных сообщений
 
             return ChatPanel;
         }
@@ -105,7 +103,13 @@ namespace CartGame
         {
             SendMessage();
         }
-
+        public void ChatPanel_VisibleChange(object sender, EventArgs e)
+        {
+            if ((sender as Panel).Visible)
+            {
+                countMissedMsg = 0;
+            }
+        }
         private void SendMessage()
         {
             string Msg = BoxWrite.Text;
@@ -117,7 +121,6 @@ namespace CartGame
                 //добавляем сообщение в чат пользователя
                 if (ChatBox.Text != "") ChatBox.Text += Environment.NewLine + Msg;
                 else ChatBox.Text = Msg;
-                countMissedMsg = 0;//обнуляем счетчик пропущенных сообщений
             }
         }
         public void AddMessage(string message)
@@ -127,7 +130,6 @@ namespace CartGame
             { 
                     if (ChatBox.Text != "") ChatBox.Text += Environment.NewLine + message;
                     else ChatBox.Text = message;
-                countMissedMsg = 0;//обнуляем счетчик пропущенных сообщений
             }
             else
             {

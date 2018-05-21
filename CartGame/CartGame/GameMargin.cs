@@ -750,7 +750,7 @@ namespace CartGame
                     //если обновляемая карта ветеран, то обновляем все карты
                     this.Invoke((MethodInvoker)delegate
                     {  
-                        if (UserCardsOfMargin[index].GetType() == (Carte.GetCarte(3) as Robot).ImageCartMin().GetType())
+                        if ((int)UserCardsOfMargin[index].Tag == 3)
                         {
                             UserCardsOfMargin.RemoveAt(index);
                             AllPaintCard(UserCardsOfMargin, UserMargin, DataSession.UsCarteOnField);
@@ -797,6 +797,7 @@ namespace CartGame
                         CardsOfMargin[index].MouseDown += MarginCarte_MouseDown;
                         CardsOfMargin[index].MouseMove += Carte_MouseMove;
                         CardsOfMargin[index].MouseUp += MarginCarte_MouseUp;
+                    
                     }
                     else
                     {
@@ -805,7 +806,9 @@ namespace CartGame
                         CardsOfMargin[index].MouseLeave += Carte_MouseLeave;
                         CardsOfMargin[index].MouseClick += EnemyCardsOfMargin_Click;
                     }
-                }
+                        //обновляем подсказку к карте
+                        HelpForCardsMargin(CardsOfMargin[index], CarteOnField[index]);
+                 }
 
 
                 //обновляем карты
@@ -2077,20 +2080,6 @@ namespace CartGame
             
         }
 
-        private void GameMargin_KeyDown(object sender, KeyEventArgs e)
-        {
-            try
-            {
-                if (e.Control && e.KeyCode == Keys.H)
-                {
-
-                    Help.ShowHelp(this, "HelpCardsGame.chm");
-                    e.SuppressKeyPress = false;
-                }
-            }
-            catch { MessageBox.Show("Неудалость открыть справку"); }
-        }
-
         private void ChatMsg(string message)
         {
             try
@@ -2120,13 +2109,13 @@ namespace CartGame
                 {
                     //отображаем чат                  
                     ChatPanel.Visible = false;
-                    (sender as Button).Text = "Свернуть чат";
+                    (sender as Button).Text = "Открыть чат";
                 }
                 else
                 {
                     //сворачиваем чат                 
                     ChatPanel.Visible = true;
-                    (sender as Button).Text = "Открыть чат";
+                    (sender as Button).Text = "Свернуть чат";
                 }
             }
             catch (Exception ex)

@@ -115,11 +115,10 @@ namespace CarteServer
         //осуществляет поиск оборонитльных сооружений на игровом поле игрока
         private DefenceConstr SeekDefenceConstr(User us)
         {
-            foreach (Robot Card in us.CardsMargin)
-                if (Card is DefenceConstr)//ищем самого первого защитника
+           
+                if (us.userHQ.Defender!=null)//ищем самого первого защитника
                 {
-                    return Card as DefenceConstr;
-                    
+                    return us.userHQ.Defender;                  
                 }
             return null;
         }
@@ -160,14 +159,11 @@ namespace CarteServer
                     break;
                 case 12:
                     //ищем карту, не являющуюся защитным сооружением
-                  
-                    foreach (Robot Card in us.CardsMargin)
-                        if (!(Card is DefenceConstr))
-                        {
+                               
                             //если уже есть защитник
-                            if (Card.Defender != null)
+                            if (us.userHQ.Defender != null)
                             {
-                               DefenceConstr LocalCard = Card.Defender;
+                               DefenceConstr LocalCard = us.userHQ.Defender;
                                 //ищем последнего защитника
                                 while (LocalCard.Defender != null)
                                 {
@@ -186,10 +182,7 @@ namespace CarteServer
                                 us.userHQ.Defender = (DefenceConstr)us.CardsMargin[index];
                             }
                             //выходим из цикла
-                            break;                         
-                        }
-                         
-                        
+                                                                         
                     break;
                 case 16:
                     //добавляем бонус ко всем картам
@@ -509,6 +502,32 @@ namespace CarteServer
             catch (Exception E)
             { WriteLog.Write(E.ToString()); }
         }
+        private void ForDamageEventFunc(User user,User UserEnemy, int IDAttacking, DamageEvent Card, int attacking, int attacked)
+        {
+            if (attacked == -1)
+            {
+                WriteLog.WriteGameLog($"Игрок {user.Name} использовал событие одиночного урона по штабу игрока {UserEnemy.Name}");
+                UserEnemy.userHQ.Armor -= Card.Damage;
+                WriteLog.WriteGameLog($"Урон по штабу {UserEnemy.Name} равен {Card.Damage} Прочность штаба {UserEnemy.userHQ.Armor}");
+            }
+            else
+            {
+                WriteLog.WriteGameLog($"Игрок {user.Name} использовал событие одиночного урона по карте игрока {UserEnemy.Name}");
+                UserEnemy.CardsMargin[attacked].Armor -= Card.Damage;
+                WriteLog.WriteGameLog($"Урон по карте {UserEnemy.Name} равен {Card.Damage} Прочность карты { UserEnemy.CardsMargin[attacked].NameRobot} c номером {attacked + 1} { UserEnemy.CardsMargin[attacked].Armor}");
+                //удаляем карту
+                EffectDeliteCard(UserEnemy, attacked);
+
+            }
+            WriteLog.WriteGameLog($"Количестов карт на поле игрока {UserEnemy.Name} равно {UserEnemy.CardsMargin.Count}");
+            //отправляем о сообщение об удачной атаке
+            user.Send(user.Energy, MsgType.YourEnergy);
+            UserEnemy.Send(user.Energy, MsgType.EnemyEnergy);
+            user.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
+            UserEnemy.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
+            //проверяем на уничтожение одного из штабов
+            TestEndGame();
+        }
         //осуществляет обработки события использовании карты нанесния одиночног урона
         private void DamageEventFunc(User user,int IDAttacking, DamageEvent Card,int attacking, int attacked)
         {
@@ -516,55 +535,11 @@ namespace CarteServer
             {
                 if (user == Us1)
                 {
-                    if (attacked == -1)
-                    {
-                        WriteLog.WriteGameLog($"Игрок {user.Name} использовал событие одиночного урона по штабу игрока {Us2.Name}");
-                        Us2.userHQ.Armor -= Card.Damage;
-                        WriteLog.WriteGameLog($"Урон по штабу {Us2.Name} равен {Card.Damage} Прочность штаба {Us2.userHQ.Armor}");
-                    }
-                    else
-                    {
-                        WriteLog.WriteGameLog($"Игрок {user.Name} использовал событие одиночного урона по карте игрока {Us2.Name}");
-                        Us2.CardsMargin[attacked].Armor -= Card.Damage;
-                        WriteLog.WriteGameLog($"Урон по карте {Us2.Name} равен {Card.Damage} Прочность карты { Us2.CardsMargin[attacked].NameRobot} c номером {attacked+1} { Us2.CardsMargin[attacked].Armor}");
-                        //удаляем карту
-                        EffectDeliteCard(user, attacked);
-
-                    }
-                    WriteLog.WriteGameLog($"Количестов карт на поле игрока {Us2.Name} равно {Us2.CardsMargin.Count}");
-                    //отправляем о сообщение об удачной атаке
-                    Us1.Send(Us1.Energy, MsgType.YourEnergy);
-                    Us2.Send(Us1.Energy, MsgType.EnemyEnergy);
-                    Us1.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
-                    Us2.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
-                    //проверяем на уничтожение одного из штабов
-                    TestEndGame();
-
+                    ForDamageEventFunc(Us1, Us2, IDAttacking, Card, attacking, attacked);
                 }
                 else if (user == Us2)
                 {
-                    if (attacked == -1)
-                    {
-                        WriteLog.WriteGameLog($"Игрок {user.Name} использовал событие одиночного урона по карте игрока {Us1.Name}");
-                        Us1.userHQ.Armor -= Card.Damage;
-                        WriteLog.WriteGameLog($"Урон по штабу {Us1.Name} равен {Card.Damage} Прочность штаба {Us1.userHQ.Armor}");
-                    }
-                    else
-                    {
-                        WriteLog.WriteGameLog($"Игрок {user.Name} использовал событие одиночного урона по карте игрока {Us1.Name}");
-                        Us1.CardsMargin[attacked].Armor -= Card.Damage;
-                        WriteLog.WriteGameLog($"Урон по карте {Us1.Name} равен {Card.Damage} Прочность карты { Us1.CardsMargin[attacked].NameRobot} c номером {attacked+1} { Us1.CardsMargin[attacked].Armor}");
-                        if (Us1.CardsMargin[attacked].Armor <= 0) Us1.CardsMargin.RemoveAt(attacked);
-                    }
-                    WriteLog.WriteGameLog($"Количестов карт на поле игрока {Us1.Name} равно {Us1.CardsMargin.Count}");
-                    //отправляем о сообщение об удачной атаке
-                    Us2.Send(Us2.Energy, MsgType.YourEnergy);
-                    Us1.Send(Us2.Energy, MsgType.EnemyEnergy);
-                    Us2.Send(new int[] { attacking, attacked, Card.Damage }, MsgType.UserDamageEvent);
-                    Us1.Send(new int[] { attacking, IDAttacking, attacked, Card.Damage }, MsgType.EnemyDamageEvent);
-                    //проверяем на конец игры
-                    TestEndGame();
-
+                    ForDamageEventFunc(Us2, Us1, IDAttacking, Card, attacking, attacked);
                 }
             }
             catch (Exception e)
@@ -799,8 +774,8 @@ namespace CarteServer
                              us2.CardsMargin[attacked].Armor -= damageEnemy;
                        WriteLog.WriteGameLog($"{us1.Name} атакует карту {us2.Name} нанося {damageEnemy} урона. карта {us2.CardsMargin[attacked].NameRobot} на поле атакуемого имеет прочность {us2.CardsMargin[attacked].Armor} и номер {attacked+1}");
 
-                    //если очков прочности меньше 0 удаляем карту
-                    EffectDeliteCard(us2, attacked);
+                            //если очков прочности меньше 0 удаляем карту
+                            EffectDeliteCard(us2, attacked);
                  
                         }
                          
@@ -828,10 +803,9 @@ namespace CarteServer
                                 //урон от врага по игроку
                                 damageUser = us2.userHQ.Attack;
                                 us1.CardsMargin[attacking].Armor -= damageUser;
-
+                          WriteLog.WriteGameLog($"{us2.Name} ответчает на атаку карты {us1.Name} нанося {damageUser} урона. карта {us1.CardsMargin[attacking].NameRobot} на поле атакуещего имеет прочность {us1.CardsMargin[attacking].Armor} и номер {attacking + 1}");
                         //если очков прочности меньше 0 удаляем карту
-                        EffectDeliteCard(us1, attacking);
-                        WriteLog.WriteGameLog($"{us2.Name} ответчает на атаку карты {us1.Name} нанося {damageUser} урона. карта {us1.CardsMargin[attacking].NameRobot} на поле атакуещего имеет прочность {us1.CardsMargin[attacking].Armor} и номер {attacking+1}");
+                           EffectDeliteCard(us1, attacking);        
                             }
                         }
                         else
@@ -843,17 +817,17 @@ namespace CarteServer
                                  {
                                    damageUser = us2.CardsMargin[attacked].Attack + us2.CardsMargin[attacked].BonusAttack;
                                    us1.CardsMargin[attacking].Armor -= damageUser;
-                                    EffectDeliteCard(us1, attacking);
-                        WriteLog.WriteGameLog($"{us2.Name} ответчает на атаку карты {us1.Name} нанося {damageUser} урона. карта {us1.CardsMargin[attacking].NameRobot} на поле атакуещего имеет прочность {us1.CardsMargin[attacking].Armor} и номер {attacking+1}");
+                                WriteLog.WriteGameLog($"{us2.Name} ответчает на атаку карты {us1.Name} нанося {damageUser} урона. карта {us1.CardsMargin[attacking].NameRobot} на поле атакуещего имеет прочность {us1.CardsMargin[attacking].Armor} и номер {attacking + 1}");                      
                                  }
                                     //урон по карте противника  
                                    damageEnemy = us1.CardsMargin[attacking].Attack + us1.CardsMargin[attacking].BonusAttack;
                                    attacked = BeforeDamage(us2.CardsMargin, attacked);
                                    us2.CardsMargin[attacked].Armor -= damageEnemy;
-                    WriteLog.WriteGameLog($"{us1.Name} атакует карту {us2.Name} нанося {damageEnemy} урона. карта {us2.CardsMargin[attacked].NameRobot} на поле атакуемого имеет прочность {us2.CardsMargin[attacked].Armor} и номер {attacked+1}");
-                                //если их очки прочности меньше 0, то удаляем их
-                               
-                                 EffectDeliteCard(us2, attacked);
+                                   WriteLog.WriteGameLog($"{us1.Name} атакует карту {us2.Name} нанося {damageEnemy} урона. карта {us2.CardsMargin[attacked].NameRobot} на поле атакуемого имеет прочность {us2.CardsMargin[attacked].Armor} и номер {attacked+1}");
+
+                                    //если их очки прочности меньше 0, то удаляем их
+                                    EffectDeliteCard(us1, attacking);
+                                    EffectDeliteCard(us2, attacked);
                            
                                 }
                             }
@@ -887,7 +861,6 @@ namespace CarteServer
                     ForAttackFunc(Us2, Us1, attacking, attacked, attackCount);
                 }
                 //проверяем на уничтожение одного из штабов
-                TestEndGame();
             }
             catch (Exception e)
             { WriteLog.Write(e.ToString()); }
@@ -898,25 +871,29 @@ namespace CarteServer
         private void TestEndGame()
         {
             //проверяем на конец игры
-            if ((Us1.userHQ.Armor <= 0 && Us2.userHQ.Armor <= 0))
+            if (Us1.userHQ.Armor <= 0 && Us2.userHQ.Armor <= 0)
             {
+                WriteLog.WriteGameLog("Игра закончлиась ничьей");
                 Us1.Send(MsgType.Draw);
                 Us2.Send(MsgType.Draw);
-                WriteLog.WriteGameLog("Игра закончлиась ничьей");
+                Dispose();//освобождаем все ресурсы
                 return;
             }
             if (Us1.userHQ.Armor <= 0)
             {
+                WriteLog.WriteGameLog($"Игрок {Us2.Name} победил");
                 Us1.Send(MsgType.YouOver);
                 Us2.Send(MsgType.YouWin);
-                WriteLog.WriteGameLog($"Игрок {Us2.Name} победил");
+                Dispose();//освобождаем все ресурсы     
                 return;
             }
             if (Us2.userHQ.Armor <= 0)
             {
+                WriteLog.WriteGameLog($"Игрок {Us1.Name} победил");
                 Us2.Send(MsgType.YouOver);
                 Us1.Send(MsgType.YouWin);
-                WriteLog.WriteGameLog($"Игрок {Us1.Name} победил");
+                Dispose();//освобождаем все ресурсы
+              
                 return;
             }
         }

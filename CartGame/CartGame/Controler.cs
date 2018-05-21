@@ -797,31 +797,36 @@ namespace CartGame
             {
                 while (StopThread && Client.Connected)
                 {
-                    byte[] caption = new byte[3];
-                    int CaptionBytes = RecData(caption, caption.Length, ClientNetwork);
-                    MsgType msgType;
-                    if (CaptionBytes > 0)
+                    try
                     {
-                        msgType = (MsgType)caption[0];
-                        short MsgLength = BitConverter.ToInt16(caption, 1);
-                        MsgLength = IPAddress.NetworkToHostOrder(MsgLength);
-                        if (MsgLength == 0)
+                        byte[] caption = new byte[3];
+                        int CaptionBytes = RecData(caption, caption.Length, ClientNetwork);
+                        MsgType msgType;
+                        if (CaptionBytes > 0)
                         {
-                            RecMsgWithoutData(msgType);
-                            Debug.WriteLine(msgType.ToString());
-                        }
-                        else
-                        {
-                            byte[] Data = new byte[MsgLength];
-                            int ReadData = RecData(Data, MsgLength, ClientNetwork);
-                            if (ReadData > 0)
+                            msgType = (MsgType)caption[0];
+                            short MsgLength = BitConverter.ToInt16(caption, 1);
+                            MsgLength = IPAddress.NetworkToHostOrder(MsgLength);
+                            if (MsgLength == 0)
                             {
-                                RecMsgWithData(msgType, Data);
+                                RecMsgWithoutData(msgType);
+                                Debug.WriteLine(msgType.ToString());
+                            }
+                            else
+                            {
+                                byte[] Data = new byte[MsgLength];
+                                int ReadData = RecData(Data, MsgLength, ClientNetwork);
+                                if (ReadData > 0)
+                                {
+                                    RecMsgWithData(msgType, Data);
+                                }
                             }
                         }
+
                     }
-                    
-                }
+                    catch (Exception e)//чтобы при возникновении ошибки цикл обработки сообщений не останавливался
+                    { WriteLog.Write(e.ToString()); }
+                 }
             }
             
             catch (Exception e)

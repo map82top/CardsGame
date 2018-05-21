@@ -121,185 +121,190 @@ namespace CarteServer
             try
             {
                 while (StopThread && UserTcpClient.Connected)
-                {           
-                    byte[] caption = new byte[3];
-                    int CaptionBytes = RecData(caption, caption.Length, TcpStream);
-                    MsgType? msgType = null;
-                    if (CaptionBytes > 0)
+                {
+                    try
                     {
-                        msgType = (MsgType)caption[0];//тип сообщения
-                        short MsgLength = BitConverter.ToInt16(caption, 1);
-                        MsgLength = IPAddress.NetworkToHostOrder(MsgLength);//длинна сообщения
-                        if (MsgLength > 0)
+                        byte[] caption = new byte[3];
+                        int CaptionBytes = RecData(caption, caption.Length, TcpStream);
+                        MsgType? msgType = null;
+                        if (CaptionBytes > 0)
                         {
-                            byte[] Data = new byte[MsgLength];
-                            int ReadData = RecData(Data, MsgLength, TcpStream);//получаем данные сообщения
-                            if (ReadData > 0)
+                            msgType = (MsgType)caption[0];//тип сообщения
+                            short MsgLength = BitConverter.ToInt16(caption, 1);
+                            MsgLength = IPAddress.NetworkToHostOrder(MsgLength);//длинна сообщения
+                            if (MsgLength > 0)
                             {
-                                //сообщения с данными
+                                byte[] Data = new byte[MsgLength];
+                                int ReadData = RecData(Data, MsgLength, TcpStream);//получаем данные сообщения
+                                if (ReadData > 0)
+                                {
+                                    //сообщения с данными
+                                    switch (msgType)
+                                    {
+                                        case MsgType.CarteUser:
+
+                                            if (MsgLength % 2 == 0)
+                                            {
+                                                string TempColod = null;//для лога
+                                                int index = 0;
+                                                for (int i = 0; i < MsgLength / 2; i++)
+                                                {
+                                                    int idCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, index));
+                                                    TempColod += idCard + " ";
+                                                    carteUser.Add(idCard);
+                                                    index += 2;
+                                                }
+                                                WriteLog.WriteGameLog($"Игрок {name} имеет в колоде карты: {TempColod}");
+                                                ColodRec();
+                                            }
+                                            break;
+
+                                        case MsgType.GetName:
+                                            name = Encoding.UTF8.GetString(Data);
+                                            WriteLog.WriteGameLog("Получено имя пользователя " + name);
+                                            //случайным образом определяем id пользователя
+                                            Random id = new Random();
+                                            idUser = id.Next(0, int.MaxValue);
+                                            NameRec();
+                                            break;
+
+                                        case MsgType.AddCarteOnField:
+                                            if (myProgress)
+                                            {
+                                                int NumberCarte = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));
+
+                                                //получаем ID карты
+                                                int IDCarte = CardsOnHands[NumberCarte];
+                                                //получаем экземпляр этой карты
+                                                Carte NewCarte = Carte.GetCarte(IDCarte);
+                                                WriteLog.WriteGameLog($"Игрок {name} собирается добавить карту {(NewCarte as Robot).NameRobot} с номером в руках у игрока {NumberCarte + 1} на игровое поле");
+                                                if (NewCarte is Robot)
+                                                {
+                                                    Robot NewCarteRobot = (Robot)NewCarte;
+                                                    //сравниваем цену с кол-во энергии
+                                                    if (NewCarteRobot.ValueEnergy <= energy)
+                                                    {
+                                                        energy -= NewCarteRobot.ValueEnergy;
+                                                        CardsOnHands.RemoveAt(NumberCarte);
+                                                        CardsOnMargin.Add(NewCarteRobot);
+                                                        WriteLog.WriteGameLog($"Карта добавлена на игровое поле игрока {name}");
+                                                        //уведомляем об добавление карты класс сессии
+                                                        AddCardField(this, NumberCarte, IDCarte);
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case MsgType.Attack:
+                                            if (myProgress)//если мой ход
+                                            {
+                                                short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));
+                                                short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
+                                                if (attacking == -1)
+                                                {
+
+                                                    int attackCount = userHq.AttackCount;
+                                                    if (attackCount > 0)
+                                                    {
+                                                        WriteLog.WriteGameLog($"Игрок {name} собирается атаковать штабом ");
+                                                        Attack(this, -1, attacked, attackCount - 1);
+                                                    }
+
+                                                }
+                                                else
+                                                {
+                                                    int attackCount = CardsOnMargin[attacking].AttackCount;
+                                                    if (attackCount > 0)
+                                                    {
+                                                        WriteLog.WriteGameLog($"Игрок {name} собирается атаковать картой {CardsOnMargin[attacking].NameRobot} с номером на поле {attacking + 1} ");
+                                                        Attack(this, attacking, attacked, attackCount - 1);
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case MsgType.DamageEvent:
+                                            if (myProgress)
+                                            {
+                                                short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
+                                                short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
+                                                int IdAttackingCard = CardsOnHands[attacking];
+                                                DamageEvent Card = Carte.GetCarte(IdAttackingCard) as DamageEvent;
+
+                                                if (Card.ValueEnergy <= energy)
+                                                {
+                                                    energy -= Card.ValueEnergy;
+                                                    WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие нанесния точечного урона c номером в руке {attacking + 1} атакуя карту c номером {attacked + 1}");
+                                                    CardsOnHands.RemoveAt(attacking);
+                                                    DamageCardEvent(this, IdAttackingCard, Card, attacking, attacked);
+                                                }
+
+                                            }
+
+                                            break;
+                                        case MsgType.RepairsEvent:
+                                            if (myProgress)
+                                            {
+                                                short NumberCardRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
+                                                short Repairable = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
+                                                int IdRepairsCard = CardsOnHands[NumberCardRepairs];
+                                                RepairsEvent Card = Carte.GetCarte(IdRepairsCard) as RepairsEvent;
+                                                if (Card.ValueEnergy <= energy)
+                                                {
+                                                    energy -= Card.ValueEnergy;
+                                                    WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие восстановления c номером в руке { NumberCardRepairs} восстанавливая карту c номером {Repairable + 1}");
+                                                    CardsOnHands.RemoveAt(NumberCardRepairs);
+                                                    WriteLog.WriteGameLog("");
+                                                    RepairsCardEvent(this, IdRepairsCard, Card, NumberCardRepairs, Repairable);
+
+                                                }
+                                            }
+                                            break;
+                                        case MsgType.AllDamageEvent:
+                                            if (myProgress)
+                                            {
+                                                short NumberCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
+                                                int IdRepairsCard = CardsOnHands[NumberCard];
+                                                AllDamageEvent Card = Carte.GetCarte(IdRepairsCard) as AllDamageEvent;
+                                                if (Card.ValueEnergy <= energy)
+                                                {
+                                                    energy -= Card.ValueEnergy;
+                                                    WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие массового урона c номером в руке { NumberCard + 1}");
+                                                    CardsOnHands.RemoveAt(NumberCard);
+                                                    AllDamageEvent(this, IdRepairsCard, Card, NumberCard);
+                                                }
+                                            }
+                                            break;
+                                        case MsgType.ChatMsg:
+                                            string Message = Encoding.UTF8.GetString(Data);
+                                            NewChatMsg(this, Message);
+                                            break;
+
+                                    }
+                                }
+                                //добавить иначе
+                            }
+                            else//собщения без данных
+                            {
                                 switch (msgType)
                                 {
-                                    case MsgType.CarteUser:
-                                      
-                                        if (MsgLength % 2 == 0)
-                                        {
-                                            string TempColod = null;//для лога
-                                            int index = 0;
-                                            for (int i = 0; i < MsgLength/2; i++)
-                                            {
-                                               int idCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, index));
-                                                TempColod += idCard + " "; 
-                                               carteUser.Add(idCard);
-                                               index += 2;
-                                            }
-                                            WriteLog.WriteGameLog($"Игрок {name} имеет в колоде карты: {TempColod}");
-                                            ColodRec();
-                                        }
+                                    case MsgType.EndProgress:
+                                        WriteLog.WriteGameLog($"Игрок {name} завершил свой ход");
+                                        EndProgress();
                                         break;
-
-                                    case MsgType.GetName:
-                                        name = Encoding.UTF8.GetString(Data);
-                                        WriteLog.WriteGameLog("Получено имя пользователя " + name);
-                                        //случайным образом определяем id пользователя
-                                        Random id = new Random();
-                                        idUser = id.Next(0, int.MaxValue);
-                                        NameRec();
+                                    case MsgType.DeliteSeek:
+                                        WriteLog.WriteGameLog("Игрок удаляет себя из очереди ожидания противника");
+                                        GetOutOfQueue();
                                         break;
-
-                                    case MsgType.AddCarteOnField:
-                                        if (myProgress)
-                                        {
-                                            int NumberCarte = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));
-                                            
-                                            //получаем ID карты
-                                            int IDCarte = CardsOnHands[NumberCarte];
-                                            //получаем экземпляр этой карты
-                                            Carte NewCarte = Carte.GetCarte(IDCarte);
-                                            WriteLog.WriteGameLog($"Игрок {name} собирается добавить карту {(NewCarte as Robot).NameRobot} с номером в руках у игрока {NumberCarte+1} на игровое поле");
-                                            if (NewCarte is Robot)
-                                            {
-                                                Robot NewCarteRobot = (Robot)NewCarte;
-                                                //сравниваем цену с кол-во энергии
-                                                if (NewCarteRobot.ValueEnergy <= energy)
-                                                {
-                                                    energy -= NewCarteRobot.ValueEnergy;
-                                                    CardsOnHands.RemoveAt(NumberCarte);
-                                                    CardsOnMargin.Add(NewCarteRobot);
-                                                    WriteLog.WriteGameLog($"Карта добавлена на игровое поле игрока {name}");
-                                                    //уведомляем об добавление карты класс сессии
-                                                    AddCardField(this, NumberCarte, IDCarte);
-                                                }
-                                            }
-                                        }
+                                    case MsgType.ClientClosing:
+                                        WriteLog.WriteGameLog($"Игрок {name} закрыл свой клиент игры");
+                                        if(StopThread)FailedSendMsg(this);
                                         break;
-                                    case MsgType.Attack:
-                                        if (myProgress)//если мой ход
-                                        {
-                                            short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));
-                                            short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
-                                            if (attacking == -1)
-                                            {
-                                                
-                                                int attackCount = userHq.AttackCount;
-                                                if (attackCount > 0)
-                                                {
-                                                    WriteLog.WriteGameLog($"Игрок {name} собирается атаковать штабом ");
-                                                    Attack(this, -1, attacked, attackCount - 1);
-                                                }
-                                                   
-                                            }
-                                            else
-                                            {
-                                                int attackCount = CardsOnMargin[attacking].AttackCount;                    
-                                                if (attackCount > 0)
-                                                {
-                                                    WriteLog.WriteGameLog($"Игрок {name} собирается атаковать картой {CardsOnMargin[attacking].NameRobot} с номером на поле {attacking+1} ");
-                                                    Attack(this, attacking, attacked, attackCount - 1);
-                                                }
-                                            }
-                                        }
-                                        break;
-                                    case MsgType.DamageEvent:
-                                        if (myProgress)
-                                        {
-                                            short attacking = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
-                                            short attacked = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
-                                            int IdAttackingCard = CardsOnHands[attacking];
-                                            DamageEvent Card = Carte.GetCarte(IdAttackingCard) as DamageEvent;
-                                            
-                                            if (Card.ValueEnergy <= energy)
-                                            {
-                                                energy -= Card.ValueEnergy;
-                                                WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие нанесния точечного урона c номером в руке {attacking+1} атакуя карту c номером {attacked+1}");
-                                                CardsOnHands.RemoveAt(attacking);
-                                                DamageCardEvent(this, IdAttackingCard, Card,attacking, attacked);
-                                            }
-                                           
-                                        }
-                                
-                                        break;
-                                    case MsgType.RepairsEvent:
-                                        if (myProgress)
-                                        {
-                                            short NumberCardRepairs = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
-                                            short Repairable = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 2));
-                                            int IdRepairsCard = CardsOnHands[NumberCardRepairs];
-                                            RepairsEvent Card = Carte.GetCarte(IdRepairsCard) as RepairsEvent;
-                                            if (Card.ValueEnergy <= energy)
-                                            {
-                                                energy -= Card.ValueEnergy;
-                                                WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие восстановления c номером в руке { NumberCardRepairs} восстанавливая карту c номером {Repairable+1}");
-                                                CardsOnHands.RemoveAt(NumberCardRepairs);
-                                                WriteLog.WriteGameLog("");
-                                                RepairsCardEvent(this, IdRepairsCard, Card, NumberCardRepairs, Repairable);
-                                               
-                                            }
-                                        }
-                                        break;
-                                    case MsgType.AllDamageEvent:
-                                        if (myProgress)
-                                        {
-                                            short NumberCard = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Data, 0));//номер карты  в руке у игрока
-                                            int IdRepairsCard = CardsOnHands[NumberCard];
-                                            AllDamageEvent Card = Carte.GetCarte(IdRepairsCard) as AllDamageEvent;
-                                            if (Card.ValueEnergy <= energy)
-                                            {
-                                                energy -= Card.ValueEnergy;
-                                                WriteLog.WriteGameLog($"Игрок {name} собирается использовать событие массового урона c номером в руке { NumberCard +1}");
-                                                CardsOnHands.RemoveAt(NumberCard);
-                                                AllDamageEvent(this, IdRepairsCard, Card, NumberCard);
-                                            }
-                                        }
-                                     break;
-                                    case MsgType.ChatMsg:
-                                        string Message = Encoding.UTF8.GetString(Data);
-                                        NewChatMsg(this, Message);
-                                        break;
-
                                 }
-                            }
-                            //добавить иначе
-                        }
-                        else//собщения без данных
-                        {
-                            switch (msgType)
-                            {
-                                case MsgType.EndProgress:
-                                    WriteLog.WriteGameLog($"Игрок {name} завершил свой ход");
-                                     EndProgress(); 
-                                    break;
-                                case MsgType.DeliteSeek:
-                                    WriteLog.WriteGameLog("Игрок удаляет себя из очереди ожидания противника");
-                                    GetOutOfQueue();
-                                    break;
-                                case MsgType.ClientClosing:
-                                    WriteLog.WriteGameLog($"Игрок {name} закрыл свой клиент игры");
-                                    FailedSendMsg(this);
-                                    break;
                             }
                         }
                     }
-                }
+                    catch (Exception e)//чтобы при возникновении ошибки цикл обработки сообщений не оставналивался
+                    { WriteLog.Write(e.ToString()); }
+                 }
             }
             catch (Exception e) { WriteLog.Write(e.ToString()); }
         }
@@ -318,15 +323,19 @@ namespace CarteServer
         private int RecData(byte[] data, int length, NetworkStream stream)
         {
             try
-            {
-                int ReadBytes = 0;
-                while (ReadBytes != length)
+            { 
+                    int ReadBytes = 0;
+                if (StopThread)
                 {
-                    int readed = stream.Read(data, 0, length - ReadBytes);
-                    ReadBytes += readed;
-                    if (readed == 0) return 0;
+                    while (ReadBytes != length)
+                    {
+                        int readed = stream.Read(data, 0, length - ReadBytes);
+                        ReadBytes += readed;
+                        if (readed == 0) return 0;
+                    }
                 }
-                return ReadBytes;
+                    return ReadBytes;
+                
             }
             catch (IOException e)
             {
@@ -335,9 +344,13 @@ namespace CarteServer
                     GetOutOfQueue();
                     return 0;
                 }
+
+                if (StopThread)
+                {
                     FailedSendMsg(this);
-                Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
-                WriteLog.Write(e.ToString());
+                    Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
+                    WriteLog.Write(e.ToString());
+                }
                 return 0;
             }
             catch (Exception e) { WriteLog.Write(e.ToString()); return 0; }
@@ -356,12 +369,13 @@ namespace CarteServer
             //временно
             catch (IOException e)
             {
-                if (FailedSendMsg != null)
-                {
-                    FailedSendMsg(this);
-                    Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
-                    WriteLog.Write(e.ToString());
-                }
+               
+                    if(StopThread)FailedSendMsg(this);
+                    {
+                        Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
+                        WriteLog.Write(e.ToString());
+                    }
+                
             }
             catch (Exception e) { WriteLog.Write(e.ToString()); }
         }  
@@ -382,12 +396,14 @@ namespace CarteServer
             //временно
             catch (IOException e)
             {
-                if (FailedSendMsg != null)
+
+                if (StopThread)
                 {
                     FailedSendMsg(this);
                     Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
                     WriteLog.Write(e.ToString());
                 }
+                
             }
             catch (Exception e) { WriteLog.Write(e.ToString()); }
             }
@@ -406,12 +422,14 @@ namespace CarteServer
             //временно
             catch (IOException e)
             {
-                if (FailedSendMsg != null)
+
+                if (StopThread)
                 {
                     FailedSendMsg(this);
                     Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
                     WriteLog.Write(e.ToString());
                 }
+                
             }
             catch (Exception e) { WriteLog.Write(e.ToString()); }
         }
@@ -444,12 +462,14 @@ namespace CarteServer
             //временно
             catch (IOException e)
             {
-                if (FailedSendMsg != null)
+
+                if (StopThread)
                 {
                     FailedSendMsg(this);
                     Console.WriteLine(DateTime.Now + $"Вызван метод окончания игровой сессии из-за недоступности {name} из игроков");
                     WriteLog.Write(e.ToString());
                 }
+                
             }
             catch (Exception e)
             { WriteLog.Write(e.ToString()); }
@@ -489,14 +509,14 @@ namespace CarteServer
         //особождает все ресурсы
         public void Dispose()
         {
+            StopThread = false;
             WriteLog.WriteGameLog($"Класс игрока {name} освободил все ресурсы");
             //закрываем соединение
             if(UserTcpClient != null)UserTcpClient.Close();
             UserTcpClient = null;
             TcpStream = null;
 
-            StopThread = false;
-
+            FailedSendMsg = null;
             name = null;
             Attack = null;
             DamageCardEvent = null;
@@ -515,6 +535,8 @@ namespace CarteServer
             NameRec = null;
             EndProgress = null;
             AddCardField = null;
+            GetOutOfQueue = null;
+            NewChatMsg = null;
 
         }
     }

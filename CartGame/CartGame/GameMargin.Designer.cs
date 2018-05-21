@@ -263,7 +263,6 @@
             this.Text = "GameMargin";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GameMargin_FormClosing);
             this.Load += new System.EventHandler(this.GameMargin_Load);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GameMargin_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

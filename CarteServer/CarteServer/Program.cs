@@ -49,9 +49,9 @@ namespace CarteServer
             {
                 Console.WriteLine("Неправильный формат ввода IP-адреса или порта!");
             }
-            catch (SocketException)
+            catch (SocketException e)
             {
-                Console.WriteLine("Ошибка инициализации сокета!");
+                Console.WriteLine("Ошибка инициализации сокета!" + e.ToString());
             }
             catch (Exception e)
             {
